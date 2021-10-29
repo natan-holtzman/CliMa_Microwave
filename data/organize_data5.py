@@ -19,6 +19,8 @@ fig_size[1] = 7
 
 plt.rcParams['font.size']=28
 #%%
+#raw flux data is not included in this repository
+#you can download it from https://ameriflux.lbl.gov/sites/siteinfo/US-MOz
 alldata = pd.read_csv('AMF_US-MOz_BASE-BADM_8-5/AMF_US-MOz_BASE_HH_8-5.csv',comment='#')
 rawdata = alldata[20016:].copy()
 #%%
@@ -225,7 +227,7 @@ SatVP = 6.1094*np.exp(17.625*tair/ (tair+ 243.04))/10  #kpa
 VPD = SatVP * (1 - relhum/100)
 
 #%%
-obs = pd.read_csv('predawn_potential_2018.csv',skiprows=[1])
+obs = pd.read_csv('predawn_potential_2020.csv',skiprows=[1])
 obs_time = [datetime.datetime.strptime(
     str(obs['Year'][i])+'_'+str(obs[' DOY'][i]), '%Y_%j')
     for i in range(len(obs))]
@@ -252,7 +254,7 @@ mydf = pd.DataFrame({'DateTime':np.array(rawdata['DateTime']),
                      'H2O':h2o, 'CO2':co2,'P_ATM':patm,
                      'LE':le, 'SMC':smc/100, 'NEE':nee,'LAI_site':lai,
                      'LAI_modis':laiM, 'Oak_Psi':oakpot
-                     }).iloc[100000:]
+                     }).iloc[:100000]
 #%%
 # fapar_noon = 1- (solar_umol_out / solar_umol_in)[24::48]
 # lai_noon = lai[24::48]
@@ -261,7 +263,7 @@ mydf = pd.DataFrame({'DateTime':np.array(rawdata['DateTime']),
 # n_per_year = 365*24*2
 # df2 = mydf.iloc[n_per_year*3:n_per_year*4]
 #%%
-mydf.to_csv('moflux_land_data_newnames_7_pt2.csv')
+mydf.to_csv('moflux_land_data_newnames_7.csv')
 #%%
 # rain_only = rain*(tair>0)
 # snow = rain*(tair <= 0)
