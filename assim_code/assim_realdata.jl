@@ -150,7 +150,8 @@ nPar= length(pars);
 
 ll0,et0,smc0,ll0prev = log_p_nolabel(pars,ET_err0,smc_err0,obsET,obsSMC);
 mycov = I*0.01/length(pars);
-chain = zeros(niter, nPar*2+11+2+2);
+#npar, ll0, llp, npar, 4
+chain = zeros(niter, nPar*2+4);
 
 for j in 1:niter
 	if j % 2 == 0
@@ -161,12 +162,8 @@ for j in 1:niter
                 println(chain[j-1,:])
         end
 
-
-
-	
 	chain[j,1:nPar] = pars;
-	chain[j,(nPar+1):(nPar+3)] = vodpar0[1:3];
-	chain[j,nPar+4] = ll0
+	chain[j,nPar*2+1] = ll0
 
 	if j > burnlen
 		mycov = (1-10^-6)*cov(chain[(j-burnlen):j,1:nPar])  + 10^-6*I;
@@ -174,14 +171,11 @@ for j in 1:niter
 
 
     parsP = rand(MvNormal(pars, mycov),1);
-	#llP = log_p_nolabel(parsP,0,0,0,10000,10^-5);
     llP,etP,smcP,ll0prev = log_p_nolabel(parsP,ET_err0 ,smc_err0,et0,smc0 );
-   chain[j,nPar+5] = llP;
-   chain[j,(nPar+6):(nPar+10)] = vodparP;
+   chain[j,(nPar+1):(nPar*2)] = parsP;
+	chain[j,nPar*2+2] = llP
     mhratio = exp(llP - ll0prev);
     randI = rand();
-   chain[j,nPar+11] = randI;
-   chain[j,(nPar+12):(nPar+12+nPar-1)] = parsP;
     if randI < mhratio
 		ll0 = llP*1;
 		pars = parsP[:,1]*1;
@@ -189,8 +183,10 @@ for j in 1:niter
 		smc0 = smcP*1;
 	end
 	
+	chain[j,nPar*2+3] = smc_err0
+	 chain[j,nPar*2+4] = ET_err0 
+
 	smc_err_prop = rand(LogNormal(log(smc_err0), 0.01));
-	chain[j,(nPar+12+nPar):(nPar+12+nPar+1)] = [smc_err0, smc_err_prop];
 	p0_new, p1_new = log_p_err(smc_err0, smc_err_prop, smc0,obsSMC);
 	mhratio_err = exp(p1_new - p0_new) * smc_err_prop/smc_err0;
 	randIe = rand();
@@ -199,7 +195,6 @@ for j in 1:niter
 	end
 
         ET_err_prop = rand(LogNormal(log(ET_err0), 0.01));
-        chain[j,(nPar+12+nPar+2):end] = [ET_err0, ET_err_prop];
         p0_new, p1_new = log_p_err(ET_err0, ET_err_prop,et0, obsET);
         mhratio_err = exp(p1_new - p0_new) * ET_err_prop/ET_err0;
         randIe = rand();
@@ -260,6 +255,12 @@ return x0, ll_init
 end
 
 
+init_name = "init_par_LL_calib.csv"
+
+if isfile(init_name)
+	ipar_LL = Array(CSV.read(init_name, DataFrame))
+else
+
 
 ipar_LL = zeros(100,9);
 
@@ -270,8 +271,8 @@ ipar_LL[j,1:8] = Array(xi);
 ipar_LL[j,9] = LLi;
 end
 
-#CSV.write("init_par_LL_calib.csv", DataFrame(ipar_LL));
-
+CSV.write(init_name, DataFrame(ipar_LL));
+end
 
 a01 = ipar_LL[argmax(ipar_LL[:,9]),1:8];
 
