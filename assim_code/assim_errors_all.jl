@@ -7,7 +7,7 @@ using StatsBase
 
 include("mironov.jl");
 
-include("rebuild_sim_N.jl");
+include("../simulation_code/rebuild_sim_N.jl");
 
 
 
@@ -122,11 +122,6 @@ using Distributions
 using LabelledArrays
 using LinearAlgebra
 
-#x0 = LVector(logVcmax=log(22), logKplant=log(4), logWeib_b=log(1.5), logSoilB=log(2.5), logSoilP=log(2), logPvs=log(0.05));
-
-#x0 = LVector(logVcmax=log(60), logKplant=log(10), logWeib_b=log(3), logSoilB=log(4), logSoilP=log(2), logPvs=log(0.1));
-
-###################
 
 
 function optim_vod_while(obsHi, obsVi, leafpot, smc_mod, simtab, k, alpha, beta, maxiter, stop_crit, step_size)
@@ -239,11 +234,11 @@ end
 
 ####################
 
-obs_mask = zeros(length(obsH));
-obs_mask[2:(24*3):end] .= 1;
-obs_mask[(2+12):(24*3):end] .= 1;
+#obs_mask = zeros(length(obsH));
+#obs_mask[2:(24*3):end] .= 1;
+#obs_mask[(2+12):(24*3):end] .= 1;
 
-#obs_mask = ones(length(obsH));
+obs_mask = ones(length(obsH));
 
 obs_mask = obs_mask .== 1;
 
@@ -271,8 +266,8 @@ sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logPcrit)), FT(exp(v.
 	else
 	
 	p0 = p+0;
-	p0 += logpdf(MvNormal(old_TB[1][obs_mask], error_var), obsH[obs_mask]);
-	p0 += logpdf(MvNormal(old_TB[2][obs_mask], error_var), obsV[obs_mask]);		
+	p0 += logpdf(MvNormal(old_TB[1][obs_mask], sqrt(error_var)), obsH[obs_mask]);
+	p0 += logpdf(MvNormal(old_TB[2][obs_mask], sqrt(error_var)), obsV[obs_mask]);		
 
 
 	optim_res = optim_vod_stages(obsH[obs_mask], obsV[obs_mask],
@@ -280,16 +275,16 @@ sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logPcrit)), FT(exp(v.
 			    sim_res[1][obs_mask,:], k0, alpha0, beta0, maxiter, stop_crit,10^-5, 24);
 		sim_TB = get_TB(sim_res, mean(sim_res[3],dims=2), optim_res[1], optim_res[2],optim_res[3]);
 
-		p += logpdf(MvNormal(sim_TB[1][obs_mask], error_var), obsH[obs_mask]);
-		p += logpdf(MvNormal(sim_TB[2][obs_mask], error_var), obsV[obs_mask]);		
+		p += 1/36.0*logpdf(MvNormal(sim_TB[1][obs_mask], sqrt(error_var)), obsH[obs_mask]);
+		p += 1/36.0*logpdf(MvNormal(sim_TB[2][obs_mask], sqrt(error_var)), obsV[obs_mask]);		
 
 
 #=
 simET = sum(reshape(sim_res[1].ETmod, (48,:)),dims=1)[1,:]/48;
 simSMC = sum(reshape(sim_res[2][:,1], (48,:)),dims=1)[1,:]/48;
 
-	 p += logpdf(MvNormal(obsET, 0.0002^2), simET);
-	p += logpdf(MvNormal(obsSMC,0.05^2), simSMC);
+	 p += logpdf(MvNormal(obsET, 0.0002), simET);
+	p += logpdf(MvNormal(obsSMC,0.05), simSMC);
 =#
 
 		return p, optim_res, sim_TB, p0
@@ -304,8 +299,8 @@ function log_p_err(error_var, new_error_var, pred_TB)
 	p0 += logpdf(truncated(Cauchy(), 0, Inf), error_var);
 	p1 += logpdf(truncated(Cauchy(), 0, Inf), new_error_var);
 
-	p0 -= 0.5*(sum( (pred_TB[1]-obsH) .^2 ./ error_var .+ log(error_var)) + sum( (pred_TB[2]-obsV) .^2 ./ error_var .+ log(error_var)))
-	p1 -= 0.5*(sum( (pred_TB[1]-obsH) .^2 ./ new_error_var .+ log(new_error_var)) + sum( (pred_TB[2]-obsV) .^2 ./ new_error_var .+ log(new_error_var)))
+	p0 -= 1/36.0*0.5*(sum( (pred_TB[1]-obsH) .^2 ./ error_var .+ log(error_var)) + sum( (pred_TB[2]-obsV) .^2 ./ error_var .+ log(error_var)))
+	p1 -= 1/36.0*0.5*(sum( (pred_TB[1]-obsH) .^2 ./ new_error_var .+ log(new_error_var)) + sum( (pred_TB[2]-obsV) .^2 ./ new_error_var .+ log(new_error_var)))
 
 	return p0, p1
 end
@@ -434,7 +429,7 @@ c1 = runAMH(x01, 10000, 500);
 
 dfc = DataFrame(c1);
 
-CSV.write("post_2x3obs_errflex.csv",dfc);
+CSV.write("post_allnorm_newvar.csv",dfc);
 
 
 #=

@@ -9,4 +9,4 @@
 ml julia/1.5.1
 
 # run the Julia application
-srun julia assim_errors.jl 
+srun julia assim_errors_all.jl 

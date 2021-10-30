@@ -56,7 +56,7 @@ K_STEFAN = FT(Stefan());
 #istart = 48*365*1 - 52*48 + 165*48 #+ 180*48 - 3*48
 #N = 48*365
 #istart = 48*365*2 - 52*48 #+ 165*48
-df_raw = CSV.read("moflux_land_data_newnames_7.csv", DataFrame);
+df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
 function run_sim(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0)
 
