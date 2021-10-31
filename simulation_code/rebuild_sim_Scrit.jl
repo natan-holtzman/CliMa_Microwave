@@ -218,7 +218,7 @@ for i in eachindex(df.Day)
 		
 		iHS.p_crt = FT(-p_crit);
 		iPS.ec    = critical_flow(iHS, iPS.ec);
-                iPS.ec    = max(FT(0), iPS.ec);
+        iPS.ec    = max(FT(0), iPS.ec);
 
 
 		
@@ -230,6 +230,13 @@ for i in eachindex(df.Day)
 			update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter));
 			gsw_control!(photo_set, iPS, iEN);
 		end
+		
+		#1/1000 = exp(-(p_crt_new / -vc.b) ^ vc.c)
+		# log(1000) = (p_crt_new / -vc.b) ^ vc.c
+		# log(1000)^(1/vc.c) * -vc.b = p_crt_new
+		iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
+		iPS.ec    = critical_flow(iHS, iPS.ec);
+        iPS.ec    = max(FT(0), iPS.ec);
 		
 		# update the flow rates
 		for iLF in 1:(nSL+1)

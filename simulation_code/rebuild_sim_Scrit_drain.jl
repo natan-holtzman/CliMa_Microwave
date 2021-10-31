@@ -231,6 +231,11 @@ for i in eachindex(df.Day)
 			gsw_control!(photo_set, iPS, iEN);
 		end
 		
+		iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
+		iPS.ec    = critical_flow(iHS, iPS.ec);
+        iPS.ec    = max(FT(0), iPS.ec);
+		
+		
 		# update the flow rates
 		for iLF in 1:(nSL+1)
 			f_CO₂ += iPS.An[iLF] * iPS.LAIx[iLF] * iPS.LA;

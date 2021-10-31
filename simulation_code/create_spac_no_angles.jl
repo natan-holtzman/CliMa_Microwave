@@ -28,7 +28,8 @@ function create_spac(
 
 	_totaldepth = FT(z_soil/1000);
 	_rootdepth = FT(z_soil/1000);
-	_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-z_soil/1000]);
+	_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7]);
+	_soil_bounds[2:5] *= _totaldepth/FT(0.7);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.35,-0.7]);
 	
 	#_totaldepth = FT(0.85);

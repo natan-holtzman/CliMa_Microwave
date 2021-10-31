@@ -61,7 +61,7 @@ K_STEFAN = FT(Stefan());
 #istart = 48*365*2 - 52*48 #+ 165*48
 df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
-function run_sim(vcmax_par, s_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, slope_index)
+function run_sim(vcmax_par, s_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, slope_index, g1)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -100,8 +100,13 @@ psi_sat = FT(p20 / rs13^(-1*b_soil));
 p_crit = FT(psi_sat*((s_crit - 0.05)/(n_soil-0.05))^(-1*b_soil));
 
 beta_curve = WeibullSingle(FT(p_crit), FT(2));
-#sm1 = Land.StomataModels.ESMMedlyn(FT(0.001),FT(125*3));
-sm1 = Land.StomataModels.ESMBallBerry(FT(0.001),FT(9*3));
+sm1 = Land.StomataModels.ESMMedlyn(FT(0.025),FT(g1));
+#max should be 10 sqrt(Kpa) * sqrt(1000 Pa) / sqrt(1 KPa)
+
+#in Medlyn paper it ranged from 2 to 14, unitless
+#14 / sqrt(D in Kpa / 101 KPa atmos press) = 14*sqrt(101) / sqrt(D in Kpa) = 140 sqrt(Kpa)
+  
+#sm1 = Land.StomataModels.ESMBallBerry(FT(0),FT(g1));
 
 
 node = create_spac(sm1,vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_soil, FT(40));
@@ -236,6 +241,11 @@ for i in eachindex(df.Day)
 			#update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter));
 			gsw_control!(photo_set, iPS, iEN);
 		end
+		
+		iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
+		iPS.ec    = critical_flow(iHS, iPS.ec);
+        iPS.ec    = max(FT(0), iPS.ec);
+		
 		
 		# update the flow rates
 		for iLF in 1:(nSL+1)
