@@ -7,7 +7,7 @@ using StatsBase
 
 include("mironov.jl");
 
-include("../simulation_code/rebuild_sim_N.jl");
+include("../simulation_code/rebuild_sim_Scrit.jl");
 
 
 
@@ -79,27 +79,26 @@ using LinearAlgebra
 
 function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 
-	v = LVector(logVcmax=a[1], logPcrit=a[2], logKmaxPlant=a[3], logKmaxSoil=a[4], logBsoil=a[5], logP20=a[6], logZsoil=a[7], logNsoil=a[8]);
+	v = LVector(logVcmax=a[1], logScrit=a[2], logKmaxPlant=a[3], logKmaxSoil=a[4], logBsoil=a[5], logP20=a[6], logZsoil=a[7], logNsoil=a[8]);
 
 	p = 0.0;
 	p += logpdf(Uniform(log(10), log(120)), v.logVcmax);
 	p += logpdf(Uniform(log(0.1), log(100)), v.logKmaxPlant);
-	p += logpdf(Uniform(log(0.75), log(5)), v.logPcrit);
+	p += logpdf(Uniform(log(0.075), log(0.3)), v.logScrit);
+	#p += logpdf(Uniform(log(0.75), log(5)), v.logPcrit);
         p += logpdf(Uniform(log(1e-5), log(2e-3)), v.logKmaxSoil);
         p += logpdf(Uniform(log(1), log(8)), v.logBsoil);
         p += logpdf(Uniform(log(0.25), log(5)), v.logP20);
         p += logpdf(Uniform(log(0.4), log(0.6)), v.logNsoil);
-        p += logpdf(Uniform(log(500), log(3000)), v.logZsoil);
+        p += logpdf(Uniform(log(250), log(3000)), v.logZsoil);
 
 	p0 = p+0 #assumes both previous and proposed parameters are in prior range 
         p0 += logpdf(MvNormal(obsET, sqrt(ET_var)), oldET);
         p0 += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), oldSMC);
 
 
-
-
 	try		
-		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logPcrit)), FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), FT(v.logBsoil), FT(v.logP20), FT(exp(v.logZsoil)), 
+		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), FT(v.logBsoil), FT(v.logP20), FT(exp(v.logZsoil)), 
 			  FT(exp(v.logNsoil)), istart, N, soil0));
 
 	if isnan(mean(sim_res[1].leafpot))
@@ -140,14 +139,6 @@ end
 
 
 function runAMH(x_init, niter, burnlen)
-
-k0 = exp(rand(Uniform(log(0.01),log(0.75))));
-alpha0 = exp(rand(Uniform(log(0.25),log(2))));
-beta0 = exp(rand(Uniform(log(1/100),log(1/25))));
-
-#pars = log.([FT(22),FT(1.5), FT(4.0), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45)]);
-#err0 = 1.7;
-
 
 pars = Array(x_init);
 
@@ -225,12 +216,12 @@ smc_err0 = 0.05^2;
 ET_err0 = 0.001^2;
 
 x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
-			 logPcrit=rand(Uniform(log(0.75), log(5))),
+			 logPcrit=rand(Uniform(log(0.075), log(0.3))),
 			 logKmaxPlant=rand(Uniform(log(0.1), log(100))),
 			 logKmaxSoil=rand(Uniform(log(1e-5), log(2e-3))), 
  logBsoil=rand(Uniform(log(1), log(8))),
  logP20=rand(Uniform(log(0.25), log(5))),
- logZsoil=rand(Uniform(log(500), log(3000))),
+ logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6)))
 			 );
 
@@ -243,12 +234,12 @@ while isnan(ll_init)
 
 
 x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
-                         logPcrit=rand(Uniform(log(0.75), log(5))),
+                         logScrit=rand(Uniform(log(0.075), log(0.3))),
                          logKmaxPlant=rand(Uniform(log(0.1), log(100))),
                          logKmaxSoil=rand(Uniform(log(1e-5), log(2e-3))),
  logBsoil=rand(Uniform(log(1), log(8))),
  logP20=rand(Uniform(log(0.25), log(5))),
- logZsoil=rand(Uniform(log(500), log(3000))),
+ logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6)))
                          );
 
@@ -263,7 +254,7 @@ return x0, ll_init
 end
 
 
-init_name = "init_par_LL_calib_8par.csv"
+init_name = "init_par_LL_calib_Scrit.csv"
 
 if isfile(init_name)
 	ipar_LL = Array(CSV.read(init_name, DataFrame))
@@ -288,6 +279,6 @@ c1 = runAMH(a01, 10000, 500);
 
 dfc = DataFrame(c1);
 
-CSV.write("post_ET_SMC_newvar_8par.csv",dfc);
+CSV.write("post_ET_SMC_newvar_Scrit.csv",dfc);
 
 

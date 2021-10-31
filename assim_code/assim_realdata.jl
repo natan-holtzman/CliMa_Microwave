@@ -140,8 +140,7 @@ k0 = exp(rand(Uniform(log(0.01),log(0.75))));
 alpha0 = exp(rand(Uniform(log(0.25),log(2))));
 beta0 = exp(rand(Uniform(log(1/100),log(1/25))));
 
-pars = log.([FT(22),FT(1.5), FT(4.0), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45)]);
-err0 = 1.7;
+pars = Array(x_init);
 
 smc_err0 = 0.05^2;
 ET_err0 = 0.001^2;

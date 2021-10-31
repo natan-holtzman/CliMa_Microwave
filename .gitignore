@@ -26,5 +26,8 @@ Manifest.toml
 #log files output by SLURM
 *.log
 
+#slurm batch files
+assim_code/run_*.sh
+
 #MCMC run output
 assim_code/*.csv
