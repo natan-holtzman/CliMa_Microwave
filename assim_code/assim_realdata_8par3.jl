@@ -7,7 +7,7 @@ using StatsBase
 
 include("mironov.jl");
 
-include("../simulation_code/rebuild_sim_Scrit.jl");
+include("../simulation_code/rebuild_sim_Scrit_drain.jl");
 
 
 
@@ -65,7 +65,7 @@ N = 48*365
 istart = 48*365*2 - 52*48 #+ 230*48
 soil0 = 0.39;
 
-sim_res1 = convert_sim(run_sim(FT(22),FT(1.5), FT(4.0), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil0));
+sim_res1 = convert_sim(run_sim(FT(22),FT(1.5), FT(4.0), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil0, FT(0.05)));
 
 obsET = sum(reshape(sim_res1[1].LE/44200, (24,:)),dims=1)[1,:]/24;
 obsSMC = sum(reshape(sim_res1[1].SMC, (24,:)),dims=1)[1,:]/24;
@@ -169,8 +169,8 @@ for j in 1:niter
 	chain[j,nPar*2+1] = ll0
 	
 	if j % 25 == 0
-		post_SMC[Int(j/25),:] = smc0;
-		post_ET[Int(j/25),:] = et0;
+		post_SMC[:,Int(j/25)] = smc0;
+		post_ET[:,Int(j/25)] = et0;
 	end
 	
 	if j > burnlen
@@ -254,7 +254,7 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logBsoil=rand(Uniform(log(1), log(8))),
  logP20=rand(Uniform(log(0.25), log(5))),
  logZsoil=rand(Uniform(log(250), log(3000))),
- logNsoil=rand(Uniform(log(0.4), log(0.6)))
+ logNsoil=rand(Uniform(log(0.4), log(0.6))),
    logSlope=rand(Uniform(log(0.005), log(0.5)))
                          );
 
@@ -275,20 +275,20 @@ if isfile(init_name)
 	ipar_LL = Array(CSV.read(init_name, DataFrame))
 else
 
-
-ipar_LL = zeros(100,9);
+NPAR = 9;
+ipar_LL = zeros(100,NPAR+1);
 
 for j in 1:100
 println(j)
 xi, LLi = init_works();
-ipar_LL[j,1:8] = Array(xi);
-ipar_LL[j,9] = LLi;
+ipar_LL[j,1:NPAR] = Array(xi);
+ipar_LL[j,end] = LLi;
 end
 
 CSV.write(init_name, DataFrame(ipar_LL));
 end
 
-a01 = ipar_LL[argmax(ipar_LL[:,9]),1:8];
+a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 
 c1, etpost, smcpost = runAMH(a01, 10000, 500);
 
