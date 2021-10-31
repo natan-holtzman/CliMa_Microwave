@@ -207,6 +207,23 @@ function update_VJR!(node::SPACMono{FT}, ratio::FT) where {FT<:AbstractFloat}
 end
 
 
+function update_VJR_leaf!(iPS::CanopyLayer{FT}, ratio::FT) where {FT<:AbstractFloat}
+    # TODO change the ratio accordingly to photo_set
+    # TODO add another ratio V2J in photo_set
+    # Update Vcmax25, Jmax25 (1.67 Vcmax), and Rd25 (0.015 Vcmax)
+
+	iPS.ps.Vcmax   = iPS.ps.Vcmax25WW * ratio;
+	iPS.ps.Vcmax25 = iPS.ps.Vcmax25WW * ratio;
+	iPS.ps.Jmax    = iPS.ps.Jmax25WW * ratio;
+	iPS.ps.Jmax25  = iPS.ps.Jmax25WW * ratio;
+	iPS.ps.Rd      = iPS.ps.Rd25WW * ratio;
+	iPS.ps.Rd25    = iPS.ps.Rd25WW * ratio;
+
+    return nothing
+end
+
+
+
 
 
 """
