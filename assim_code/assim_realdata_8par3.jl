@@ -212,10 +212,10 @@ for j in 1:niter
 
 end
 
-postET[:,end] = obsET
-postSMC[:,end] = obsSMC
+post_ET[:,end] = obsET
+post_SMC[:,end] = obsSMC
 
-return chain, postET, postSMC
+return chain, post_ET, post_SMC
 end
 
 function init_works()
@@ -271,11 +271,12 @@ end
 
 init_name = "init_par_LL_calib_Scrit_drain.csv"
 
+NPAR = 9;
+
 if isfile(init_name)
 	ipar_LL = Array(CSV.read(init_name, DataFrame))
 else
 
-NPAR = 9;
 ipar_LL = zeros(100,NPAR+1);
 
 for j in 1:100
@@ -290,12 +291,12 @@ end
 
 a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 
-c1, etpost, smcpost = runAMH(a01, 10000, 500);
+c1, etpost, smcpost = runAMH(a01, 100, 500);
 
 dfc = DataFrame(c1);
 CSV.write("post_ET_SMC_newvar_Scrit_drain.csv",dfc);
 
-CSV.write("postSMC_scrit.csv", DataFrame(etpost));
-CSV.write("postET_scrit.csv", DataFrame(smcpost));
+CSV.write("postET_scrit.csv", DataFrame(etpost));
+CSV.write("postSMC_scrit.csv", DataFrame(smcpost));
 
 
