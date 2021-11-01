@@ -5,7 +5,7 @@ using CSV
 using Random
 using StatsBase
 
-include("mironov.jl");
+include("../assim_code/mironov.jl");
 
 include("../simulation_code/rebuild_sim_Scrit_drain.jl");
 
@@ -100,13 +100,11 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 
 
 	try		
-		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), 
-									  FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), 
-									  FT(exp(v.logBsoil)), FT(exp(v.logP20)), 
-									FT(exp(v.logZsoil)), FT(exp(v.logNsoil)), istart, N, soil0, FT(exp(v.logSlope))));
+		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), FT(exp(v.logBsoil)), FT(exp(v.logP20)), FT(exp(v.logZsoil)), 
+			  FT(exp(v.logNsoil)), istart, N, soil0, FT(exp(v.logSlope))));
 
 	if isnan(mean(sim_res[1].leafpot))
-		return -Inf, 0,0,p0
+		return -Inf, 0,0,p0, 0
 
 	else
 	
@@ -116,11 +114,11 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 		p += logpdf(MvNormal(obsET, sqrt(ET_var)), simET);
 		p += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), simSMC);
 
-		return p, simET, simSMC, p0
+		return p, simET, simSMC, p0, sim_res[1].leafpot;
 	end
 
 	catch err_occurred
-                return -Inf,0,0, p0
+                return -Inf,0,0, p0, 0
         end
 
 end
@@ -141,84 +139,6 @@ return p0, p1
 end
 
 
-
-function runAMH(x_init, niter, burnlen)
-
-pars = Array(x_init);
-
-smc_err0 = 0.05^2;
-ET_err0 = 0.001^2;
-
-nPar= length(pars);
-
-ll0,et0,smc0,ll0prev = log_p_nolabel(pars,ET_err0,smc_err0,obsET,obsSMC);
-mycov = I*0.01/length(pars);
-#npar, ll0, llp, npar, 4
-chain = zeros(niter, nPar*2+4);
-post_SMC = zeros(365,Int(niter/25)+1);
-post_ET = zeros(365,Int(niter/25)+1);
-
-for j in 1:niter
-	if j % 2 == 0
-		println(j)
-	end
-
-	if j % 25 == 0
-			println(chain[j-1,:])
-	end
-
-	chain[j,1:nPar] = pars;
-	chain[j,nPar*2+1] = ll0
-	
-	if j % 25 == 0
-		post_SMC[:,Int(j/25)] = smc0;
-		post_ET[:,Int(j/25)] = et0;
-	end
-	
-	if j > burnlen
-		mycov = (1-10^-6)*cov(chain[(j-burnlen):j,1:nPar])  + 10^-6*I;
-	end
-
-
-    parsP = rand(MvNormal(pars, mycov),1);
-    llP,etP,smcP,ll0prev = log_p_nolabel(parsP,ET_err0 ,smc_err0,et0,smc0 );
-   chain[j,(nPar+1):(nPar*2)] = parsP;
-	chain[j,nPar*2+2] = llP
-    mhratio = exp(llP - ll0prev);
-    randI = rand();
-    if randI < mhratio
-		ll0 = llP*1;
-		pars = parsP[:,1]*1;
-		et0 = etP*1;
-		smc0 = smcP*1;
-	end
-	
-	chain[j,nPar*2+3] = smc_err0
-	 chain[j,nPar*2+4] = ET_err0 
-
-	smc_err_prop = rand(LogNormal(log(smc_err0), 0.01));
-	p0_new, p1_new = log_p_err(smc_err0, smc_err_prop, smc0,obsSMC);
-	mhratio_err = exp(p1_new - p0_new) * smc_err_prop/smc_err0;
-	randIe = rand();
-	if randIe < mhratio_err
-		smc_err0 = smc_err_prop;
-	end
-
-        ET_err_prop = rand(LogNormal(log(ET_err0), 0.01));
-        p0_new, p1_new = log_p_err(ET_err0, ET_err_prop,et0, obsET);
-        mhratio_err = exp(p1_new - p0_new) * ET_err_prop/ET_err0;
-        randIe = rand();
-        if randIe < mhratio_err
-                ET_err0 = ET_err_prop;
-        end
-
-end
-
-post_ET[:,end] = obsET
-post_SMC[:,end] = obsSMC
-
-return chain, post_ET, post_SMC
-end
 
 function init_works()
 
@@ -272,33 +192,12 @@ end
 
 
 init_name = "init_par_LL_calib_Scrit_drain.csv"
+ipar_LL = Array(CSV.read(init_name, DataFrame));
 
 NPAR = 9;
 
-if isfile(init_name)
-	ipar_LL = Array(CSV.read(init_name, DataFrame))
-else
+best_i = argmax(ipar_LL[:,end]);
+a01 = ipar_LL[1,1:NPAR];
 
-ipar_LL = zeros(100,NPAR+1);
-
-for j in 1:100
-println(j)
-xi, LLi = init_works();
-ipar_LL[j,1:NPAR] = Array(xi);
-ipar_LL[j,end] = LLi;
-end
-
-CSV.write(init_name, DataFrame(ipar_LL));
-end
-
-a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
-
-c1, etpost, smcpost = runAMH(a01, 100, 500);
-
-dfc = DataFrame(c1);
-CSV.write("post_ET_SMC_newvar_Scrit_drain.csv",dfc);
-
-CSV.write("postET_scrit.csv", DataFrame(etpost));
-CSV.write("postSMC_scrit.csv", DataFrame(smcpost));
-
+ll0, et0, smc0, p_obs, leaf0 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
 
