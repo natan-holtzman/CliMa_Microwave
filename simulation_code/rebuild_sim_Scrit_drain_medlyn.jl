@@ -25,22 +25,6 @@ const FT = Float32
 struct EarthParameterSet <: AbstractEarthParameterSet end
 const param_set = EarthParameterSet()
 
-const FT = Float32
-
-#=
-#import Land.PlantHydraulics.xylem_p_crit
-function xylem_p_crit2(
-            vc::WeibullSingle{FT},
-            f_st::FT = FT(1)
-)
-    @unpack b,c = vc;
-    return -b * log( FT(100) ) ^ (1 / c) * f_st
-end
-=#
-
-
-
-
 
 KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
@@ -61,7 +45,7 @@ K_STEFAN = FT(Stefan());
 #istart = 48*365*2 - 52*48 #+ 165*48
 df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
-function run_sim(vcmax_par, s_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, slope_index, g1)
+function run_sim(vcmax_par, s_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, slope_index, g1, weib_c)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -99,7 +83,7 @@ rs13 = (0.13-0.05)/(n_soil-0.05);
 psi_sat = FT(p20 / rs13^(-1*b_soil));
 p_crit = FT(psi_sat*((s_crit - 0.05)/(n_soil-0.05))^(-1*b_soil));
 
-beta_curve = WeibullSingle(FT(p_crit), FT(2));
+beta_curve = WeibullSingle(FT(p_crit), FT(weib_c));
 sm1 = Land.StomataModels.ESMMedlyn(FT(0.025),FT(g1));
 #max should be 10 sqrt(Kpa) * sqrt(1000 Pa) / sqrt(1 KPa)
 
@@ -227,12 +211,6 @@ for i in eachindex(df.Day)
 		iRT = n_canopy + 1 - i_can;
 		
 		
-		iHS.p_crt = FT(-p_crit);
-		iPS.ec    = critical_flow(iHS, iPS.ec);
-                iPS.ec    = max(FT(0), iPS.ec);
-
-
-		
 		# iterate for 15 times to find steady state solution
 		for subI in 1:subIter
 		# calculate the photosynthetic rates
@@ -242,10 +220,7 @@ for i in eachindex(df.Day)
 			gsw_control!(photo_set, iPS, iEN);
 		end
 		
-		iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
-		iPS.ec    = critical_flow(iHS, iPS.ec);
-        iPS.ec    = max(FT(0), iPS.ec);
-		
+	#iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
 		
 		# update the flow rates
 		for iLF in 1:(nSL+1)
@@ -256,8 +231,6 @@ for i in eachindex(df.Day)
 		
 		glw_mean += sum(iPS.g_lw)/(nSL+1)/n_canopy;
 	end;
-		
-		#update_Weibull!(node, FT(5.0), FT(5.0));
 		
 		# update flow profile and pressure history along the tree
 	branch_total_flow = 0;
@@ -276,9 +249,6 @@ for i in eachindex(df.Day)
 	for iRT in plant_hs.roots
 		iRT.flow = plant_hs.trunk.flow / length(plant_hs.roots);
 	end;
-	
-	#update_Kmax!(node, FT(3));
-	#update_Weibull!(node, FT(5.7), FT(0.95));
 	
 	subIter2 = 4
 	for subI2 in 1:subIter2
@@ -329,20 +299,4 @@ end;
 return df, smc_record, psi_record_leaf, psi_record_branch
 
 end
-
-#=
-etObs = sum(reshape(sim_res[1].LE/44200, (48,:)),dims=1)[1,:]/48;
-etMod = sum(reshape(sim_res[1].ETmod, (48,:)),dims=1)[1,:]/48;
-potMod = sum(reshape(sim_res[1].leafpot, (48,:)),dims=1)[1,:]/48;
-
-plot(etObs); plot!(etMod)
-
-psi_ex = -2.5:0.05:0; weib_ex = exp.(-1*(psi_ex / -1) .^ 5);
-scatter(potMod[100:300], (etObs ./ etMod)[100:300]); plot!(psi_ex,weib_ex)
-
-morningPot = sim_res[1].Oak_Psi[13:48:17520];
-hasPot = .!(ismissing.(morningPot));
-potObs = convert(Array{Float64}, morningPot[hasPot]);
-plot(sim_res[1].leafpot[12:48:17520]); scatter!((1:365)[hasPot], potObs)
-=#
 

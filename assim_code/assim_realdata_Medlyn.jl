@@ -7,55 +7,10 @@ using StatsBase
 
 include("mironov.jl");
 
-include("../simulation_code/rebuild_sim_Scrit_drain.jl");
+include("../simulation_code/rebuild_sim_Scrit_drain_medlyn.jl");
 
 
-
-
-function avg2(x)
-if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
-        return (x[1:2:end] + x[2:2:end])/2;
-else
-        return x[1:2:end]
-end
-
-end
-
-
-function avg2_2d(x)
-
-return (x[1:2:end,:] + x[2:2:end,:])/2;
-
-end
-
-
-function avg2_df(x)
-
-ncol = Integer(size(x)[2]);
-nrow = Integer(size(x)[1]/2);
-ans = deepcopy(x[1:nrow,:]);
-
-for j in 1:ncol
-#println(x[1:10,j])
-#println(avg2(x[1:10,j]))
-        ans[:,j] = avg2(x[:,j]);
-end
-
-return ans;
-
-end
-
-function convert_sim(x)
-a = avg2_df(x[1]);
-b = avg2_2d(x[2]);
-c = avg2_2d(x[3]);
-d = avg2_2d(x[4]);
-
-return a,b,c,d
-end
-
-
-
+include("time_averaging.jl")
 
 #N = 48*3
 #istart = 48*365*2 - 52*48 + 230*48
@@ -65,7 +20,7 @@ N = 48*365
 istart = 48*365*2 - 52*48 #+ 230*48
 soil0 = 0.39;
 
-sim_res1 = convert_sim(run_sim(FT(22),FT(1.5), FT(4.0), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil0, FT(0.05)));
+sim_res1 = convert_sim(run_sim(FT(22),FT(1.5), FT(0.15), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil0, FT(0.05), FT(300), FT(2)));
 
 obsET = sum(reshape(sim_res1[1].LE/44200, (24,:)),dims=1)[1,:]/24;
 obsSMC = sum(reshape(sim_res1[1].SMC, (24,:)),dims=1)[1,:]/24;
@@ -79,7 +34,8 @@ using LinearAlgebra
 
 function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 
-	v = LVector(logVcmax=a[1], logScrit=a[2], logKmaxPlant=a[3], logKmaxSoil=a[4], logBsoil=a[5], logP20=a[6], logZsoil=a[7], logNsoil=a[8], logSlope=a[9]);
+	v = LVector(logVcmax=a[1], logScrit=a[2], logKmaxPlant=a[3], logKmaxSoil=a[4], logBsoil=a[5],
+			 logP20=a[6], logZsoil=a[7], logNsoil=a[8], logSlope=a[9], logG1=a[10], logWeibC=a[11]);
 
 	p = 0.0;
 	p += logpdf(Uniform(log(10), log(120)), v.logVcmax);
@@ -92,7 +48,8 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
         p += logpdf(Uniform(log(0.4), log(0.6)), v.logNsoil);
         p += logpdf(Uniform(log(250), log(3000)), v.logZsoil);
         p += logpdf(Uniform(log(0.005), log(0.5)), v.logSlope);
-
+ p += logpdf(Uniform(log(30), log(650)), v.logG1);
+ p += logpdf(Uniform(log(0.75), log(8)), v.logWeibC);
 		
 	p0 = p+0 #assumes both previous and proposed parameters are in prior range 
         p0 += logpdf(MvNormal(obsET, sqrt(ET_var)), oldET);
@@ -103,7 +60,9 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), 
 									  FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), 
 									  FT(exp(v.logBsoil)), FT(exp(v.logP20)), 
-									FT(exp(v.logZsoil)), FT(exp(v.logNsoil)), istart, N, soil0, FT(exp(v.logSlope))));
+									FT(exp(v.logZsoil)), FT(exp(v.logNsoil)),
+						 istart, N, soil0, FT(exp(v.logSlope)),
+							FT(exp(v.logG1)), FT(exp(v.logWeibC))));
 
 	if isnan(mean(sim_res[1].leafpot))
 		return -Inf, 0,0,p0
@@ -239,8 +198,9 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logP20=rand(Uniform(log(0.25), log(5))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
-  logSlope=rand(Uniform(log(0.005), log(0.5)))
-
+  logSlope=rand(Uniform(log(0.005), log(0.5))),
+ logG1 = rand(Uniform(log(30), log(650))),
+logWeibC = rand(Uniform(log(0.75), log(8)))
 			 );
 
 ll_init,a2,a3,a4 = log_p_nolabel(Array(x0),ET_err0,smc_err0,obsET,obsSMC);
@@ -259,7 +219,9 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logP20=rand(Uniform(log(0.25), log(5))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
-   logSlope=rand(Uniform(log(0.005), log(0.5)))
+   logSlope=rand(Uniform(log(0.005), log(0.5))),
+ logG1 = rand(Uniform(log(30), log(650))),
+logWeibC = rand(Uniform(log(0.75), log(8)))
                          );
 
 
@@ -273,9 +235,9 @@ return x0, ll_init
 end
 
 
-init_name = "init_par_LL_calib_Scrit_drain.csv"
+init_name = "init_calib_medlyn.csv"
 
-NPAR = 9;
+NPAR = 11;
 
 if isfile(init_name)
 	ipar_LL = Array(CSV.read(init_name, DataFrame))
@@ -298,9 +260,9 @@ a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 c1, etpost, smcpost = runAMH(a01, 10000, 500);
 
 dfc = DataFrame(c1);
-CSV.write("post_ET_SMC_newvar_Scrit_drain.csv",dfc);
+CSV.write("post_calib_medlyn.csv",dfc);
 
-CSV.write("postET_scrit.csv", DataFrame(etpost));
-CSV.write("postSMC_scrit.csv", DataFrame(smcpost));
+CSV.write("postET_medlyn.csv", DataFrame(etpost));
+CSV.write("postSMC_medlyn.csv", DataFrame(smcpost));
 
 
