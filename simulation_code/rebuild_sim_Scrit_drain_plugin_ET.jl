@@ -272,7 +272,7 @@ for i in eachindex(df.Day)
 	#update_Kmax!(node, FT(3));
 	#update_Weibull!(node, FT(5.7), FT(0.95));
 	
-	subIter2 = 4
+	subIter2 = 4;	
 	for subI2 in 1:subIter2
 		
 		do_soil_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_index)		
