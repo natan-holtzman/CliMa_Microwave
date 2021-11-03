@@ -103,7 +103,7 @@ node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_so
 smc_record = zeros(FT,N,length(node.swc));
 psi_record_leaf = zeros(FT,N,length(node.plant_hs.leaves));
 psi_record_branch = zeros(FT,N,length(node.plant_hs.leaves));
-
+psi_record_trunk = zeros(FT,N);
 
 rbase =  Q10TD{FT}(0, 298.15, 1.7)
 
@@ -310,10 +310,10 @@ for i in eachindex(df.Day)
 		psi_record_leaf[i,ican] = node.plant_hs.leaves[ican].p_leaf;
 		psi_record_branch[i,ican] = mean(node.plant_hs.branch[ican].p_element);
 	end
-
+	psi_record_trunk[i] = mean(node.plant_hs.trunk.p_element)
 end;
 
-return df, smc_record, psi_record_leaf, psi_record_branch
+return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk
 
 end
 

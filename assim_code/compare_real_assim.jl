@@ -94,6 +94,22 @@ ylabel("LWP (MPa)")
 
 
 
+figure()
+plot(day_arr, mean(sim_res_wang[3],dims=2),label="Leaf")
+plot(day_arr, mean(sim_res_wang[4],dims=2),label="Branch")
+plot(day_arr,sim_res_wang[5],label="Trunk")
+legend()
+xlabel("Day of year")
+ylabel("LWP (MPa)")
+title("No storage")
 
+figure()
+plot(day_arr, mean(sim_res_med[3],dims=2),label="Leaf")
+plot(day_arr, mean(sim_res_med[4],dims=2),label="Branch")
+plot(day_arr, sim_res_med[5],label="Trunk")
+legend()
+xlabel("Day of year")
+ylabel("LWP (MPa)")
+title("With storage")
 
 

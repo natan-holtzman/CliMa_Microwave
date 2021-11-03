@@ -34,7 +34,8 @@ a = avg2_df(x[1]);
 b = avg2_2d(x[2]);
 c = avg2_2d(x[3]);
 d = avg2_2d(x[4]);
+d2 = avg2(x[5]);
 
-return a,b,c,d
+return a,b,c,d,d2
 end
 

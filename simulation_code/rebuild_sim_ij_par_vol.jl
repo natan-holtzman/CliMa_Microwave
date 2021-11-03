@@ -119,6 +119,8 @@ in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iP
 smc_record = zeros(FT,N,length(node.swc));
 psi_record_leaf = zeros(FT,N,length(node.plant_hs.leaves));
 psi_record_branch = zeros(FT,N,length(node.plant_hs.leaves));
+psi_record_trunk = zeros(FT,N);
+
 
 global hs0 = deepcopy(plant_hs);
 
@@ -357,10 +359,11 @@ for i in eachindex(df.Day)
 		psi_record_leaf[i,ican] = node.plant_hs.leaves[ican].p_leaf;
 		psi_record_branch[i,ican] = mean(node.plant_hs.branch[ican].p_element);
 	end
+	psi_record_trunk[i] = mean(node.plant_hs.trunk.p_element)
 
 end;
 
-return df, smc_record, psi_record_leaf, psi_record_branch, (hs0, hs1, hs2)
+return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk
 
 end
 
