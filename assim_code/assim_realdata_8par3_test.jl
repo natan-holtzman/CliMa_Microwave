@@ -198,6 +198,45 @@ NPAR = 9;
 
 best_i = argmax(ipar_LL[:,end]);
 a01 = ipar_LL[1,1:NPAR];
-
 ll0, et0, smc0, p_obs, leaf0 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
 
+a01 = ipar_LL[best_i,1:NPAR];
+ll1, et1, smc1, p_obs, leaf1 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
+
+worst_i = argmin(ipar_LL[:,end]);
+a01 = ipar_LL[worst_i,1:NPAR];
+ll2, et2, smc2, p_obs, leaf2 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
+
+mcmc_tab =  Array(CSV.read("samples_fit_data_drain.csv", DataFrame))[:,2:end];
+a01 = mcmc_tab[1,1:NPAR];
+llm1, etm1, smcm1, p_obs, leafm1 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
+
+a01 = mcmc_tab[end,1:NPAR];
+llm2, etm2, smcm2, p_obs, leafm2 =  log_p_nolabel(a01,  0.001^2, 0.05^2, obsET, obsSMC);
+
+
+
+figure()
+plot(obsET,"k",label="Obs"); plot(et0,color="green",label="OK"); plot(et1,color="blue",label="Best"); plot(et2,color="red", label="Worst")
+legend()
+xlabel("Day of year")
+ylabel("ET (mol/m2/s)")
+
+figure()
+plot(obsSMC,"k",label="Obs"); plot(smc0,color="green",label="OK"); plot(smc1,color="blue",label="Best"); plot(smc2,color="red", label="Worst")
+legend()
+xlabel("Day of year")
+ylabel("Surface SMC")
+
+
+figure()
+plot(obsET,"k",label="Obs"); plot(etm1,color="blue",label="OK"); plot(etm2,color="red",label="S2")
+legend()
+xlabel("Day of year")
+ylabel("ET (mol/m2/s)")
+
+figure()
+plot(obsSMC,"k",label="Obs"); plot(smcm1,color="blue",label="S1"); plot(smcm2,color="red",label="S2")
+legend()
+xlabel("Day of year")
+ylabel("Surface SMC")
