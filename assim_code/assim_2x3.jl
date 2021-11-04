@@ -197,7 +197,7 @@ function init_works()
 
 	x0 = rand(prior_dist, 1)[:,1];
 	ll_init,p0,sim_resP,tbP,optim_resP = log_p_nolabel(Array(x0), k0,alpha0,beta0,10000,10^-6,1.7,(obsH,obsV),x0);
-	while isinf(ll_init)
+	while isinf(ll_init) | isnan(ll_init)
 		x0 = rand(prior_dist, 1)[:,1];
 		ll_init,p0,sim_resP,tbP,optim_resP = log_p_nolabel(Array(x0), k0,alpha0,beta0,10000,10^-6,1.7,(obsH,obsV),x0);
 	end

@@ -225,7 +225,7 @@ function init_works()
 
         ll_init,p0,sim_res0,tb0_leaf,tb0_trunk,optim_res0_leaf,optim_res0_trunk = log_p_nolabel(x0,k0,alpha0,beta0,k2,alpha2,beta2,
                                                                                           10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),x0);
-	while isinf(ll_init)
+	while isinf(ll_init) | isnan(ll_init)
 		x0 = rand(prior_dist, 1)[:,1];
         	ll_init,p0,sim_res0,tb0_leaf,tb0_trunk,optim_res0_leaf,optim_res0_trunk = log_p_nolabel(x0,k0,alpha0,beta0,k2,alpha2,beta2,
 												10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),x0);
