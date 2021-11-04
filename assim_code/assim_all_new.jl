@@ -40,15 +40,15 @@ using Distributions
 using LabelledArrays
 using LinearAlgebra
 
-obs_mask = zeros(length(obsH));
-obs_mask[2:(24*3):end] .= 1;
-obs_mask[(2+12):(24*3):end] .= 1;
+#obs_mask = zeros(length(obsH));
+#obs_mask[2:(24*3):end] .= 1;
+#obs_mask[(2+12):(24*3):end] .= 1;
 
-#obs_mask = ones(length(obsH));
+obs_mask = ones(length(obsH));
 
 obs_mask = obs_mask .== 1;
 
-norm_factor = FT(1);
+norm_factor = FT(1/36);
 
 prior_min = [10, 0.01, 0.1,  1e-6, 500, 0.75, 0.75];
 prior_max = [120,0.75,  100, 2e-5, 3000, 10, 8];
@@ -206,7 +206,7 @@ end
 
 NPAR = length(prior_min);
 
-init_name = "obs2x3/init_2x3new.csv"
+init_name = "diurnal/init_2x3new.csv"
 
 if isfile(init_name)
         ipar_LL = Array(CSV.read(init_name, DataFrame))
@@ -226,14 +226,14 @@ c1 = runAMH(a01, 50, 500);
 
 dfc = DataFrame(c1[1]);
 
-CSV.write("obs2x3/post_2x3obs_new.csv",dfc);
+CSV.write("diurnal/post_2x3obs_new.csv",dfc);
 
 #post_RZ, post_ET, post_LWP, post_branch, post_trunk;
-CSV.write("obs2x3/postRZ_new.csv", DataFrame(c1[2]));
-CSV.write("obs2x3/postET_new.csv", DataFrame(c1[3]));
-CSV.write("obs2x3/postLeaf_new.csv", DataFrame(c1[4]));
-CSV.write("obs2x3/postBranch_new.csv", DataFrame(c1[5]));
-CSV.write("obs2x3/postTrunk_new.csv", DataFrame(c1[6]));
+CSV.write("diurnal/postRZ_new.csv", DataFrame(c1[2]));
+CSV.write("diurnal/postET_new.csv", DataFrame(c1[3]));
+CSV.write("diunal/postLeaf_new.csv", DataFrame(c1[4]));
+CSV.write("diurnal/postBranch_new.csv", DataFrame(c1[5]));
+CSV.write("diurnal/postTrunk_new.csv", DataFrame(c1[6]));
 
 
 

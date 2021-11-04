@@ -39,3 +39,22 @@ d2 = avg2(x[5]);
 return a,b,c,d,d2
 end
 
+
+function get_diurnal(x,navg)
+	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
+			return mean(reshape(x,(navg,:)),dims=2)[:,1];
+	else
+			return x[1:navg]
+	end
+end
+
+
+function get_daily(x,navg)
+	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
+			return mean(reshape(x,(navg,:)),dims=1)[1,:];
+	else
+			return x[1:navg:end]
+	end
+end
+
+
