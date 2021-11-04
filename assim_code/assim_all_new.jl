@@ -15,7 +15,7 @@ include("time_averaging.jl")
 #istart = 48*365*2 - 52*48 + 230*48
 
 
-N = 48*3
+N = 48*365
 istart = 48*365*2 - 52*48 #+ 230*48
 soil0 = 0.39;
 
@@ -23,7 +23,7 @@ function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::F
 	return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC));
 end
 
-sim_res1 = run_sim_2(FT(22),FT(0.33), FT(5.0),FT(1e-6), FT(800),FT(2),FT(2));
+sim_res1 = run_sim_2(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1));
 #vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, smc0, slope_index,use_flux, weibB, weibC
 
 noise_std = 1.3;
@@ -68,7 +68,7 @@ function log_p_nolabel(a, k0, alpha0, beta0, maxiter, stop_crit, error_var, old_
 			sim_res = run_sim_2(convert(Array{FT}, exp.(a))...);
 
 			if isnan(mean(sim_res[1].leafpot))
-				return -Inf, 0, 0, 0;
+				return -Inf, 0, 0, 0, 0;
 			else
 				optim_res = optim_vod_stages(obsH[obs_mask], obsV[obs_mask],
 							mean(sim_res[3],dims=2)[obs_mask], sim_res[2][:,1][obs_mask],
@@ -206,7 +206,7 @@ end
 
 NPAR = length(prior_min);
 
-init_name = "diurnal/init_2x3new.csv"
+init_name = "diurnal/init_par.csv"
 
 if isfile(init_name)
         ipar_LL = Array(CSV.read(init_name, DataFrame))
@@ -222,18 +222,18 @@ else
 end
 
 a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
-c1 = runAMH(a01, 50, 500);
+c1 = runAMH(a01, 10000, 500);
 
 dfc = DataFrame(c1[1]);
 
-CSV.write("diurnal/post_2x3obs_new.csv",dfc);
+CSV.write("diurnal/post_par.csv",dfc);
 
 #post_RZ, post_ET, post_LWP, post_branch, post_trunk;
-CSV.write("diurnal/postRZ_new.csv", DataFrame(c1[2]));
-CSV.write("diurnal/postET_new.csv", DataFrame(c1[3]));
-CSV.write("diunal/postLeaf_new.csv", DataFrame(c1[4]));
-CSV.write("diurnal/postBranch_new.csv", DataFrame(c1[5]));
-CSV.write("diurnal/postTrunk_new.csv", DataFrame(c1[6]));
+CSV.write("diurnal/postRZ.csv", DataFrame(c1[2]));
+CSV.write("diurnal/postET.csv", DataFrame(c1[3]));
+CSV.write("diunal/postLeaf.csv", DataFrame(c1[4]));
+CSV.write("diurnal/postBranch.csv", DataFrame(c1[5]));
+CSV.write("diurnal/postTrunk.csv", DataFrame(c1[6]));
 
 
 
