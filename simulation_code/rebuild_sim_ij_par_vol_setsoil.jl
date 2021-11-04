@@ -48,7 +48,7 @@ mpa2mm = FT(10^6/9.8);
 deltaT = FT(60*30)
 
 
-#include("create_spac_no_angles.jl")
+#include("create_spac_setsoil.jl")
 include("land_utils4.jl")
 include("cap_funs.jl")
 include("create_node_newvol.jl")
@@ -64,7 +64,7 @@ K_STEFAN = FT(Stefan());
 #istart = 48*365*2 - 52*48 #+ 165*48
 df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
-function run_sim(vcmax_par, s_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, drain_rate, storage_mult)
+function run_sim(vcmax_par, p_crit, k_plant, k_soil, z_soil, istart, N, smc0, drain_rate, storage_mult)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -98,11 +98,7 @@ df[!,"Runoff"] = zeros(N)
 df[!,"pl1"] = zeros(N)
 df[!,"pl2"] = zeros(N)
 
-rs13 = (0.13-0.05)/(n_soil-0.05);
-psi_sat = FT(p20 / rs13^(-1*b_soil));
-p_crit = FT(psi_sat*((s_crit - 0.05)/(n_soil-0.05))^(-1*b_soil));
-
-node = create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult);
+node = create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, z_soil, smc0, storage_mult);
 
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,
 		latitude, leaves_rt, n_canopy, photo_set, plant_hs, plant_ps,

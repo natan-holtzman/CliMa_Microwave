@@ -31,3 +31,4 @@ assim_code/run_*.sh
 
 #MCMC run output
 assim_code/*.csv
+assim_code/post_files_nov2/*.csv

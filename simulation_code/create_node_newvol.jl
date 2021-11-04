@@ -34,7 +34,7 @@ mpa2mm = FT(10^6/9.8);
 deltaT = FT(60*30)
 
 
-include("create_spac_no_angles.jl")
+include("create_spac_setsoil.jl")
 include("land_utils4.jl")
 include("cap_funs.jl")
 
@@ -50,7 +50,7 @@ function create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_s
 psi_sat = FT(p20 / 0.2^(-1*b_soil));
 
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_soil, FT(40), 1);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), 1);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,
@@ -88,6 +88,7 @@ end
 
 rbase =  Q10TD{FT}(0, 298.15, 1.7)
 
+#=
 @unpack lidf, nAzi, nIncl = canopy_rt;
 @unpack dWL, iPAR = wl_set;
 in_rad_bak = deepcopy(in_rad);
@@ -95,6 +96,7 @@ nSL = nAzi * nIncl;
 in_Erad = in_rad_bak.E_direct .+ in_rad_bak.E_diffuse;
 #in_PPFD = sum( e2phot(dWL, in_Erad)[iPAR] ) * FT(1e6);
 in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iPAR] ) * FT(1e6);
+=#
 
 w_soil = FT(smc0);		
 node.swc = ones(FT, length(node.swc))*w_soil;

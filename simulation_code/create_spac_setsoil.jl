@@ -5,10 +5,7 @@ function create_spac(
             sm::AbstractStomatalModel = OSMWang{FT}(),
             vcmax::FT = FT(30),
             kmax::FT = FT(0.3),
-			psi_sat::FT = FT(0.014),
-			b_soil::FT = FT(5.3),
-		z_soil::FT = FT(0.7),  
-	porosity::FT = FT(0.45),     
+		z_soil::FT = FT(1000),       
      chl::FT = FT(40),
 	 N_slice::Int = 1
 ) where {FT<:AbstractFloat} 
@@ -16,15 +13,15 @@ function create_spac(
 
 	#_soil_hs = create_soil_VC(VanGenuchten{FT}(), "Silt Loam");
 	
-	#=
+	
 	_soil_hs = VanGenuchten{FT}(stype = "Ozark",
 									α = 1.368,
 									n = 2.6257,
 								   Θs = 0.45,
 								   Θr = 0.067);
-	=#					   
+						   
 								   
-	_soil_hs = BrooksCorey{FT}(stype= "Ozark", Θs = FT(porosity), Θr = FT(0.05), ϕs = psi_sat, b = b_soil);
+	#_soil_hs = BrooksCorey{FT}(stype= "Ozark", Θs = FT(porosity), Θr = FT(0.05), ϕs = psi_sat, b = b_soil);
 	
 
 	_totaldepth = FT(z_soil/1000);

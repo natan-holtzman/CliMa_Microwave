@@ -34,7 +34,27 @@ a = avg2_df(x[1]);
 b = avg2_2d(x[2]);
 c = avg2_2d(x[3]);
 d = avg2_2d(x[4]);
+d2 = avg2(x[5]);
 
-return a,b,c,d
+return a,b,c,d,d2
 end
+
+
+function get_diurnal(x,navg)
+	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
+			return mean(reshape(x,(navg,:)),dims=2)[:,1];
+	else
+			return x[1:navg]
+	end
+end
+
+
+function get_daily(x,navg)
+	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
+			return mean(reshape(x,(navg,:)),dims=1)[1,:];
+	else
+			return x[1:navg:end]
+	end
+end
+
 

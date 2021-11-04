@@ -31,7 +31,7 @@ function update_gsw!(clayer::CanopyLayer{FT},
             photo_set::AbstractPhotoModelParaSet{FT},
             envir::AirLayer{FT},
             Δt::FT;
-            τ::FT = FT(1e-5)
+            τ::FT = FT(1e-6)
 ) where {FT<:AbstractFloat} 
 (
     # unpack values
@@ -337,3 +337,58 @@ function do_soil_nss!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::F
 	#return runoff
 end	
 
+
+
+function do_soil_nss_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
+	layer_thick = -1*diff(node.soil_bounds)*1000
+
+	runoff = FT(0);
+		
+	for i_root in eachindex(node.plant_hs.roots)
+		soil_layerI = node.plant_hs.root_index_in_soil[i_root]
+		
+		out_layer = node.plant_hs.roots[i_root].q_in /KG_H_2_MOL_S * FT(1/node.ga*deltaT/(60*60));
+		
+		node.swc[soil_layerI] -= out_layer / layer_thick[soil_layerI]
+		node.swc[soil_layerI] = max(node.plant_hs.roots[soil_layerI].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[soil_layerI].sh.Θs));
+	end	
+
+	smc_rain = node.swc[1] + rain_in /layer_thick[1]
+	smc_rain = max(min(smc_rain, node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	node.swc[1] = smc_rain
+	
+	k_soil = zeros(length(node.swc))
+	p_soil_tot = zeros(length(node.swc))
+	midpoints = zeros(length(node.swc))
+
+	for i_soil in eachindex(node.swc)
+		k_soil[i_soil] = soil_k_ratio_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])
+		midpoint = (node.soil_bounds[i_soil] + node.soil_bounds[i_soil+1]) /2 * 1000
+		midpoints[i_soil] = midpoint;
+		p_soil_tot[i_soil] = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])*mpa2mm + midpoint
+	end
+
+	k_soil *= k_soil_max
+
+	p_diff = -1*diff(p_soil_tot) #in mm
+	layer_len = -1*diff(midpoints)
+	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len * deltaT #mm/s * mm / mm * s
+
+	#drainage = k_soil*FT(0.15*6)*deltaT
+	drainage = k_soil*slope_index*deltaT
+	#drainage = 0
+	
+	runoff += drainage[length(k_soil)]
+	
+	node.swc[1:(length(k_soil)-1)] -= q_down ./ layer_thick[1:(length(k_soil)-1)]
+	node.swc[2:length(k_soil)] += q_down ./ layer_thick[2:length(k_soil)]
+	
+	node.swc[length(k_soil)] -= drainage[length(k_soil)] ./ layer_thick[length(k_soil)]
+	#node.swc -= drainage ./ layer_thick
+	
+	for i_soil in eachindex(node.swc)
+		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	end
+	
+	#return runoff
+end	
