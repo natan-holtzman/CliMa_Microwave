@@ -30,6 +30,7 @@ fV = abs2.((eps*mycostheta .- sqrt.(eps .- mysin2theta)) ./ (eps*mycostheta .+ s
 
 #leafpot = mean(sim_res1[3],dims=2);
 leafvol_rel = 1 .+ pvs*leafpot;
+leafvol_rel[leafvol_rel .< 0] .= 0;
 laiM = sim_res[1].LAI_modis;
 
 vod = leafvol_rel .* (alpha .+ laiM*beta);
@@ -95,6 +96,7 @@ while (itercount < maxiter) & (err_diff > stop_crit)
 	
 	itercount = itercount + 1;
 	leafvol_rel = 1 .+ k*leafpot;
+	leafvol_rel[leafvol_rel .< 0] .= 0;
 	vod = leafvol_rel .* (alpha .+ laiM * beta);
 	gamma = exp.(-1*vod / mycostheta);
 

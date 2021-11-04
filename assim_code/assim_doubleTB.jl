@@ -30,22 +30,22 @@ noise_std = 1.3;
 noise_var = noise_std^2
 
 trueTB_leaf = get_TB(sim_res1, mean(sim_res1[3],dims=2), 0.25, 1, 1/50);
-obsH = trueTB_leaf[1] + noise_std*randn(Float64, length(trueTB[1]));
-obsV = trueTB_leaf[2] + noise_std*randn(Float64, length(trueTB[1]));
+obsH_leaf = trueTB_leaf[1] + noise_std*randn(Float64, length(trueTB_leaf[1]));
+obsV_leaf = trueTB_leaf[2] + noise_std*randn(Float64, length(trueTB_leaf[1]));
 
 trueTB_trunk =  get_TB(sim_res1, sim_res1[5], 0.25, 1, 1/50); 
-obsH2 = trueTB_trunk[1] + noise_std*randn(Float64, length(trueTB[1]));
-obsV2 = trueTB_trunk[2] + noise_std*randn(Float64, length(trueTB[1]));
+obsH_trunk = trueTB_trunk[1] + noise_std*randn(Float64, length(trueTB_leaf[1]));
+obsV_trunk = trueTB_trunk[2] + noise_std*randn(Float64, length(trueTB_leaf[1]));
 
 using Distributions
 using LabelledArrays
 using LinearAlgebra
 
-obs_mask = zeros(length(obsH));
+obs_mask = zeros(length(obsH_leaf));
 obs_mask[2:(24*3):end] .= 1;
 obs_mask[(2+12):(24*3):end] .= 1;
 
-#obs_mask = ones(length(obsH));
+#obs_mask = ones(length(obsH_leaf));
 
 obs_mask = obs_mask .== 1;
 
@@ -66,13 +66,13 @@ function log_p_nolabel(a, k0, alpha0, beta0, k2, alpha2, beta2, maxiter, stop_cr
 
 
 	if isinf(p)
-		return -Inf, 0,0,0,0;
+		return -Inf, 0,0,0,0,0,0;
 	else
 		try
 			sim_res = run_sim_2(convert(Array{FT}, exp.(a))...);
 
 			if isnan(mean(sim_res[1].leafpot))
-				return -Inf, 0, 0, 0, 0;
+				return -Inf, 0, 0, 0, 0,0,0;
 			else
 				optim_res_leaf = optim_vod_stages(obsH_leaf[obs_mask], obsV_leaf[obs_mask],
 							mean(sim_res[3],dims=2)[obs_mask], sim_res[2][:,1][obs_mask],
@@ -93,13 +93,13 @@ function log_p_nolabel(a, k0, alpha0, beta0, k2, alpha2, beta2, maxiter, stop_cr
 				return p,p0,sim_res,sim_TB_leaf,sim_TB_trunk,optim_res_leaf,optim_res_trunk;
 			end
 		catch err_occurred
-			return -Inf, 0,0,0,0;
+			return -Inf, 0,0,0,0,0,0;
 		end
 	end
 end
 
 
-function log_p_err(error_var, new_error_var, pred_TB)
+function log_p_err(error_var, new_error_var, pred_TB, obsH, obsV)
 	p0 = 0;
 	p1 = 0;
 	
@@ -116,9 +116,9 @@ end
 
 function runAMH(x_init, niter, burnlen)
 
-        k0,k2 = exp(rand(Uniform(log(0.01),log(0.75)),2));
-        alpha0,alpha2 = exp(rand(Uniform(log(0.25),log(2)),2));
-        beta0,beta2 = exp(rand(Uniform(log(1/100),log(1/25)),2));
+        k0,k2 = exp.(rand(Uniform(log(0.01),log(0.75)),2));
+        alpha0,alpha2 = exp.(rand(Uniform(log(0.25),log(2)),2));
+        beta0,beta2 = exp.(rand(Uniform(log(1/100),log(1/25)),2));
 
 	pars = Array(x_init);
 
@@ -162,9 +162,9 @@ function runAMH(x_init, niter, burnlen)
 		
 		chain[j,1:nPar] = pars;
 		chain[j,nPar*2+1] = ll0;
-		chain[j,nPar*2+2] = err_leaf;
-		chain[j,nPar*2+3] = err_trunk		
-		chain[j,(nPar*2+3):end] = vcat(optim_res0_leaf[1:3], optim_res0_trunk[1:3]);
+		chain[j,nPar*2+2] = err0_leaf;
+		chain[j,nPar*2+3] = err0_trunk;		
+		chain[j,(nPar*2+4):end] = vcat(optim_res0_leaf[1:3], optim_res0_trunk[1:3]);
 
 		if j > burnlen
 			mycov = (1-10^-6)*cov(chain[(j-burnlen):j,1:nPar])  + 10^-6*I;
@@ -186,16 +186,16 @@ function runAMH(x_init, niter, burnlen)
 		end
 		
 		err_prop_leaf = rand(LogNormal(log(err0_leaf), 0.01));
-		p0_new, p1_new = log_p_err(err0_leaf, err_prop_leaf, tb0_leaf);
-		mhratio_err = exp(p1_new - p0_new) * err_prop/err0;
+		p0_new, p1_new = log_p_err(err0_leaf, err_prop_leaf, tb0_leaf, obsH_leaf, obsV_leaf);
+		mhratio_err = exp(p1_new - p0_new) * err_prop_leaf/err0_leaf;
 		randIe = rand();
 		if randIe < mhratio_err
 			err0_leaf = err_prop_leaf;
 		end
 
 		err_prop_trunk = rand(LogNormal(log(err0_trunk), 0.01));
-		p0_new, p1_new = log_p_err(err0_trunk, err_prop_trunk, tb0_trunk);
-                mhratio_err = exp(p1_new - p0_new) * err_prop/err0;
+		p0_new, p1_new = log_p_err(err0_trunk, err_prop_trunk, tb0_trunk, obsH_trunk, obsV_trunk);
+                mhratio_err = exp(p1_new - p0_new) * err_prop_trunk/err0_trunk;
                 randIe = rand();
                 if randIe < mhratio_err
                         err0_trunk = err_prop_trunk;
@@ -217,18 +217,18 @@ end
 
 function init_works()
 
-	k0,k2 = exp(rand(Uniform(log(0.01),log(0.75)),2));
-	alpha0,alpha2 = exp(rand(Uniform(log(0.25),log(2)),2));
-	beta0,beta2 = exp(rand(Uniform(log(1/100),log(1/25)),2));
+	k0,k2 = exp.(rand(Uniform(log(0.01),log(0.75)),2));
+	alpha0,alpha2 = exp.(rand(Uniform(log(0.25),log(2)),2));
+	beta0,beta2 = exp.(rand(Uniform(log(1/100),log(1/25)),2));
 
 	x0 = rand(prior_dist, 1)[:,1];
 
         ll_init,p0,sim_res0,tb0_leaf,tb0_trunk,optim_res0_leaf,optim_res0_trunk = log_p_nolabel(x0,k0,alpha0,beta0,k2,alpha2,beta2,
-                                                                                          10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),pars);
+                                                                                          10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),x0);
 	while isinf(ll_init)
 		x0 = rand(prior_dist, 1)[:,1];
         	ll_init,p0,sim_res0,tb0_leaf,tb0_trunk,optim_res0_leaf,optim_res0_trunk = log_p_nolabel(x0,k0,alpha0,beta0,k2,alpha2,beta2,
-												10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),pars);
+												10000,10^-6, 1.7,1.7, (obsH_leaf,obsV_leaf),(obsH_trunk,obsV_trunk),x0);
 	end
 	return x0, ll_init
 end
