@@ -34,7 +34,7 @@ mpa2mm = FT(10^6/9.8);
 deltaT = FT(60*30)
 
 
-include("create_spac_no_angles.jl")
+include("create_spac_setsoil.jl")
 include("land_utils4.jl")
 include("cap_funs.jl")
 
@@ -50,7 +50,7 @@ function create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_s
 psi_sat = FT(p20 / 0.2^(-1*b_soil));
 
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_soil, FT(40), 1);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), 1);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,

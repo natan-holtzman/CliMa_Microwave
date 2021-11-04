@@ -31,7 +31,7 @@ function update_gsw!(clayer::CanopyLayer{FT},
             photo_set::AbstractPhotoModelParaSet{FT},
             envir::AirLayer{FT},
             Δt::FT;
-            τ::FT = FT(1e-5)
+            τ::FT = FT(1e-6)
 ) where {FT<:AbstractFloat} 
 (
     # unpack values
