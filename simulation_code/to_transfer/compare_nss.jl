@@ -73,14 +73,14 @@ include("rebuild_sim_ij.jl")
 println("No capacitance")
 sim_res1 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1);
 
-sim_res1_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1);
+#sim_res1_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1);
 
 
 include("rebuild_sim_ij_nss.jl")
 println("Old capacitance")
 
 sim_res2 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1, 1, 1e-5);
-sim_res2_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,1, 1e-5);
+#sim_res2_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,1, 1e-5);
 
 
 include("rebuild_sim_ij_par_vol.jl")
@@ -121,6 +121,7 @@ legend()
 show()
 =#
 
+#=
 dayrange = collect(1:Int(N/48))
 
 figure(figsize=(12,6))
@@ -156,3 +157,4 @@ xlabel("Time (hours)")
 ylabel("Leaf water potential (mol/m2/s)")
 legend()
 show()
+=#
