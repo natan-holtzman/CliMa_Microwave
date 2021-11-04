@@ -41,16 +41,13 @@ include("cap_funs.jl")
 
 K_STEFAN = FT(Stefan());
 
-function create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult)
+function create_moflux_node(vcmax_par, k_plant, k_soil,  z_soil, smc0, storage_mult)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1
 #vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult = parlist
 
-psi_sat = FT(p20 / 0.2^(-1*b_soil));
-
-
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_soil, FT(40), 1);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), 1);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,

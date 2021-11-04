@@ -71,7 +71,7 @@ soil_init1 = 0.38;
 #include("rebuild_sim_ij.jl")
 include("sim_vary_new_stomata.jl")
 println("No capacitance")
-sim_res1 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,FT(1),FT(1e-5),1);
+sim_res1 = run_sim(FT(22),FT(0.33),FT(3),FT(2), FT(20), FT(1e-4), FT(700),istart,N, soil_init1,FT(1),FT(1e-5),1);
 
 #sim_res1_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1);
 
@@ -79,16 +79,16 @@ sim_res1 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),F
 #include("rebuild_sim_ij_nss.jl")
 println("Old capacitance")
 
-sim_res2 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,FT(1),FT(1e-5),2);
+sim_res2 = run_sim(FT(22),FT(0.33),FT(3),FT(2), FT(20), FT(1e-4), FT(700),istart,N, soil_init1,FT(1),FT(1e-5),2);
 #sim_res2_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,1, 1e-5);
 
 
 #include("rebuild_sim_ij_par_vol.jl")
 println("New capacitance")
 
-sim_res3 = run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,FT(0.5),FT(1e-5),3);
+sim_res3 = run_sim(FT(22),FT(0.33),FT(3),FT(2), FT(20), FT(1e-4), FT(700),istart,N, soil_init1,FT(0.5),FT(1e-5),3);
 
-sim_res4_time = @timed run_sim(FT(22),FT(1.5), FT(20), FT(1e-4), FT(2.5), FT(2.0), FT(700),FT(0.45),istart,N, soil_init1,FT(2),FT(1e-5),3);
+sim_res4_time = @timed run_sim(FT(22), FT(0.33),FT(3),FT(2),FT(20), FT(1e-4), FT(700),istart,N, soil_init1,FT(2),FT(1e-5),3);
 
 sim_res4 = sim_res4_time.value;
 

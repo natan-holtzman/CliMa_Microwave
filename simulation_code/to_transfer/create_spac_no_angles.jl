@@ -5,10 +5,7 @@ function create_spac(
             sm::AbstractStomatalModel = OSMWang{FT}(),
             vcmax::FT = FT(30),
             kmax::FT = FT(0.3),
-			psi_sat::FT = FT(0.014),
-			b_soil::FT = FT(5.3),
-		z_soil::FT = FT(0.7),  
-	porosity::FT = FT(0.45),     
+		z_soil::FT = FT(0.7),    
      chl::FT = FT(40),
 	 N_slice::Int = 1
 ) where {FT<:AbstractFloat} 

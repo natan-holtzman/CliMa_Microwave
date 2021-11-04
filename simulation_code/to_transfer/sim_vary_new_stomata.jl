@@ -65,7 +65,7 @@ K_STEFAN = FT(Stefan());
 #istart = 48*365*2 - 52*48 #+ 165*48
 df_raw = CSV.read("../../data/moflux_land_data_newnames_7.csv", DataFrame);
 
-function run_sim(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, istart, N, smc0, storage_mult, buffrate,scheme_number)
+function run_sim(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -100,15 +100,14 @@ df[!,"pl1"] = zeros(N)
 df[!,"pl2"] = zeros(N)
 
 if scheme_number == 3
-	node = create_moflux_node(vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult);
+	node = create_moflux_node(vcmax_par, k_plant, k_soil, z_soil, smc0, storage_mult);
 else
-	psi_sat = FT(p20 / 0.2^(-1*b_soil));
-	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,psi_sat, b_soil, z_soil, n_soil, FT(40));
+	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40));
 end
 
-k_weibB = 3;
-k_weibC = 2;
-k_rel_crit = FT(0.33);
+#k_weibB = 3;
+#k_weibC = 2;
+#k_rel_crit = FT(0.33);
 update_Weibull!(node, FT(k_weibB), FT(k_weibC));
 
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,
