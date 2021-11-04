@@ -96,14 +96,14 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 		
 	p0 = p+0 #assumes both previous and proposed parameters are in prior range 
         p0 += logpdf(MvNormal(obsET, sqrt(ET_var)), oldET);
-        p0 += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), oldSMC);
+        #p0 += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), oldSMC);
 
 
 	try		
 		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), 
 									  FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), 
 									  FT(exp(v.logBsoil)), FT(exp(v.logP20)), 
-									FT(exp(v.logZsoil)), FT(exp(v.logNsoil)), istart, N, soil0, FT(exp(v.logSlope))));
+									FT(1650), FT(exp(v.logNsoil)), istart, N, soil0, FT(exp(v.logSlope))));
 
 	if isnan(mean(sim_res[1].leafpot))
 		return -Inf, 0,0,p0
@@ -114,7 +114,7 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 		simSMC = sum(reshape(sim_res[2][:,1], (24,:)),dims=1)[1,:]/24;
 
 		p += logpdf(MvNormal(obsET, sqrt(ET_var)), simET);
-		p += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), simSMC);
+		#p += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), simSMC);
 
 		return p, simET, simSMC, p0
 	end
@@ -273,7 +273,7 @@ return x0, ll_init
 end
 
 
-init_name = "init_par_LL_calib_Scrit_drain.csv"
+init_name = "init_par_opt_etOnly.csv"
 
 NPAR = 9;
 
@@ -298,9 +298,9 @@ a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 c1, etpost, smcpost = runAMH(a01, 10000, 500);
 
 dfc = DataFrame(c1);
-CSV.write("post_ET_SMC_newvar_Scrit_drain.csv",dfc);
+CSV.write("post_par_etOnly.csv",dfc);
 
-CSV.write("postET_scrit.csv", DataFrame(etpost));
-CSV.write("postSMC_scrit.csv", DataFrame(smcpost));
+CSV.write("postET_scrit_etOnly.csv", DataFrame(etpost));
+CSV.write("postSMC_scrit_etOnly.csv", DataFrame(smcpost));
 
 

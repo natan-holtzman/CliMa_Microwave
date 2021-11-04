@@ -48,19 +48,19 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
         p += logpdf(Uniform(log(0.4), log(0.6)), v.logNsoil);
         p += logpdf(Uniform(log(250), log(3000)), v.logZsoil);
         p += logpdf(Uniform(log(0.005), log(0.5)), v.logSlope);
- p += logpdf(Uniform(log(30), log(650)), v.logG1);
+ p += logpdf(Uniform(log(30), log(1200)), v.logG1);
  p += logpdf(Uniform(log(0.75), log(8)), v.logWeibC);
 		
 	p0 = p+0 #assumes both previous and proposed parameters are in prior range 
         p0 += logpdf(MvNormal(obsET, sqrt(ET_var)), oldET);
-        p0 += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), oldSMC);
+        #p0 += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), oldSMC);
 
 
 	try		
 		sim_res = convert_sim(run_sim(FT(exp(v.logVcmax)),FT(exp(v.logScrit)), 
 									  FT(exp(v.logKmaxPlant)), FT(exp(v.logKmaxSoil)), 
 									  FT(exp(v.logBsoil)), FT(exp(v.logP20)), 
-									FT(exp(v.logZsoil)), FT(exp(v.logNsoil)),
+									FT(1650), FT(exp(v.logNsoil)),
 						 istart, N, soil0, FT(exp(v.logSlope)),
 							FT(exp(v.logG1)), FT(exp(v.logWeibC))));
 
@@ -73,7 +73,7 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
 		simSMC = sum(reshape(sim_res[2][:,1], (24,:)),dims=1)[1,:]/24;
 
 		p += logpdf(MvNormal(obsET, sqrt(ET_var)), simET);
-		p += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), simSMC);
+		#p += logpdf(MvNormal(obsSMC,sqrt(SMC_var)), simSMC);
 
 		return p, simET, simSMC, p0
 	end
@@ -199,7 +199,7 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
   logSlope=rand(Uniform(log(0.005), log(0.5))),
- logG1 = rand(Uniform(log(30), log(650))),
+ logG1 = rand(Uniform(log(30), log(1200))),
 logWeibC = rand(Uniform(log(0.75), log(8)))
 			 );
 
@@ -220,7 +220,7 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
    logSlope=rand(Uniform(log(0.005), log(0.5))),
- logG1 = rand(Uniform(log(30), log(650))),
+ logG1 = rand(Uniform(log(30), log(1200))),
 logWeibC = rand(Uniform(log(0.75), log(8)))
                          );
 
@@ -235,7 +235,7 @@ return x0, ll_init
 end
 
 
-init_name = "init_calib_medlyn0.csv"
+init_name = "init_calib_medlyn0_etOnly.csv"
 
 NPAR = 11;
 
@@ -260,9 +260,9 @@ a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 c1, etpost, smcpost = runAMH(a01, 10000, 500);
 
 dfc = DataFrame(c1);
-CSV.write("post_calib_medlyn0.csv",dfc);
+CSV.write("post_calib_medlyn0_etOnly.csv",dfc);
 
-CSV.write("postET_medlyn0.csv", DataFrame(etpost));
-CSV.write("postSMC_medlyn0.csv", DataFrame(smcpost));
+CSV.write("postET_medlyn0_etOnly.csv", DataFrame(etpost));
+CSV.write("postSMC_medlyn0_etOnly.csv", DataFrame(smcpost));
 
 

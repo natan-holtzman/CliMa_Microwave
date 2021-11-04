@@ -48,7 +48,7 @@ function log_p_nolabel(a,  ET_var, SMC_var, oldET, oldSMC)
         p += logpdf(Uniform(log(0.4), log(0.6)), v.logNsoil);
         p += logpdf(Uniform(log(250), log(3000)), v.logZsoil);
         p += logpdf(Uniform(log(0.005), log(0.5)), v.logSlope);
- p += logpdf(Uniform(log(30), log(650)), v.logG1);
+ p += logpdf(Uniform(log(30), log(1200)), v.logG1);
  p += logpdf(Uniform(log(0.75), log(8)), v.logWeibC);
 		
 	p0 = p+0 #assumes both previous and proposed parameters are in prior range 
@@ -199,7 +199,7 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
   logSlope=rand(Uniform(log(0.005), log(0.5))),
- logG1 = rand(Uniform(log(30), log(650))),
+ logG1 = rand(Uniform(log(30), log(1200))),
 logWeibC = rand(Uniform(log(0.75), log(8)))
 			 );
 
@@ -220,7 +220,7 @@ x0 = LVector(logVcmax=rand(Uniform(log(10), log(120))),
  logZsoil=rand(Uniform(log(250), log(3000))),
  logNsoil=rand(Uniform(log(0.4), log(0.6))),
    logSlope=rand(Uniform(log(0.005), log(0.5))),
- logG1 = rand(Uniform(log(30), log(650))),
+ logG1 = rand(Uniform(log(30), log(1200))),
 logWeibC = rand(Uniform(log(0.75), log(8)))
                          );
 
