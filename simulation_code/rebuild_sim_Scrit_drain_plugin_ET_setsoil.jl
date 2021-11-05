@@ -22,43 +22,22 @@ const FT = Float32
 struct EarthParameterSet <: AbstractEarthParameterSet end
 const param_set = EarthParameterSet()
 
-const FT = Float32
-
-#=
-#import Land.PlantHydraulics.xylem_p_crit
-function xylem_p_crit2(
-            vc::WeibullSingle{FT},
-            f_st::FT = FT(1)
-)
-    @unpack b,c = vc;
-    return -b * log( FT(100) ) ^ (1 / c) * f_st
-end
-=#
-
-
-
-
-
 KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
+K_STEFAN = FT(Stefan());
+
 
 deltaT = FT(60*30)
 
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
 
-include("create_spac_setsoil.jl")
-include("land_utils4.jl")
 
-#using Plots
+#include("create_spac_setsoil.jl")
+#include("land_utils4.jl")
 
-K_STEFAN = FT(Stefan());
 
-#N      = 48*7 #only run for 4 days for quick testing
-#istart = 48*365*1 - 52*48 + 165*48 #+ 180*48 - 3*48
-#N = 48*365
-#istart = 48*365*2 - 52*48 #+ 165*48
-df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
-
-function run_sim(vcmax_par, k_rel_crit, k_plant, k_soil, z_soil, istart, N, smc0, slope_index,use_flux,k_weibB,k_weibC)
+function run_sim(vcmax_par, k_rel_crit, k_plant, k_soil, z_soil, istart, N, smc0, slope_index,use_flux,k_weibB,k_weibC,df_raw)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -214,10 +193,9 @@ for i in eachindex(df.Day)
 			gsw_control!(photo_set, iPS, iEN);
 		end
 		
-		#iHS.p_crt = FT(-iHS.vc.b * log(1000)^(1/iHS.vc.c));
-		#iPS.ec    = critical_flow(iHS, iPS.ec);
-        #iPS.ec    = max(FT(0), iPS.ec);
-		
+		iHS.p_crt = -iHS.vc.b * log(FT(1000)) ^ (1/iHS.vc.c);
+		iPS.ec    = critical_flow(iHS, iPS.ec);
+        iPS.ec    = max(FT(0), iPS.ec);
 		
 		# update the flow rates
 		for iLF in 1:(nSL+1)
@@ -253,6 +231,7 @@ for i in eachindex(df.Day)
 	subIter2 = 4;	
 	for subI2 in 1:subIter2
 		
+		pressure_profile!(node.plant_hs, SteadyStateMode(); update=false);
 		do_soil_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_index)		
 		
 		for i_root in eachindex(node.plant_hs.roots)
@@ -260,8 +239,6 @@ for i in eachindex(df.Day)
 			node.plant_hs.roots[i_root].p_ups = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[rootI])
 		end
 		
-		pressure_profile!(node.plant_hs, SteadyStateMode(); update=false);
-
 		# update canopy layer p_ups, which will be passed to each leaf
 		for _i_can in eachindex(node.plant_hs.leaves)
 			_iHS = node.plant_hs.leaves[_i_can];

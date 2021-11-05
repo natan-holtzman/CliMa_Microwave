@@ -50,12 +50,13 @@ tight_layout()
 ax_all[2,4].axis("off")
 =#
 
+df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
 
 include("mironov.jl");
 include("tau_omega_funs.jl");
 #include("../simulation_code/sim_cap_nov4.jl");
-#include("../simulation_code/rebuild_sim_Scrit_drain_plugin_ET_setsoil.jl");
+
 
 #include("../simulation_code/new_capacitance/sim_vary_new_stomata.jl");
 include("time_averaging.jl")
@@ -64,15 +65,29 @@ N = 48*365
 istart = 48*365*2 - 52*48 #+ 230*48
 soil0 = 0.39;
 
-function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT)
-	#return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC));
-	#return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC, FT(0.001)));
-	return convert_sim(run_sim(vcmax_par, k_frac, weibB, weibC, 		k_plant, k_soil, z_soil, istart, N, soil0, FT(1), 1e-5, 3));
-	#						   vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number
+include("../simulation_code/rebuild_sim_Scrit_drain_plugin_ET_setsoil.jl");
+function run_sim_old(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT)
+	return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC, df_raw));
 end
 
-sim_res0 = run_sim_2(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1));
+#sim_res0 = run_sim_old(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1));
 
+include("../simulation_code/new_capacitance/sim_vary_new_stomata.jl");
+function run_sim_new(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, scheme::Int, storage_mult::FT)
+	return convert_sim(run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, storage_mult, 1e-5, scheme, df_raw));
+end
+
+sim_res0_x = run_sim_new(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1),1, FT(1));
+
+sim_res0_c0 = run_sim_new(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1),3, FT(0.1));
+
+sim_res0_c1 = run_sim_new(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1),3, FT(1));
+
+sim_res0_c10 = run_sim_new(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1),3, FT(10));
+
+
+
+#=
 noise_std = 1.3;
 noise_var = noise_std^2
 
@@ -124,7 +139,7 @@ for ax in vec(ax_all)[1:8]
     global j += 1
 end
 tight_layout()
-
+=#
 
 
 

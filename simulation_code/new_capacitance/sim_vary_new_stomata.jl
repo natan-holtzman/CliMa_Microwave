@@ -26,44 +26,28 @@ const FT = Float32
 struct EarthParameterSet <: AbstractEarthParameterSet end
 const param_set = EarthParameterSet()
 
-const FT = Float32
-
-#=
-#import Land.PlantHydraulics.xylem_p_crit
-function xylem_p_crit2(
-            vc::WeibullSingle{FT},
-            f_st::FT = FT(1)
-)
-    @unpack b,c = vc;
-    return -b * log( FT(100) ) ^ (1 / c) * f_st
-end
-=#
-
-
-
-
-
 KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
+K_STEFAN = FT(Stefan());
 
 deltaT = FT(60*30)
 
+#=
 include("create_spac_no_angles.jl")
 include("create_node_newvol.jl")
 include("land_utils4_new.jl")
 include("cap_funs.jl")
+=#
 
-#using Plots
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/cap_funs.jl")
+include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_node_newvol.jl")
 
-K_STEFAN = FT(Stefan());
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_spac_no_angles.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/land_utils4_new.jl")
 
-#N      = 48*7 #only run for 4 days for quick testing
-#istart = 48*365*1 - 52*48 + 165*48 #+ 180*48 - 3*48
-#N = 48*365
-#istart = 48*365*2 - 52*48 #+ 165*48
-df_raw = CSV.read("../../data/moflux_land_data_newnames_7.csv", DataFrame);
-
-function run_sim(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number)
+function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -113,6 +97,12 @@ update_Weibull!(node, FT(k_weibB), FT(k_weibC));
 		rt_con, soil_opt, stomata_model, wl_set, n_root = node;
 @unpack lidf, nAzi, nIncl = canopy_rt;
 @unpack dWL, iPAR = wl_set;
+in_rad_bak = deepcopy(in_rad);
+nSL = nAzi * nIncl;
+in_Erad = in_rad_bak.E_direct .+ in_rad_bak.E_diffuse;
+#in_PPFD = sum( e2phot(dWL, in_Erad)[iPAR] ) * FT(1e6);
+in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iPAR] ) * FT(1e6);
+
 
 if scheme_number == 2
 
@@ -204,29 +194,8 @@ psi_record_trunk = zeros(FT,N);
 
 rbase =  Q10TD{FT}(0, 298.15, 1.7)
 
-global hs0 = deepcopy(plant_hs);
-
-in_rad_bak = deepcopy(in_rad);
-nSL = nAzi * nIncl;
-in_Erad = in_rad_bak.E_direct .+ in_rad_bak.E_diffuse;
-#in_PPFD = sum( e2phot(dWL, in_Erad)[iPAR] ) * FT(1e6);
-in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iPAR] ) * FT(1e6);
-
 # iterate through the weather data
 for i in eachindex(df.Day)
-
-	
-	if i==2
-		global hs1 = deepcopy(plant_hs);
-	end
-	
-	if i==3
-		global hs2 = deepcopy(plant_hs);
-	end
-	
-	t_soil = FT(df.T_SOIL[1] + 273.15);
-
-
 #=
 	if mod(i, 48) == 0
 		println(Int(i/48))
@@ -234,7 +203,7 @@ for i in eachindex(df.Day)
 	end	
 =#
 
-
+	t_soil = FT(df.T_SOIL[1] + 273.15);
 	update_LAI!(node, FT(df.LAI_modis[i]));
 	
 
@@ -255,7 +224,7 @@ for i in eachindex(df.Day)
 	#update_Weibull!(node, FT(weib_b), FT(3.0));
 	#update_Kmax!(node, FT(k_plant));
 	
-	df.pl1[i] = node.plant_hs.leaves[1].p_leaf*1
+	#df.pl1[i] = node.plant_hs.leaves[1].p_leaf*1
 
 	
 	# update fluxes
@@ -273,9 +242,15 @@ for i in eachindex(df.Day)
 		iEN.p_a   = iEN.p_atm * 4e-4;
 		iEN.p_O₂  = iEN.p_atm * 0.209;
 		iEN.p_sat = saturation_vapor_pressure( param_set, iEN.t_air , Liquid());
-		iEN.vpd   = df.VPD[i] * 100;
-		iEN.p_H₂O = iEN.p_sat - iEN.vpd;
-		iEN.RH    = iEN.p_H₂O / iEN.p_sat;
+		
+		iEN.RH    = FT(df.RelHum[i]);
+		iEN.p_H₂O = iEN.RH * iEN.p_sat;
+		iEN.vpd   = (FT(1)-iEN.RH) * iEN.p_sat;
+	
+		#iEN.vpd   = df.VPD[i] * 100;
+		#iEN.p_H₂O = iEN.p_sat - iEN.vpd;
+		#iEN.RH    = iEN.p_H₂O / iEN.p_sat;
+		
 		iEN.wind  = df.WIND[i];
 
 		# prescribe leaf temperature
@@ -296,7 +271,7 @@ for i in eachindex(df.Day)
 		
 	end
 	
-	df.pl2[i] = node.plant_hs.leaves[1].p_leaf*1
+	#df.pl2[i] = node.plant_hs.leaves[1].p_leaf*1
 	
 	glw_mean = 0	
 	
@@ -309,17 +284,10 @@ for i in eachindex(df.Day)
 		iPS = plant_ps[i_can];
 		iRT = n_canopy + 1 - i_can;
 		
-		#=
-		iHS.p_crt = FT(-p_crit);
-		iPS.ec    = critical_flow(iHS, iPS.ec);
-        iPS.ec    = max(FT(0), iPS.ec);
-		=#
-		
 		iHS.p_crt = FT(-iHS.vc.b * log(FT(1/k_rel_crit))^(1/iHS.vc.c));
 		iPS.ec    = critical_flow(iHS, iPS.ec);
         iPS.ec    = max(FT(0), iPS.ec);
 
-		
 		# iterate for 15 times to find steady state solution
 		for subI in 1:subIter
 		# calculate the photosynthetic rates
@@ -329,12 +297,9 @@ for i in eachindex(df.Day)
 			gsw_control!(photo_set, iPS, iEN);
 		end
 		
-		
 		iHS.p_crt = -iHS.vc.b * log(FT(1000)) ^ (1/iHS.vc.c);
 		iPS.ec    = critical_flow(iHS, iPS.ec);
         iPS.ec    = max(FT(0), iPS.ec);
-		
-		
 		
 		# update the flow rates
 		for iLF in 1:(nSL+1)
@@ -346,10 +311,7 @@ for i in eachindex(df.Day)
 		glw_mean += sum(iPS.g_lw)/(nSL+1)/n_canopy;
 	end;
 		
-		#update_Weibull!(node, FT(5.0), FT(5.0));
-		
-		# update flow profile and pressure history along the tree
-	
+	# update flow profile and pressure history along the tree
 	if scheme_number==1
 		branch_total_flow = 0;
 		for i_can in 1:n_canopy
@@ -381,9 +343,7 @@ for i in eachindex(df.Day)
 
 		end;
 	end
-	
-	subIter3 = 1
-	subIter2 = 4
+		subIter2 = 4
 	
 	if scheme_number==3
 		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
