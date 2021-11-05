@@ -1,0 +1,1 @@
+PROJECT_HOME = @__DIR__

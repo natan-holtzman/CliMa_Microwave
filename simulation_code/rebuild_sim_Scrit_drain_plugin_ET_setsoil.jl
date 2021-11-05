@@ -29,8 +29,11 @@ K_STEFAN = FT(Stefan());
 
 deltaT = FT(60*30)
 
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
+
+include(string(PROJECT_HOME,"/simulation_code/create_spac_setsoil.jl"))
+include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
 
 
 #include("create_spac_setsoil.jl")

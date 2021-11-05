@@ -1,5 +1,5 @@
-#include("updatefuns.jl")
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_hydraulics_layered.jl")
+include(string(PROJECT_HOME,"/simulation_code/updatefuns.jl"))
+include(string(PROJECT_HOME,"/simulation_code/create_hydraulics_layered.jl"))
 
 function create_spac(
             sm::AbstractStomatalModel = OSMWang{FT}(),
@@ -38,14 +38,16 @@ function create_spac(
 	#_rootdepth = FT(0.85);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.3,-0.55,-0.85]);
 
+	_air_bounds = convert(Array{FT},[0,5,9,12,16,18.5,20] );
+	
 	_tree_hs = create_tree2(FT(-1*_rootdepth), FT(9), FT(18.5), _soil_bounds,
-						   collect(FT,0:5:20), N_slice);
+						   _air_bounds, N_slice);
 	for _root in _tree_hs.roots
 		_root.sh = deepcopy(_soil_hs);
 	end;
 
 	_node = SPACMono{FT}(soil_bounds = _soil_bounds,
-						  air_bounds = collect(FT,0:5:20),
+						  air_bounds = _air_bounds,
 							  z_root = FT(-1*_rootdepth),
 							z_canopy = 18.5,
 							plant_hs = _tree_hs,

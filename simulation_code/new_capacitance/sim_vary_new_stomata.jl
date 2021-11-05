@@ -39,10 +39,17 @@ include("land_utils4_new.jl")
 include("cap_funs.jl")
 =#
 
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/cap_funs.jl")
-include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_node_newvol.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/cap_funs.jl")
+#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_node_newvol.jl")
+
+include(string(PROJECT_HOME,"/simulation_code/create_spac_setsoil.jl"))
+include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
+include(string(PROJECT_HOME,"/simulation_code/cap_funs.jl"))
+include(string(PROJECT_HOME,"/simulation_code/new_capacitance/create_node_newvol.jl"))
+
+
 
 #include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_spac_no_angles.jl")
 #include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/land_utils4_new.jl")

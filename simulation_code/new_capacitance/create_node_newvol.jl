@@ -33,12 +33,6 @@ mpa2mm = FT(10^6/9.8);
 
 deltaT = FT(60*30)
 
-
-#include("create_spac_no_angles.jl")
-#include("land_utils4_new.jl")
-#include("cap_funs.jl")
-
-
 K_STEFAN = FT(Stefan());
 
 function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult)
