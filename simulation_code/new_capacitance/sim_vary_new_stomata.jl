@@ -48,19 +48,10 @@ mpa2mm = FT(10^6/9.8);
 
 deltaT = FT(60*30)
 
-
-#include("../create_spac_no_angles.jl")
-#include("../land_utils4.jl")
-#include("../cap_funs.jl")
-#include("../create_node_newvol.jl")
-
-
-#include("../create_spac_setsoil.jl")
-#include("../create_node_newvol_newsoil.jl")
-include("hide_funs/create_spac_no_angles.jl")
-include("hide_funs/create_node_newvol.jl")
-include("hide_funs/land_utils4_new.jl")
-include("hide_funs/cap_funs.jl")
+include("create_spac_no_angles.jl")
+include("create_node_newvol.jl")
+include("land_utils4_new.jl")
+include("cap_funs.jl")
 
 #using Plots
 

@@ -41,7 +41,7 @@ include("cap_funs.jl")
 
 K_STEFAN = FT(Stefan());
 
-function create_moflux_node(vcmax_par, k_plant, k_soil,  z_soil, smc0, storage_mult)
+function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1

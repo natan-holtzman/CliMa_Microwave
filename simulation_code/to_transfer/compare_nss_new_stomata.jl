@@ -30,19 +30,17 @@ return return mean(reshape(x,(navg,:,size(x)[2])),dims=1)[1,:,:];
 end
 
 function avg2_df(x,navg)
+	ncol = Integer(size(x)[2]);
+	nrow = Integer(size(x)[1]/navg);
+	ans = deepcopy(x[1:nrow,:]);
 
-ncol = Integer(size(x)[2]);
-nrow = Integer(size(x)[1]/navg);
-ans = deepcopy(x[1:nrow,:]);
+	for j in 1:ncol
+	#println(x[1:10,j])
+	#println(avg2(x[1:10,j]))
+			ans[:,j] = avg2(x[:,j]);
+	end
 
-for j in 1:ncol
-#println(x[1:10,j])
-#println(avg2(x[1:10,j]))
-        ans[:,j] = avg2(x[:,j]);
-end
-
-return ans;
-
+	return ans;
 end
 
 function convert_sim(x)
@@ -91,6 +89,17 @@ sim_res3 = run_sim(FT(22),FT(0.33),FT(3),FT(2), FT(20), FT(1e-4), FT(700),istart
 sim_res4_time = @timed run_sim(FT(22), FT(0.33),FT(3),FT(2),FT(20), FT(1e-4), FT(700),istart,N, soil_init1,FT(2),FT(1e-5),3);
 
 sim_res4 = sim_res4_time.value;
+
+#=
+soil0 = FT(soil_init1)
+include("../../assim_code/time_averaging.jl")
+include("../rebuild_sim_Scrit_drain_plugin_ET_setsoil.jl")
+function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT)
+	return run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC);
+end
+sim_res_1b = run_sim_2(FT(22),FT(0.33), FT(20), FT(1e-4), FT(700),FT(3),FT(2));
+=#
+
 
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams");
 rcParams["lines.linewidth"] = 1;

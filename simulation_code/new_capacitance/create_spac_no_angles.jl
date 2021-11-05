@@ -1,11 +1,11 @@
-include("updatefuns.jl")
+include("updatefuns_new.jl")
 include("create_hydraulics_layered.jl")
 
 function create_spac(
             sm::AbstractStomatalModel = OSMWang{FT}(),
             vcmax::FT = FT(30),
             kmax::FT = FT(0.3),
-		z_soil::FT = FT(0.7),    
+		z_soil::FT = FT(1000),    
      chl::FT = FT(40),
 	 N_slice::Int = 1
 ) where {FT<:AbstractFloat} 
@@ -23,14 +23,25 @@ function create_spac(
 								   
 	#_soil_hs = BrooksCorey{FT}(stype= "Ozark", Θs = FT(porosity), Θr = FT(0.05), ϕs = psi_sat, b = b_soil);
 
+	#=
 	_totaldepth = FT(z_soil/1000);
 	_rootdepth = FT(z_soil/1000);
 	_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-z_soil/1000]);
+	=#
 	#_soil_bounds = collect(FT,[0,-0.1,-0.35,-0.7]);
 	
 	#_totaldepth = FT(0.85);
 	#_rootdepth = FT(0.85);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.3,-0.55,-0.85]);
+	
+	_totaldepth = FT(z_soil/1000);
+	_rootdepth = FT(z_soil/1000);
+	_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7]);
+	_soil_bounds[3:5] *= _totaldepth/FT(0.7);
+	
+	_totaldepth = -1*_soil_bounds[5];
+	_rootdepth = -1*_soil_bounds[5];
+	
 
 	_tree_hs = create_tree2(FT(-1*_rootdepth), FT(9), FT(18.5), _soil_bounds,
 						   collect(FT,0:5:20), N_slice);
