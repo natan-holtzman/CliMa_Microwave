@@ -1,5 +1,4 @@
-
-
+#update the stomatal conductance for empirical stomatal models
 function update_gsw!(clayer::CanopyLayer{FT},
             sm::EmpiricalStomatalModel{FT},
             photo_set::AbstractPhotoModelParaSet{FT},
@@ -25,7 +24,7 @@ function update_gsw!(clayer::CanopyLayer{FT},
 end
 
 
-
+#update the stomatal conductance for Wang optimal stomatal model
 function update_gsw!(clayer::CanopyLayer{FT},
             sm::OSMWang{FT},
             photo_set::AbstractPhotoModelParaSet{FT},
@@ -67,6 +66,8 @@ function update_gsw!(clayer::CanopyLayer{FT},
 )
 end
 
+#version of gas exchange functions from Land
+#modified by skipping fluorescence calculations
 
 function gas_exchange_nofluor!(
             photo_set::AbstractPhotoModelParaSet{FT},
@@ -173,61 +174,10 @@ function update_VJR!(node::SPACMono{FT}, ratio::FT) where {FT<:AbstractFloat}
 	
 end
 
-function do_soil!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT)
-	layer_thick = -1*diff(node.soil_bounds)*1000
-
-	runoff = FT(0);
-		
-	for i_root in eachindex(node.plant_hs.roots)
-		soil_layerI = node.plant_hs.root_index_in_soil[i_root]
-		
-		out_layer = node.plant_hs.roots[i_root].flow /KG_H_2_MOL_S * FT(1/node.ga*deltaT/(60*60));
-		
-		node.swc[soil_layerI] -= out_layer / layer_thick[soil_layerI]
-		node.swc[soil_layerI] = max(node.plant_hs.roots[soil_layerI].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[soil_layerI].sh.Θs));
-	end	
-
-	smc_rain = node.swc[1] + rain_in /layer_thick[1]
-	smc_rain = max(min(smc_rain, node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
-	node.swc[1] = smc_rain
-	
-	k_soil = zeros(length(node.swc))
-	p_soil_tot = zeros(length(node.swc))
-	midpoints = zeros(length(node.swc))
-
-	for i_soil in eachindex(node.swc)
-		k_soil[i_soil] = soil_k_ratio_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])
-		midpoint = (node.soil_bounds[i_soil] + node.soil_bounds[i_soil+1]) /2 * 1000
-		midpoints[i_soil] = midpoint;
-		p_soil_tot[i_soil] = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])*mpa2mm + midpoint
-	end
-
-	k_soil *= k_soil_max
-
-	p_diff = -1*diff(p_soil_tot) #in mm
-	layer_len = -1*diff(midpoints)
-	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len * deltaT #mm/s * mm / mm * s
-
-	#drainage = k_soil*FT(0.15*6)*deltaT
-	drainage = k_soil*FT(0.2)*deltaT
-	#drainage = 0
-	
-	runoff += drainage[length(k_soil)]
-	
-	node.swc[1:(length(k_soil)-1)] -= q_down ./ layer_thick[1:(length(k_soil)-1)]
-	node.swc[2:length(k_soil)] += q_down ./ layer_thick[2:length(k_soil)]
-	
-	node.swc[length(k_soil)] -= drainage[length(k_soil)] ./ layer_thick[length(k_soil)]
-	#node.swc -= drainage ./ layer_thick
-	
-	for i_soil in eachindex(node.swc)
-		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
-	end
-	
-	#return runoff
-end	
-
-
+#the following functions update the soil moisture given the flux into the roots
+#while accounting for rain entering the top layer, vertical drainage between the layers, 
+#and free drainage runoff out of the bottom layer if slope_index is greater than zero
+#set slope_index to zero to assume no runoff
 function do_soil_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
 	layer_thick = -1*diff(node.soil_bounds)*1000
 
@@ -282,63 +232,8 @@ function do_soil_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max:
 	#return runoff
 end	
 
-
-function do_soil_nss!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT)
-	layer_thick = -1*diff(node.soil_bounds)*1000
-
-	runoff = FT(0);
-		
-	for i_root in eachindex(node.plant_hs.roots)
-		soil_layerI = node.plant_hs.root_index_in_soil[i_root]
-		
-		out_layer = node.plant_hs.roots[i_root].q_in /KG_H_2_MOL_S * FT(1/node.ga*deltaT/(60*60));
-		
-		node.swc[soil_layerI] -= out_layer / layer_thick[soil_layerI]
-		node.swc[soil_layerI] = max(node.plant_hs.roots[soil_layerI].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[soil_layerI].sh.Θs));
-	end	
-
-	smc_rain = node.swc[1] + rain_in /layer_thick[1]
-	smc_rain = max(min(smc_rain, node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
-	node.swc[1] = smc_rain
-	
-	k_soil = zeros(length(node.swc))
-	p_soil_tot = zeros(length(node.swc))
-	midpoints = zeros(length(node.swc))
-
-	for i_soil in eachindex(node.swc)
-		k_soil[i_soil] = soil_k_ratio_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])
-		midpoint = (node.soil_bounds[i_soil] + node.soil_bounds[i_soil+1]) /2 * 1000
-		midpoints[i_soil] = midpoint;
-		p_soil_tot[i_soil] = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])*mpa2mm + midpoint
-	end
-
-	k_soil *= k_soil_max
-
-	p_diff = -1*diff(p_soil_tot) #in mm
-	layer_len = -1*diff(midpoints)
-	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len * deltaT #mm/s * mm / mm * s
-
-	#drainage = k_soil*FT(0.15*6)*deltaT
-	drainage = k_soil*FT(0.2)*deltaT
-	#drainage = 0
-	
-	runoff += drainage[length(k_soil)]
-	
-	node.swc[1:(length(k_soil)-1)] -= q_down ./ layer_thick[1:(length(k_soil)-1)]
-	node.swc[2:length(k_soil)] += q_down ./ layer_thick[2:length(k_soil)]
-	
-	node.swc[length(k_soil)] -= drainage[length(k_soil)] ./ layer_thick[length(k_soil)]
-	#node.swc -= drainage ./ layer_thick
-	
-	for i_soil in eachindex(node.swc)
-		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
-	end
-	
-	#return runoff
-end	
-
-
-
+#this function is the same as the previous one, but for use with non steady state plant hydraulics
+#because in that case the root water uptake is stored as root.q_in instead of root.flow
 function do_soil_nss_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
 	layer_thick = -1*diff(node.soil_bounds)*1000
 

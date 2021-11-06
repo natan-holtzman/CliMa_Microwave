@@ -1,5 +1,6 @@
-mpa2mm = FT(10^6/9.8);
+mpa2mm = FT(10^6/9.8); #mPa of water pressure to mm of water height
 
+#functions to update the pressure and conductivity of a plant, after its storage volumes have already been updated
 function update_pk_leaf!(tissue::LeafHydraulics{FT})
 	tissue.p_storage = (tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
 	tissue.p_element[1] = tissue.p_storage
@@ -34,8 +35,11 @@ function update_pk_tree!(plant_hs)
 
 end
 
-
-
+#The capacitance model solves a set of ODEs at each timestep
+#described by dv/dt = A*v + b
+#this function fills in the matrix A and vector b
+#using the state of the plant
+#note that it is designed to work with a system where each component only has one vertical slice
 
 function create_deriv_mat(plant_hs)
 
@@ -162,7 +166,11 @@ end
 
 using LinearAlgebra
 
-
+#this function solves the system of linear ODEs
+#dx/dt = deriv_mat*x + deriv_const
+#given the initial condition of x
+#it returns the value of x after the time interval deltaT
+#it also returns the integrals of the components of x over that time interval
 function solve_odes(deriv_mat, deriv_const, init_cond, deltaT)
 
 	e_val = eigvals(deriv_mat);
@@ -179,6 +187,7 @@ function solve_odes(deriv_mat, deriv_const, init_cond, deltaT)
 end
 
 #=
+#slower way of solving ODEs
 function solve_odes_exp(deriv_mat, deriv_const, init_cond, deltaT)
 	inv_deriv = inv(deriv_mat);
 	cprime = -inv_deriv * deriv_const;
@@ -189,6 +198,8 @@ function solve_odes_exp(deriv_mat, deriv_const, init_cond, deltaT)
 end
 =#
 
+#this function takes a plant hydraulic system and returns the pressure of each leaf,branch,trunk,and root
+#note that it is designed to work with a system where each component only has one vertical slice
 function get_p_prof2(plant_hs)
 	root_p = [x.p_element[1] for x in plant_hs.roots]
 	trunk_p = plant_hs.trunk.p_element[1];
@@ -212,7 +223,7 @@ function get_p_prof2(plant_hs)
 	return p_list
 end
 
-
+#same as previous function but returning current storage volume instead of pressure
 function get_v_prof2(plant_hs)
 	root_p = [x.v_storage[1] for x in plant_hs.roots]
 	trunk_p = plant_hs.trunk.v_storage[1];
@@ -235,7 +246,7 @@ function get_v_prof2(plant_hs)
 	return p_list
 end
 
-
+#sets volumes of each component to the values listed in newvols
 function set_vol!(plant_hs, newvals)
 	for ican in 1:plant_hs.n_canopy
 		plant_hs.leaves[ican].v_storage = newvals[ican]/plant_hs.leaves[ican].area;
@@ -249,7 +260,7 @@ function set_vol!(plant_hs, newvals)
 	end
 end
 
-
+#combines the above functions to advance the capacitance model by a time step
 function update_cap_mat!(plant_hs, deltaT)
 
 	volumes = get_v_prof2(plant_hs);
@@ -260,6 +271,8 @@ function update_cap_mat!(plant_hs, deltaT)
 	
 	set_vol!(plant_hs,newvals)
 
+	#compute the average value of root water uptake over the time step
+	#for each root
 	for iroot in 1:plant_hs.n_root
 		rootI = plant_hs.roots[iroot]
 		m = 1/rootI.pv.slope;

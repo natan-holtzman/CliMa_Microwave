@@ -1,4 +1,6 @@
 function create_tree2(
+#modified the default create_tree function to include the number of vertical slices as an argument
+#which was by default set to 5
             z_root::FT,
             z_trunk::FT,
             z_canopy::FT,

@@ -33,6 +33,10 @@ deltaT = FT(60*30)
 
 K_STEFAN = FT(Stefan());
 
+#this function creates a SPAC node and modifies it by editing the 
+#storage volume and PV curves
+
+
 function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
@@ -68,9 +72,10 @@ end
 
 total_water_vol = FT(storage_mult * 12 * node.ga * 1000/18.02); #in mol over the tree's area
 
+#actually the branch volumes should be normalized by each branch's share of total branch length
 for i in 1:n_canopy
 	plant_hs.leaves[i].v_maximum = FT(0.1)*total_water_vol / n_canopy /  plant_hs.leaves[i].area
-	#plant_hs.branch[i].v_maximum[1] = FT(0.1)*total_water_vol / n_canopy
+	plant_hs.branch[i].v_maximum = FT(0.1)*total_water_vol / n_canopy
 end
 
 plant_hs.trunk.v_maximum[1] = FT(0.8)*total_water_vol
@@ -79,26 +84,14 @@ for i in 1:n_root
 	plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol / n_root
 end
 
-rbase =  Q10TD{FT}(0, 298.15, 1.7)
-
-@unpack lidf, nAzi, nIncl = canopy_rt;
-@unpack dWL, iPAR = wl_set;
-in_rad_bak = deepcopy(in_rad);
-nSL = nAzi * nIncl;
-in_Erad = in_rad_bak.E_direct .+ in_rad_bak.E_diffuse;
-#in_PPFD = sum( e2phot(dWL, in_Erad)[iPAR] ) * FT(1e6);
-in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iPAR] ) * FT(1e6);
-
 w_soil = FT(smc0);		
 node.swc = ones(FT, length(node.swc))*w_soil;
-# update soil water matrices
-# need to adjust SWC to avoid problem in residual SWC at Niwot Ridge
 ψ_soil = soil_p_25_swc(plant_hs.roots[1].sh, w_soil);
 for root in plant_hs.roots
 	root.p_ups = ψ_soil;
 end;
 
-
+#set the plant water storage so the corresponding xylem potential is slightly below the soil water potential
 pot_init = 1+0.05*ψ_soil
 
 for i in 1:n_canopy
@@ -112,6 +105,8 @@ for i in 1:n_root
 	plant_hs.roots[i].v_storage = FT(pot_init) * plant_hs.roots[i].v_maximum
 end
 
+#then calculate the steady state plant water storage
+#and set plant state to that
 update_pk_tree!(plant_hs)
 volumes0 = get_v_prof2(plant_hs);
 dmat0, dvec0 = create_deriv_mat(plant_hs)
