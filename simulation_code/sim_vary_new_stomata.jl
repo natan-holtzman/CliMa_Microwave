@@ -32,30 +32,10 @@ K_STEFAN = FT(Stefan());
 
 deltaT = FT(60*30)
 
-#=
-include("create_spac_no_angles.jl")
-include("create_node_newvol.jl")
-include("land_utils4_new.jl")
-include("cap_funs.jl")
-=#
-
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/create_spac_setsoil.jl")
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/land_utils4.jl")
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/cap_funs.jl")
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_node_newvol.jl")
-
 include(string(PROJECT_HOME,"/simulation_code/create_spac_setsoil.jl"))
 include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
-#include(string(PROJECT_HOME,"/simulation_code/cap_funs.jl"))
 include(string(PROJECT_HOME,"/simulation_code/cap_funs_inv.jl"))
-
-#include(string(PROJECT_HOME,"/simulation_code/new_capacitance/create_node_newvol.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV.jl"))
-
-
-
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/create_spac_no_angles.jl")
-#include("C:/Users/natan/OneDrive - Leland Stanford Junior University/Documents/moflux_docs/git_test/CliMa_Microwave/simulation_code/new_capacitance/land_utils4_new.jl")
 
 function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw)
 
@@ -116,10 +96,10 @@ in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iP
 
 if scheme_number == 2
 
-	node.plant_hs.branch[1].v_maximum = node.plant_hs.branch[2].v_maximum
-	node.plant_hs.branch[1].v_storage = node.plant_hs.branch[2].v_storage
+	#node.plant_hs.branch[1].v_maximum = node.plant_hs.branch[2].v_maximum
+	#node.plant_hs.branch[1].v_storage = node.plant_hs.branch[2].v_storage
 
-	mypv = PVCurveLinear{Float32}(0.05f0, FT(buffrate));
+	mypv = PVCurveLinear{Float32}(0.2f0, FT(buffrate));
 	for i_can in 1:n_canopy
 		plant_hs.leaves[i_can].pv = mypv
 		plant_hs.branch[i_can].pv = mypv

@@ -30,5 +30,6 @@ Manifest.toml
 assim_code/run_*.sh
 
 #MCMC run output
-assim_code/*.csv
-assim_code/*/*.csv
+assim_code/outputs/*
+assim_code/old_funs/
+simulation_code/old_funs/

@@ -7,21 +7,24 @@ using StatsBase
 
 include("mironov.jl");
 include("tau_omega_funs.jl");
-include("../simulation_code/rebuild_sim_Scrit_drain_plugin_ET_setsoil.jl");
 include("time_averaging.jl")
 
-
-#N = 48*3
-#istart = 48*365*2 - 52*48 + 230*48
-
+df_raw = CSV.read("../data/moflux_land_data_newnames_7.csv", DataFrame);
 
 N = 48*365
 istart = 48*365*2 - 52*48 #+ 230*48
 soil0 = 0.39;
 
+#include("../simulation_code/rebuild_sim_Scrit_drain_plugin_ET_setsoil.jl");
+#function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT)
+#	return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC));
+#end
+
+include("../simulation_code/sim_vary_new_stomata.jl");
 function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT)
-	return convert_sim(run_sim(vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, soil0, FT(0), 0, weibB, weibC));
+	return convert_sim(run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, 1, 1e-5, 1, df_raw));
 end
+
 
 sim_res1 = run_sim_2(FT(22),FT(0.33), FT(15.0),FT(1e-5), FT(800),FT(1.5),FT(1));
 #vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, smc0, slope_index,use_flux, weibB, weibC
