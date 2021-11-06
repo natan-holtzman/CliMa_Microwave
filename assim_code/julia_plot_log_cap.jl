@@ -73,14 +73,14 @@ end
 
 mypars = convert(Array{FT}, [22, 0.33, 1, 5e-6, 800, 1.5, 1])
 
-sim_res0 = run_sim_old(mypars...);
+#sim_res0 = run_sim_old(mypars...);
 
 include("../simulation_code/new_capacitance/sim_vary_new_stomata.jl");
 function run_sim_new(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, scheme::Int, storage_mult::FT)
 	return convert_sim(run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, storage_mult, 1e-5, scheme, df_raw));
 end
 
-sim_res0_x = run_sim_new(mypars...,1, FT(1));
+#sim_res0_x = run_sim_new(mypars...,1, FT(1));
 
 sim_res0_c0 = run_sim_new(mypars...,3, FT(0.1));
 
@@ -88,11 +88,16 @@ sim_res0_c1 = run_sim_new(mypars...,3, FT(1));
 
 sim_res0_c10 = run_sim_new(mypars...,3, FT(10));
 
+#=
 figure()
 plot(get_diurnal(mean(sim_res0_c1[3],dims=2),24)); plot(get_diurnal(mean(sim_res0_c1[4],dims=2), 24)); plot(get_diurnal(sim_res0_c1[5], 24))
 
 figure()
 plot(get_diurnal(mean(sim_res0_x[3],dims=2),24)); plot(get_diurnal(mean(sim_res0_x[4],dims=2), 24)); plot(get_diurnal(sim_res0_x[5], 24))
+=#
+
+figure()
+plot(sim_res0_c0[1].leafpot); plot(sim_res0_c1[1].leafpot); plot(sim_res0_c10[1].leafpot)
 
 #=
 plot(mean(sim_res0_c1[3],dims=2)[2:24:end]); plot(mean(sim_res0_c1[4],dims=2)[2:24:end]); plot(sim_res0_c1[5][2:24:end])
