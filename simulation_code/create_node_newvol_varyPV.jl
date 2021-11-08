@@ -75,7 +75,7 @@ total_water_vol = FT(storage_mult * 12 * node.ga * 1000/18.02); #in mol over the
 #actually the branch volumes should be normalized by each branch's share of total branch length
 for i in 1:n_canopy
 	plant_hs.leaves[i].v_maximum = FT(0.1)*total_water_vol / n_canopy /  plant_hs.leaves[i].area
-	plant_hs.branch[i].v_maximum = FT(0.1)*total_water_vol / n_canopy
+	plant_hs.branch[i].v_maximum[1] = FT(0.1)*total_water_vol / n_canopy
 end
 
 plant_hs.trunk.v_maximum[1] = FT(0.8)*total_water_vol
