@@ -3,23 +3,23 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-prior_min = [10, 0.01, 0.1,  1e-6, 500, 0.75, 0.75];
-prior_max = [120,0.75,  100, 2e-5, 3000, 10, 8];
+prior_min = [10, 0.01, 0.1,  1e-6, 500, 0.75, 0.75,0.01];
+prior_max = [120,0.75,  100, 2e-5, 3000, 10, 8,10];
 
 #true_val = [22, 0.33, 15, 1e-5, 800, 1.5, 1];
-par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth", "Kplant location", "Kplant shape"];
+par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth", "Kplant location", "Kplant shape","Volume factor"];
 
 
 plt.rcParams["lines.linewidth"] = 1;
-plt.rcParams["font.size"] = 20;
+plt.rcParams["font.size"] = 16;
 
-out_folder = "outputs/realET/";
+out_folder = "outputs/realET_cap/";
 
 g1 = np.array(pd.read_csv(out_folder+"post_par.csv"));
 
 j = 0
 fig, ax_all = plt.subplots(2,4,figsize=(12,8))
-for ax in ax_all.ravel()[:-1]:
+for ax in ax_all.ravel()[:]:
     ax.plot(np.exp(g1[:,j]),color="blue")
 #ax.plot(exp.(g2[j,:]),color="orange")
 #ax.plot(exp.(g3[j,:]),color="purple")
@@ -32,11 +32,11 @@ for ax in ax_all.ravel()[:-1]:
     j += 1
 #end
 plt.tight_layout()
-ax = ax_all[1,3]
-ax.plot(np.sqrt(g1[:,-1]))
-ax.set_title("ET RMSE")
+#ax = ax_all[1,3]
+#ax.plot(np.sqrt(g1[:,-1]))
+#ax.set_title("ET RMSE")
 
-plt.savefig("chain.png")
+plt.savefig("chainC.png")
 
 
 #leaf, stem, trunk
@@ -56,7 +56,7 @@ outvar = [leaftab[1::24,:],leaftab[12::24,:], branchtab[1::24,:], branchtab[12::
 j = 0
 fig, ax_all = plt.subplots(2,4,figsize=(12,8))
 for ax in ax_all.ravel():
-    ax.plot(outvar[j][:,300:-1],color="grey",alpha=0.1)
+    ax.plot(outvar[j][:,-100:-1],color="grey",alpha=0.1)
     ax.set_title(out_names[j])
     #ax.set_xticks([])
     j += 1
@@ -64,5 +64,5 @@ for ax in ax_all.ravel():
 plt.tight_layout()
 ax.plot(ETtab[:,-1],color="red")
 
-plt.savefig("post_vars.png")
+plt.savefig("post_varsC.png")
 
