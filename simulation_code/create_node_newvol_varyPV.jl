@@ -37,13 +37,13 @@ K_STEFAN = FT(Stefan());
 #storage volume and PV curves
 
 
-function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult)
+function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1
 #vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult = parlist
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), 1);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,

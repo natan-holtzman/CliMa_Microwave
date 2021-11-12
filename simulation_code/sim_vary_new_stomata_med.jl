@@ -37,7 +37,7 @@ include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
 include(string(PROJECT_HOME,"/simulation_code/cap_funs_inv.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV.jl"))
 
-function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw)
+function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw,g1)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -76,6 +76,10 @@ if scheme_number == 3
 else
 	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40));
 end
+
+beta_curve = WeibullSingle(FT(k_weibB*(1-k_rel_crit)), FT(k_weibC));
+sm1 = Land.StomataModels.ESMMedlyn(FT(0),FT(g1));
+node.stomata_model = sm1;
 
 #k_weibB = 3;
 #k_weibC = 2;
@@ -282,8 +286,8 @@ for i in eachindex(df.Day)
 		for subI in 1:subIter
 		# calculate the photosynthetic rates
 			gas_exchange_new!(photo_set, iPS, iEN, GswDrive());
-			#update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter),FT(1));
-			update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter));
+			update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter),FT(1));
+			#update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter));
 			gsw_control!(photo_set, iPS, iEN);
 		end
 		
@@ -370,6 +374,12 @@ for i in eachindex(df.Day)
 	# calculate respiration from other components
 	_r = photo_TD_from_set(rbase, t_soil);
 
+	for i_can in 1:n_canopy
+		ratioI = xylem_k_ratio(beta_curve, plant_hs.leaves[i_can].p_leaf);
+		update_VJR_leaf!(node.plant_ps[i_can], ratioI)
+	end
+	
+	
 	# update the data frame
 	df.glw[i] = glw_mean
 	df.NPP[i] = f_CO₂ / ga - _r;
