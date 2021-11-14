@@ -29,7 +29,7 @@ const param_set = EarthParameterSet()
 KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
 
-deltaT = FT(60*30)
+#deltaT = FT(60*60)
 
 K_STEFAN = FT(Stefan());
 
@@ -37,13 +37,13 @@ K_STEFAN = FT(Stefan());
 #storage volume and PV curves
 
 
-function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice)
+function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice,deltaT,alpha,n)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1
 #vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult = parlist
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice,alpha,n);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,

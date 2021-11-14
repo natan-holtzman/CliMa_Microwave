@@ -7,7 +7,9 @@ function create_spac(
             kmax::FT = FT(0.3),
 		z_soil::FT = FT(1000),       
      chl::FT = FT(40),
-	 N_slice::Int = 1
+	 N_slice::Int = 1,
+	alpha::FT = FT(1.368),
+	n::FT = FT(2.6257)
 ) where {FT<:AbstractFloat} 
 (
 
@@ -15,8 +17,8 @@ function create_spac(
 	
 	
 	_soil_hs = VanGenuchten{FT}(stype = "Ozark",
-									α = 1.368,
-									n = 2.6257,
+									α = alpha,
+									n = n,
 								   Θs = 0.45,
 								   Θr = 0.067);
 						   

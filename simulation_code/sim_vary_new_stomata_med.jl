@@ -30,14 +30,14 @@ KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
 K_STEFAN = FT(Stefan());
 
-deltaT = FT(60*30)
+#deltaT = FT(60*60)
 
 include(string(PROJECT_HOME,"/simulation_code/create_spac_setsoil.jl"))
 include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
 include(string(PROJECT_HOME,"/simulation_code/cap_funs_inv.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV.jl"))
 
-function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw,g1)
+function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n)
 
 df = deepcopy(df_raw[istart+1:istart+N,:]);
 
@@ -72,9 +72,9 @@ df[!,"pl1"] = zeros(N)
 df[!,"pl2"] = zeros(N)
 
 if scheme_number == 3
-	node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1);
+	node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n);
 else
-	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40));
+	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40),alpha,n);
 end
 
 beta_curve = WeibullSingle(FT(k_weibB*(1-k_rel_crit)), FT(k_weibC));
