@@ -100,12 +100,20 @@ function create_spac(
 	
 	
 	
-	
+	#=
 	for _iPS in _node.plant_ps
 		_iPS.g_min   = 0.001;
 		_iPS.g_min25 = 0.001;
 		_iPS.g_max   = 0.08; #0.50;
 		_iPS.g_max25 = 0.08; #0.50;
+	end;
+	=#
+	
+	for _iPS in _node.plant_ps
+		_iPS.g_min   = 0.001;
+		_iPS.g_min25 = 0.001;
+		_iPS.g_max   = 0.12; #0.50;
+		_iPS.g_max25 = 0.12; #0.50;
 	end;
 	
 	

@@ -33,6 +33,8 @@ K_STEFAN = FT(Stefan());
 #deltaT = FT(60*60)
 
 include(string(PROJECT_HOME,"/simulation_code/create_spac_setsoil.jl"))
+#include(string(PROJECT_HOME,"/simulation_code/create_spac_multi.jl"))
+
 include(string(PROJECT_HOME,"/simulation_code/land_utils4.jl"))
 include(string(PROJECT_HOME,"/simulation_code/cap_funs_inv.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV.jl"))
@@ -43,6 +45,8 @@ df = deepcopy(df_raw[istart+1:istart+N,:]);
 
 df[!,"leafpot"] = zeros(N)
 df[!,"leafpotStore"] = zeros(N)
+
+df[!,"VPD"] = zeros(N)
 
 df[!,"leafvol"] = zeros(N)
 df[!,"stempot"] = zeros(N)
@@ -71,14 +75,16 @@ df[!,"Runoff"] = zeros(N)
 df[!,"pl1"] = zeros(N)
 df[!,"pl2"] = zeros(N)
 
-if scheme_number == 3
-	node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n);
-else
-	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40),alpha,n);
-end
+#if scheme_number == 3
+node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n);
+#else
+#	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40),alpha,n);
+#end
 
 beta_curve = WeibullSingle(FT(k_weibB*(1-k_rel_crit)), FT(k_weibC));
 sm1 = Land.StomataModels.ESMMedlyn(FT(0),FT(g1));
+#sm1 = Land.StomataModels.ESMBallBerry(FT(0),FT(g1));
+
 node.stomata_model = sm1;
 
 #k_weibB = 3;
@@ -199,6 +205,8 @@ for i in eachindex(df.Day)
 
 	t_soil = FT(df.T_SOIL[1] + 273.15);
 	update_LAI!(node, FT(df.LAI_modis[i]));
+	#update_LAI!(node, FT(df.LAI_modis[i]*0.5 + 1));
+	#update_LAI!(node, FT(mean(df.LAI_modis*0.5 .+ 1)));
 	
 
 	# update PAR related information
@@ -286,6 +294,7 @@ for i in eachindex(df.Day)
 		for subI in 1:subIter
 		# calculate the photosynthetic rates
 			gas_exchange_new!(photo_set, iPS, iEN, GswDrive());
+			#prognostic_gsw!(iPS, iEN, stomata_model, FT(1), deltaT/subIter);
 			update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter),FT(1));
 			#update_gsw!(iPS, stomata_model, photo_set, iEN, FT(deltaT/subIter));
 			gsw_control!(photo_set, iPS, iEN);
@@ -392,6 +401,7 @@ for i in eachindex(df.Day)
 	df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
 	df.leafStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].v_storage;
 	df.leafpotStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_storage;
+	df.VPD[i] = node.envirs[1].vpd
 	
 	for ican in eachindex(node.plant_hs.leaves)
 		psi_record_leaf[i,ican] = node.plant_hs.leaves[ican].p_leaf;
