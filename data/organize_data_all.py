@@ -169,8 +169,8 @@ y2data = pd.merge(y2data,obsWO_MDmean,on='DateTime',how='left')
 #%%
 oakpot_MD = np.array(y2data['MLWP'])
 #%%
-plt.plot(oakpot,"o")
-plt.plot(oakpot_MD,"o")
+#plt.plot(oakpot,"o")
+#plt.plot(oakpot_MD,"o")
 # plt.plot(par_wm2[:500])
 # plt.plot(netrad[:500])
 #%%
@@ -199,5 +199,19 @@ mydf_all = pd.DataFrame({'DateTime':np.array(rawdata['DateTime']),
 #%%
 df_skipyear = mydf_all.loc[(mydf_all["YEAR"] != 2004) & (mydf_all["YEAR"] != 2011)].reset_index()
 #%%
-df_skipyear.to_csv('moflux_land_data_newnames_7_skipyear.csv')
+def df_avg(df,N):
+    newlen = int(len(df)/N);
+    newdf = df.iloc[:newlen,:].copy()
+    coltypes = df.dtypes
+    for j in range(len(df.columns)):
+        if coltypes[j] == 'float64':
+            newcol = np.nanmean(np.reshape(np.array(df.iloc[:,j]), (-1,N)), axis=1)
+        else:
+            newcol = df.iloc[::N,j]
+        newdf.iloc[:,j] = newcol
+    return newdf
+#%%
+df_24 = df_avg(df_skipyear,2)
+#%%
+df_24.to_csv('moflux_land_data_skipyear_hourly.csv')
 #%%
