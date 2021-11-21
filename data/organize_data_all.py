@@ -207,11 +207,11 @@ def df_avg(df,N):
         if coltypes[j] == 'float64':
             newcol = np.nanmean(np.reshape(np.array(df.iloc[:,j]), (-1,N)), axis=1)
         else:
-            newcol = df.iloc[::N,j]
+            newcol = np.array(df.iloc[:,j])[::N]
         newdf.iloc[:,j] = newcol
     return newdf
 #%%
 df_24 = df_avg(df_skipyear,2)
 #%%
-df_24.to_csv('moflux_land_data_skipyear_hourly.csv')
+df_24.to_csv('moflux_land_data_skipyear_hourly2.csv')
 #%%
