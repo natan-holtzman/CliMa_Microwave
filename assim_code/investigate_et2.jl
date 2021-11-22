@@ -15,7 +15,7 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*6
+N = 24*365*12
 istart = 1 #+ 365*24 #24*365*2 - 52*24 #+ 230*48
 soil0 = 0.42;
 
@@ -29,7 +29,10 @@ function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::F
         return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
-sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
+#sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
+
+sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-6), FT(800),FT(3),FT(2),FT(1),FT(506));
+
 
 #%%
 noon_ET = sim_res1[1].LE[12:24:end]/44200;
@@ -55,8 +58,8 @@ noon_GLW_mod_select2 = noon_GLW_mod_select[noon_GLW_select .> 0];
 
 #plot(log.(vpdobs[12:24:end]),    log.(etratio)[12:24:end], "o")
 figure()
-plot(get_daily(sim_res1[1].LE/44200, 24))
-plot(get_daily(sim_res1[1].ETmod, 24))
+plot(get_daily(sim_res1[1].LE/44200, 24*5))
+plot(get_daily(sim_res1[1].ETmod, 24*5))
 #%%
 figure()
 plot(cumsum(get_daily(sim_res1[1].LE/44200, 24)))

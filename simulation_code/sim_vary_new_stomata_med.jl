@@ -48,32 +48,32 @@ df[!,"leafpotStore"] = zeros(N)
 
 df[!,"VPD"] = zeros(N)
 
-df[!,"leafvol"] = zeros(N)
+#df[!,"leafvol"] = zeros(N)
 df[!,"stempot"] = zeros(N)
 df[!,"soilpot"] = zeros(N)
 df[!,"ETmod"] = zeros(N)
 df[!,"trunkflow"] = zeros(N)
 
-df[!,"APARsun"] = zeros(N)
-df[!,"Zenith"] = zeros(N)
+#df[!,"APARsun"] = zeros(N)
+#df[!,"Zenith"] = zeros(N)
 
-df[!,"APARshade"] = zeros(N)
+#df[!,"APARshade"] = zeros(N)
 
-df[!,"APAR_ps"] = zeros(N)
+#df[!,"APAR_ps"] = zeros(N)
 
-df[!,"Ecrit"] = zeros(N)
+#df[!,"Ecrit"] = zeros(N)
 
 df[!,"leafStore"] = zeros(N)
 
-df[!,"fvis"] = zeros(N)
+#df[!,"fvis"] = zeros(N)
 df[!,"glw"] = zeros(N)
-df[!,"GPP"] = zeros(N)
+#df[!,"GPP"] = zeros(N)
 df[!,"NPP"] = zeros(N)
-df[!,"Pcrit"] = zeros(N)
-df[!,"Runoff"] = zeros(N)
+#df[!,"Pcrit"] = zeros(N)
+#df[!,"Runoff"] = zeros(N)
 
-df[!,"pl1"] = zeros(N)
-df[!,"pl2"] = zeros(N)
+#df[!,"pl1"] = zeros(N)
+#df[!,"pl2"] = zeros(N)
 
 #if scheme_number == 3
 node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n);
@@ -196,10 +196,11 @@ rbase =  Q10TD{FT}(0, 298.15, 1.7)
 
 # iterate through the weather data
 for i in eachindex(df.Day)
+
 #=
-	if mod(i, 48) == 0
-		println(Int(i/48))
-		println(node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf)
+	if mod(i, (24*365)) == 1
+		println(Int((i-1)/(24*365)))
+		#println(node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf)
 	end	
 =#
 
@@ -397,8 +398,8 @@ for i in eachindex(df.Day)
 	df.stempot[i] = mean(node.plant_hs.trunk.p_element);
 	df.leafpot[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf;
 	smc_record[i,:] = node.swc
-	df.Ecrit[i] = node.plant_ps[length(node.plant_hs.leaves)].ec;
-	df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
+	#df.Ecrit[i] = node.plant_ps[length(node.plant_hs.leaves)].ec;
+	#df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
 	df.leafStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].v_storage;
 	df.leafpotStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_storage;
 	df.VPD[i] = node.envirs[1].vpd
