@@ -178,6 +178,7 @@ end
 #while accounting for rain entering the top layer, vertical drainage between the layers, 
 #and free drainage runoff out of the bottom layer if slope_index is greater than zero
 #set slope_index to zero to assume no runoff
+#ksoil max is in mm/s
 function do_soil_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
 	layer_thick = -1*diff(node.soil_bounds)*1000
 

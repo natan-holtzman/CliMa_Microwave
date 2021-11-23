@@ -15,9 +15,9 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*12
-istart = 1 #+ 365*24 #24*365*2 - 52*24 #+ 230*48
-soil0 = 0.42;
+N = 24*365*9
+istart = 24*365*0+1
+soil0 = 0.4;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
 
@@ -25,13 +25,35 @@ deltaT = FT(60*60);
 alpha = FT(1.368);
 nsoil = FT(2.6257);
 
+#nsoil = FT(1.7);
+#alpha = FT(3.2);
+
+#alpha = FT(1.9);
+#nsoil = FT(3.2);
+
+#alpha = FT(204);
+#nsoil = FT(1.4);
+
+
+#alpha = FT(8.0);
+#nsoil = FT(1.4);
+
 function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
         return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
 #sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
+#sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(800),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
-sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-6), FT(800),FT(3),FT(2),FT(1),FT(506));
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(0.4e-6), FT(800),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+
+
+gravity_factor = (18.5+9)/2 * 1000/mpa2mm;
+
+leafpot = mean(sim_res1[3],dims=2);
+simTB = get_TB(sim_res1, leafpot, 0.041, 0.82, 0.051);
+simTB0 = get_TB(sim_res1, leafpot, 0, 0.82, 0.051);
+simTB2 = get_TB(sim_res1, leafpot, 0.082, 0.82, 0.051);
 
 
 #%%
@@ -52,7 +74,42 @@ noon_GLW_select2 = noon_GLW_select[noon_GLW_select .> 0];
 noon_GLW_mod_select2 = noon_GLW_mod_select[noon_GLW_select .> 0];
 
 
+pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
+figure()
+plot(leafpot[7:24:end])
+#plot(sim_res1[5][7:24:end])
 
+#plot(sim_res1[5][7:24:end])
+plot(pdLWP[7:24:end] .- gravity_factor, "o")
+
+#=
+s_arr = collect(0.14:0.005:0.45);
+n = 1.4; m = 1-1/n; a = 40;
+psi_arr = (((s_arr .- 0.067) / (0.45 - 0.067)) .^ (-1/m) .-1) .^ (1/n) / a;
+psi_arr *= 1.0/psi_arr[s_arr .== 0.25];
+
+figure()
+scatter(mean(sim_res1[2],dims=2), pdLWP, c = sim_res1[1].YEAR)
+#scatter(sim_res1[2][:,1], pdLWP)
+#scatter(sim_res1[2][:,4], pdLWP)
+plot(s_arr, -psi_arr,"k")
+
+n = 2.0; m = 1-1/n; a = 40;
+psi_arr = (((s_arr .- 0.067) / (0.45 - 0.067)) .^ (-1/m) .-1) .^ (1/n) / a;
+psi_arr *= 1.75/psi_arr[s_arr .== 0.2];
+plot(s_arr, -psi_arr,color="orange")
+=#
+
+#=
+figure()
+plot(-get_daily(sim_res1[1].LE/44200, 24),color="grey")
+twinx()
+plot(pdLWP[7:24:end],"ro")
+twinx()
+plot(sim_res1[1].SMC[1:24:end],"k")
+plot(sim_res1[2][1:24:end,1],color="orange")
+plot(sim_res1[2][1:24:end,4],color="blue")
+=#
 
 #%%
 
@@ -61,9 +118,11 @@ figure()
 plot(get_daily(sim_res1[1].LE/44200, 24*5))
 plot(get_daily(sim_res1[1].ETmod, 24*5))
 #%%
+#=
 figure()
 plot(cumsum(get_daily(sim_res1[1].LE/44200, 24)))
 plot(cumsum(get_daily(sim_res1[1].ETmod, 24)))
+=#
 #%%
 figure()
 plot(get_diurnal(sim_res1[1].LE/44200, 24))

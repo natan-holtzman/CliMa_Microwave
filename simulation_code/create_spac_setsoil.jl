@@ -21,7 +21,7 @@ function create_spac(
 									n = n,
 								   Θs = 0.45,
 								   Θr = 0.067);
-						   
+	
 								   
 	#_soil_hs = BrooksCorey{FT}(stype= "Ozark", Θs = FT(porosity), Θr = FT(0.05), ϕs = psi_sat, b = b_soil);
 	
@@ -29,16 +29,12 @@ function create_spac(
 	_totaldepth = FT(z_soil/1000);
 	_rootdepth = FT(z_soil/1000);
 	_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7]);
-	_soil_bounds[3:5] *= _totaldepth/FT(0.7);
+	#_soil_bounds = collect(FT,[0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.7]);
+
+	_soil_bounds[3:end] *= _totaldepth/FT(0.7);
 	
-	_totaldepth = -1*_soil_bounds[5];
-	_rootdepth = -1*_soil_bounds[5];
-	
-	#_soil_bounds = collect(FT,[0,-0.1,-0.35,-0.7]);
-	
-	#_totaldepth = FT(0.85);
-	#_rootdepth = FT(0.85);
-	#_soil_bounds = collect(FT,[0,-0.1,-0.3,-0.55,-0.85]);
+	_totaldepth = -1*_soil_bounds[end];
+	_rootdepth = -1*_soil_bounds[end];
 
 	_air_bounds = convert(Array{FT},[0,5,9,12,16,18.5,20] );
 	
@@ -59,7 +55,7 @@ function create_spac(
 						   longitude = -92.2,
 						   elevation = 219.4,
 					   stomata_model = sm);
-	_node.swc = collect(FT,[0.4,0.4,0.4,0.4]);
+	_node.swc = collect(FT,0.4*ones(length(_soil_bounds)-1));
 	
 	n_canopy = length(_node.plant_hs.canopy_index_in_air);
 	
@@ -112,8 +108,8 @@ function create_spac(
 	for _iPS in _node.plant_ps
 		_iPS.g_min   = 0.001;
 		_iPS.g_min25 = 0.001;
-		_iPS.g_max   = 0.12; #0.50;
-		_iPS.g_max25 = 0.12; #0.50;
+		_iPS.g_max   = 0.08; #0.50;
+		_iPS.g_max25 = 0.08; #0.50;
 	end;
 	
 	

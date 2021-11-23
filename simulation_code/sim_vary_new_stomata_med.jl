@@ -41,7 +41,7 @@ include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV.jl"))
 
 function run_sim_vary(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N, smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n)
 
-df = deepcopy(df_raw[istart+1:istart+N,:]);
+df = deepcopy(df_raw[istart:(istart+N-1),:]);
 
 df[!,"leafpot"] = zeros(N)
 df[!,"leafpotStore"] = zeros(N)
@@ -347,7 +347,8 @@ for i in eachindex(df.Day)
 
 		end;
 	end
-		subIter2 = 4
+		
+	subIter2 = 8
 	
 	if scheme_number==3
 		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
