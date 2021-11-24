@@ -9,9 +9,10 @@ function create_tree2(
 			N_subunit::Int
 ) where {FT<:AbstractFloat}
     # determine how many layers in roots and canopy
-    _n_root  = 0;
-    _r_index = Int[]
-    for i in eachindex(soil_bounds)
+    #=
+	_n_root  = 0;
+	_r_index = Int[]
+	for i in eachindex(soil_bounds)
         _z = soil_bounds[i];
         if _z > z_root
             _n_root += 1;
@@ -20,6 +21,9 @@ function create_tree2(
             break
         end
     end
+	=#
+	_n_root = 4;
+	_r_index = [4,5,6,7]
 
     _n_canopy = 0;
     _c_index  = Int[];
@@ -45,6 +49,7 @@ function create_tree2(
         end
     end
 
+	
     # create evenly distributed root system for now
     _roots = RootHydraulics{FT}[];
     for i in _r_index
@@ -56,6 +61,7 @@ function create_tree2(
                     Δh=_Δh);
         push!(_roots, _rt);
     end
+		
 
     # create Trunk
     _k_trunk = z_canopy / z_trunk * 50;

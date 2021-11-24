@@ -15,15 +15,19 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*9
+N = 24*365*12
 istart = 24*365*0+1
-soil0 = 0.4;
+soil0 = 0.42;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
 
 deltaT = FT(60*60);
-alpha = FT(1.368);
-nsoil = FT(2.6257);
+#alpha = FT(1.368);
+#nsoil = FT(2.6257);
+
+#alpha = FT(2);
+#nsoil = FT(1.8);
+
 
 #nsoil = FT(1.7);
 #alpha = FT(3.2);
@@ -35,8 +39,16 @@ nsoil = FT(2.6257);
 #nsoil = FT(1.4);
 
 
-#alpha = FT(8.0);
-#nsoil = FT(1.4);
+alpha = FT(2.5);
+nsoil = FT(1.2);
+
+
+#alpha = FT(1);
+#nsoil = FT(1.8);
+
+#alpha = FT(204/4);
+#nsoil = FT(1.6);
+
 
 function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
         return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
@@ -45,7 +57,7 @@ end
 #sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
 #sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(800),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
-sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(0.4e-6), FT(800),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(5e-5), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
 
 gravity_factor = (18.5+9)/2 * 1000/mpa2mm;
@@ -75,6 +87,14 @@ noon_GLW_mod_select2 = noon_GLW_mod_select[noon_GLW_select .> 0];
 
 
 pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
+mdLWP = Float64.(replace(sim_res1[1].LWP_midday, missing => NaN));
+
+#nsoil = 1.4
+#alpha = 200
+msoil = 1-1/nsoil;
+swc_eq = ((-pdLWP * alpha) .^ nsoil .+ 1) .^ (-msoil) * (0.45 - 0.067) .+ 0.067;
+
+
 figure()
 plot(leafpot[7:24:end])
 #plot(sim_res1[5][7:24:end])
@@ -99,6 +119,15 @@ psi_arr = (((s_arr .- 0.067) / (0.45 - 0.067)) .^ (-1/m) .-1) .^ (1/n) / a;
 psi_arr *= 1.75/psi_arr[s_arr .== 0.2];
 plot(s_arr, -psi_arr,color="orange")
 =#
+
+figure()
+plot((mean(sim_res1[2][:,3:4],dims=2) .- 0.067) / (0.45-0.067), pdLWP, "o")
+srel_arr = collect(0.6:0.01:0.95);
+n = 1.2; m = 1-1/n; a = 200;
+psi_arr = (srel_arr .^ (-1/m) .-1) .^ (1/n);
+psi_fac = 1.5/psi_arr[srel_arr .== 0.75];
+plot(srel_arr, -psi_arr*psi_fac,"k")
+
 
 #=
 figure()

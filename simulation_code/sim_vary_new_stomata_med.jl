@@ -413,7 +413,7 @@ for i in eachindex(df.Day)
 
 end;
 
-return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk
+return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk #, node
 
 end
 

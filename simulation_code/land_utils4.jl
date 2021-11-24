@@ -246,7 +246,7 @@ function do_soil_nss_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_
 		out_layer = node.plant_hs.roots[i_root].q_in /KG_H_2_MOL_S * FT(1/node.ga*deltaT/(60*60));
 		
 		node.swc[soil_layerI] -= out_layer / layer_thick[soil_layerI]
-		node.swc[soil_layerI] = max(node.plant_hs.roots[soil_layerI].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[soil_layerI].sh.Θs));
+		node.swc[soil_layerI] = max(node.plant_hs.roots[i_root].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[i_root].sh.Θs));
 	end	
 
 	smc_rain = node.swc[1] + rain_in /layer_thick[1]
