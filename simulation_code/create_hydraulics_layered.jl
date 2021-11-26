@@ -22,8 +22,12 @@ function create_tree2(
         end
     end
 	=#
-	_n_root = 4;
-	_r_index = [4,5,6,7]
+	#_n_root = 4;
+	#_r_index = [4,5,6,7]
+	
+	#distribute roots in lower half of soil column
+	_r_index = [i for i in eachindex(soil_bounds[1:(end-1)]) if abs(soil_bounds[i]) >= abs(soil_bounds[end]/2)];
+	_n_root = length(_r_index);
 
     _n_canopy = 0;
     _c_index  = Int[];

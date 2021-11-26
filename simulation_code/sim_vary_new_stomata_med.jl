@@ -348,10 +348,15 @@ for i in eachindex(df.Day)
 		end;
 	end
 		
-	subIter2 = 8
+	subIter2 = 16
 	
 	if scheme_number==3
 		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		#try
+		#	dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		#catch err
+		#	return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk #, node
+		#end
 	end
 	
 	for subI2 in 1:subIter2
@@ -365,7 +370,7 @@ for i in eachindex(df.Day)
 			update_PVF!(node.plant_hs,deltaT/subIter2);
 		end
 		if scheme_number==3
-			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil,FT(0))		
+			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, FT(0))		
 		end
 		
 		for i_root in eachindex(node.plant_hs.roots)

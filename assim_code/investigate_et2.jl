@@ -15,8 +15,8 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*12
-istart = 24*365*0+1
+N = 24*365*1
+istart = 24*365*8+1
 soil0 = 0.42;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
@@ -50,14 +50,19 @@ nsoil = FT(1.2);
 #nsoil = FT(1.6);
 
 
-function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
-        return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
+function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
+        return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, FT(2e-5), z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
 #sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
 #sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(800),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
-sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(5e-5), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+
+logpar2 = [3.420552042,-3.005631752,0.140492204,7.77502719,1.384741914,1.146245499,0.559185057,6.697470399]
+par2 = convert(Array{FT}, exp.(logpar2));
+sim_res2 = run_sim_2(par2...);
+#sim_res2 = run_sim_2(FT(31),FT(0.5), FT(2), FT(500),FT(5),FT(2),FT(1),FT(506));
 
 
 gravity_factor = (18.5+9)/2 * 1000/mpa2mm;

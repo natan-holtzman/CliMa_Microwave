@@ -1,6 +1,22 @@
 include(string(PROJECT_HOME,"/simulation_code/updatefuns.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_hydraulics_layered.jl"))
 
+function make_layers(_totaldepth)
+	linear_layers = collect(0:0.1:0.8);
+	toadd = [0,0,1,2,3,4,5,6,7];
+	quad_layers = cumsum(toadd)/sum(toadd);
+	
+	if _totaldepth < 0.8
+		lower_layer_thick = (_totaldepth-0.1)/Int(floor((_totaldepth-0.1) / 0.1));
+		layers = vcat(0, 0.1:lower_layer_thick:_totaldepth);
+	end
+	
+	if _totaldepth >= 0.8
+		layers = linear_layers + quad_layers*(_totaldepth-0.8);
+	end
+	return convert(Array{FT}, -1*layers)
+end
+
 function create_spac(
             sm::AbstractStomatalModel = OSMWang{FT}(),
             vcmax::FT = FT(30),
@@ -30,11 +46,19 @@ function create_spac(
 	_rootdepth = FT(z_soil/1000);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7]);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.2,-0.3,-0.4]);
-	_soil_bounds = collect(FT,[0,-0.1,-0.15,-0.2,-0.25,-0.3,-0.35,-0.4]);
-
 	#_soil_bounds = collect(FT,[0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.6,-0.7]);
+	
+	#_soil_bounds = collect(FT,[0,-0.1,-0.15,-0.2,-0.25,-0.3,-0.35,-0.4]);
+	#_soil_bounds[3:end] *= _totaldepth/FT(0.4);
+	
+	
+	#_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.5,-0.75,-1.0,-1.5,-2]);
+	#_soil_bounds *= _totaldepth/FT(2);
 
-	_soil_bounds[3:end] *= _totaldepth/FT(0.4);
+	#_soil_bounds = collect(FT,[0,-0.1,-0.2, -0.3, -0.4, -0.5, -0.6, -0.7]);
+	#_soil_bounds *= _totaldepth/FT(0.7);
+		
+	_soil_bounds = make_layers(_totaldepth);
 	
 	_totaldepth = -1*_soil_bounds[end];
 	_rootdepth = -1*_soil_bounds[end];
