@@ -31,10 +31,15 @@ function create_spac(
 	#_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7]);
 	#_soil_bounds = collect(FT,[0,-0.1,-0.2,-0.3,-0.4]);
 	_soil_bounds = collect(FT,[0,-0.1,-0.15,-0.2,-0.25,-0.3,-0.35,-0.4]);
+	_soil_bounds[3:end] *= _totaldepth/FT(0.4);
+	#_soil_bounds *= _totaldepth/FT(0.4);
+
+	#_soil_bounds = collect(FT,[0,-0.1,-0.25,-0.45,-0.7,-1,-1.5,-2]);
+	#_soil_bounds = collect(FT,0:-0.1:-2);
+	#_soil_bounds *= _totaldepth/FT(2);
 
 	#_soil_bounds = collect(FT,[0,-0.1,-0.2,-0.3,-0.4,-0.5,-0.6,-0.7]);
 
-	_soil_bounds[3:end] *= _totaldepth/FT(0.4);
 	
 	_totaldepth = -1*_soil_bounds[end];
 	_rootdepth = -1*_soil_bounds[end];

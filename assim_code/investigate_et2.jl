@@ -15,7 +15,7 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*12
+N = 24*365*1
 istart = 24*365*0+1
 soil0 = 0.42;
 
@@ -50,14 +50,25 @@ nsoil = FT(1.2);
 #nsoil = FT(1.6);
 
 
-function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
-        return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
+function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
+        return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, FT(2e-5), z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
 #sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
-#sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(800),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+#sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(2000),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
-sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(5e-5), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+
+
+logpars2 = [2.8933913968586777,-1.7762277439638017,0.7795067372441098,7.680412466595532,1.2084340077654594,0.8096878560790971,0.031647170905096667,6.410054960024914];
+#1.9630859065481738,-1.48071171061214,0.9442077119675751,7.7824687021644365,1.3560629794140506,0.4356231357842697,
+
+#logpars2 = [3.571767116,	-0.558399684,	0.770768547,	-9.29149755,	7.523426586,	1.824630598,	0.805881105,	-0.581338593,	6.134655671];
+fpars2 = convert(Array{FT}, exp.(logpars2));
+#fpars2[4] = 5e-5;
+
+sim_res2 = run_sim_2(fpars2...);
 
 
 gravity_factor = (18.5+9)/2 * 1000/mpa2mm;
@@ -66,6 +77,8 @@ leafpot = mean(sim_res1[3],dims=2);
 simTB = get_TB(sim_res1, leafpot, 0.041, 0.82, 0.051);
 simTB0 = get_TB(sim_res1, leafpot, 0, 0.82, 0.051);
 simTB2 = get_TB(sim_res1, leafpot, 0.082, 0.82, 0.051);
+
+simTB = get_TB(sim_res1, leafpot, 0.067, 0.82, 0.051);
 
 
 #%%
