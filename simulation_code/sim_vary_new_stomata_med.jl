@@ -348,19 +348,14 @@ for i in eachindex(df.Day)
 		end;
 	end
 		
-	if scheme_number==3
-		try
-			dd1, dd2 = update_cap_mat!(plant_hs,deltaT/subIter2);
-		catch err
-			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
-		end
-	end
-			
-	
 	subIter2 = 8
 	
-	for subI2 in 1:subIter2
+	if scheme_number==3
+		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+	end
 	
+	for subI2 in 1:subIter2
+		
 		if scheme_number==1
 			pressure_profile!(node.plant_hs, SteadyStateMode(); update=false);
 			do_soil_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil,FT(0))
