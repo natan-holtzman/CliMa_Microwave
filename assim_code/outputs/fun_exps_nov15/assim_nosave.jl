@@ -136,14 +136,6 @@ function runAMH(x_init, niter, burnlen)
 	
 	nday = Int(length(sim_res1[1].leafpot)/24);
 	
-	post_RZ = zeros(nday,Int(niter/25)+1);
-	#post_Surf = zeros(nday,Int(niter/25)+1);
-	post_ET = zeros(nday,Int(niter/25)+1);
-	post_LWP = zeros(nday*24,Int(niter/25)+1);
-	post_branch = zeros(nday*24,Int(niter/25)+1);
-	post_trunk = zeros(nday*24,Int(niter/25)+1);
-
-	
 	for j in 1:niter
 		if j % 2 == 0
 			println(j)
@@ -151,12 +143,6 @@ function runAMH(x_init, niter, burnlen)
 
 		if j % 25 == 0
 			println(chain[j-1,:])
-			post_RZ[:,Int(j/25)] = get_daily(sim_res0[2][:,end],24);
-			#post_Surf[:,Int(j/25)] = get_daily(sim_res0[2][:,1],24);
-			post_ET[:,Int(j/25)] = get_daily(sim_res0[1].ETmod,24);
-			post_LWP[:,Int(j/25)] = mean(sim_res0[3],dims=2)[:,1];
-			post_branch[:,Int(j/25)] = mean(sim_res0[4],dims=2)[:,1];
-			post_trunk[:,Int(j/25)] = sim_res0[5];
 		end
 
 		#each row of chain is [pars old, pars proposed, old log likelihood, old err estimate, old VOD par]
@@ -194,12 +180,6 @@ function runAMH(x_init, niter, burnlen)
 	end
 	
 	#place the results of the original true run in the last column
-	post_RZ[:,end] = get_daily(sim_res1[2][:,end],24);
-	#post_Surf[:,end] = get_daily(sim_res1[2][:,1],24);
-	post_ET[:,end] = get_daily(sim_res1[1].ETmod,24);
-	post_LWP[:,end] = mean(sim_res1[3],dims=2)[:,1];
-	post_branch[:,end] = mean(sim_res1[4],dims=2)[:,1];
-	post_trunk[:,end] = sim_res1[5];
 	
 	return chain, post_RZ, post_ET, post_LWP, post_branch, post_trunk;
 end
@@ -243,12 +223,5 @@ c1 = runAMH(a01, 5000, 500);
 
 dfc = DataFrame(c1[1]);
 CSV.write(string(outdir,"post_par.csv"),dfc);
-
-#post_RZ, post_ET, post_LWP, post_branch, post_trunk;
-CSV.write(string(outdir,"postRZ.csv"), DataFrame(c1[2]));
-CSV.write(string(outdir,"postET.csv"), DataFrame(c1[3]));
-CSV.write(string(outdir,"postLeaf.csv"), DataFrame(c1[4]));
-CSV.write(string(outdir,"postBranch.csv"), DataFrame(c1[5]));
-CSV.write(string(outdir,"postTrunk.csv"), DataFrame(c1[6]));
 
 end

@@ -16,20 +16,22 @@ df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.c
 df_raw[!,"RAIN"] *= 2;
 
 N = 24*365
-istart = 24*365*2 - 1; 
-soil0 = 0.42;
+istart = 24*365*2 + 1; 
+soil0 = 0.40;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
 
 deltaT = FT(60*60);
-alpha = FT(1.368);
-nsoil = FT(2.6257);
+alpha = FT(2.5);
+nsoil = FT(1.2);
 
 function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, k_soil::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
 	return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
-sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-6), FT(800),FT(3),FT(2),FT(1),FT(506));
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2),FT(5e-5), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+
+#sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-6), FT(800),FT(3),FT(2),FT(1),FT(506));
 
 #sim_res1 = run_sim_2(FT(22),FT(0.33), FT(2),FT(1e-5), FT(600),FT(4.0),FT(3),FT(1),FT(600));
 #vcmax_par, k_frac, k_plant, k_soil, z_soil, istart, N, smc0, slope_index,use_flux, weibB, weibC
@@ -63,8 +65,8 @@ obsV = trueTB[2] + noise_std*randn(Float64, length(trueTB[1]));
 
 #norm_factor = FT(1);
 
-prior_min = [10, 0.01, 0.1,  1e-7, 500, 0.75, 0.75, 0.1,100];
-prior_max = [120,0.75,  50, 2e-5, 3000, 10, 8, 10,1000];
+prior_min = [10, 0.01, 0.1,  5e-7, 500, 0.75, 0.75, 0.1,100];
+prior_max = [120,0.9,  50, 5e-4, 3000, 10, 8, 10,1000];
 prior_dist = Product(Uniform.(log.(prior_min), log.(prior_max)));
 
 
@@ -136,14 +138,6 @@ function runAMH(x_init, niter, burnlen)
 	
 	nday = Int(length(sim_res1[1].leafpot)/24);
 	
-	post_RZ = zeros(nday,Int(niter/25)+1);
-	#post_Surf = zeros(nday,Int(niter/25)+1);
-	post_ET = zeros(nday,Int(niter/25)+1);
-	post_LWP = zeros(nday*24,Int(niter/25)+1);
-	post_branch = zeros(nday*24,Int(niter/25)+1);
-	post_trunk = zeros(nday*24,Int(niter/25)+1);
-
-	
 	for j in 1:niter
 		if j % 2 == 0
 			println(j)
@@ -151,12 +145,6 @@ function runAMH(x_init, niter, burnlen)
 
 		if j % 25 == 0
 			println(chain[j-1,:])
-			post_RZ[:,Int(j/25)] = get_daily(sim_res0[2][:,end],24);
-			#post_Surf[:,Int(j/25)] = get_daily(sim_res0[2][:,1],24);
-			post_ET[:,Int(j/25)] = get_daily(sim_res0[1].ETmod,24);
-			post_LWP[:,Int(j/25)] = mean(sim_res0[3],dims=2)[:,1];
-			post_branch[:,Int(j/25)] = mean(sim_res0[4],dims=2)[:,1];
-			post_trunk[:,Int(j/25)] = sim_res0[5];
 		end
 
 		#each row of chain is [pars old, pars proposed, old log likelihood, old err estimate, old VOD par]
@@ -194,14 +182,8 @@ function runAMH(x_init, niter, burnlen)
 	end
 	
 	#place the results of the original true run in the last column
-	post_RZ[:,end] = get_daily(sim_res1[2][:,end],24);
-	#post_Surf[:,end] = get_daily(sim_res1[2][:,1],24);
-	post_ET[:,end] = get_daily(sim_res1[1].ETmod,24);
-	post_LWP[:,end] = mean(sim_res1[3],dims=2)[:,1];
-	post_branch[:,end] = mean(sim_res1[4],dims=2)[:,1];
-	post_trunk[:,end] = sim_res1[5];
 	
-	return chain, post_RZ, post_ET, post_LWP, post_branch, post_trunk;
+	return chain #, post_RZ, post_ET, post_LWP, post_branch, post_trunk;
 end
 
 function init_works()
@@ -241,14 +223,7 @@ end
 a01 = ipar_LL[argmax(ipar_LL[:,end]),1:NPAR];
 c1 = runAMH(a01, 5000, 500);
 
-dfc = DataFrame(c1[1]);
+dfc = DataFrame(c1);
 CSV.write(string(outdir,"post_par.csv"),dfc);
-
-#post_RZ, post_ET, post_LWP, post_branch, post_trunk;
-CSV.write(string(outdir,"postRZ.csv"), DataFrame(c1[2]));
-CSV.write(string(outdir,"postET.csv"), DataFrame(c1[3]));
-CSV.write(string(outdir,"postLeaf.csv"), DataFrame(c1[4]));
-CSV.write(string(outdir,"postBranch.csv"), DataFrame(c1[5]));
-CSV.write(string(outdir,"postTrunk.csv"), DataFrame(c1[6]));
 
 end
