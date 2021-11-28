@@ -15,15 +15,16 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*1
-istart = 24*365*8+1
-soil0 = 0.42;
+N = 24*365*12
+istart = 24*365*0+1
+soil0 = 0.3;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
 
 deltaT = FT(60*60);
-#alpha = FT(1.368);
-#nsoil = FT(2.6257);
+alpha = FT(1.368);
+nsoil = FT(2.6257);
+#alpha = FT(200);
 
 #alpha = FT(2);
 #nsoil = FT(1.8);
@@ -39,9 +40,16 @@ deltaT = FT(60*60);
 #nsoil = FT(1.4);
 
 
-alpha = FT(2.5);
+alpha = FT(50);
 nsoil = FT(1.2);
+#alpha = FT(20);
 
+
+#alpha = FT(1.5);
+#nsoil = FT(1.5);
+
+#alpha = FT(7.2);
+#nsoil = FT(1.2);
 
 #alpha = FT(1);
 #nsoil = FT(1.8);
@@ -50,20 +58,37 @@ nsoil = FT(1.2);
 #nsoil = FT(1.6);
 
 
-function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, z_soil::FT, weibB::FT, weibC::FT, vol_factor::FT, g1::FT)
-        return run_sim_vary(vcmax_par, k_frac, weibB, weibC, k_plant, FT(2e-5), z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
+function run_sim_2(vcmax_par::FT, k_frac::FT, k_plant::FT, z_soil::FT, weibB::FT, vol_factor::FT, g1::FT)
+        return run_sim_vary(vcmax_par, k_frac, weibB, FT(2), k_plant, FT(1e-4), z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil);
 end
 
 #sim_res1 = run_sim_2(FT(60),FT(0.25), FT(2),FT(1e-5), FT(600),FT(3),FT(2),FT(1),FT(506));
 #sim_res1 = run_sim_2(FT(31),FT(0.25), FT(2),FT(0.4e-6), FT(800),FT(4),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
 
-sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2), FT(2000),FT(5),FT(2),FT(1),FT((16-0.0*9.3)*sqrt(1000)));
+#sim_res1 = run_sim_2(FT(31),FT(0.5), FT(2), FT(2000),FT(5),FT(1),FT(506));
+#sim_res1 = run_sim_2(FT(31*1.5),FT(0.33), FT(2), FT(2000),FT(4),FT(1),FT(506*1.5));
+sim_res1 = run_sim_2(FT(31),FT(0.5), FT(16), FT(2000),FT(5),FT(0.33),FT(506));
 
-logpar2 = [3.420552042,-3.005631752,0.140492204,7.77502719,1.384741914,1.146245499,0.559185057,6.697470399]
+#=
+#logpar2 = [3.420552042,-3.005631752,0.140492204,7.77502719,1.384741914,1.146245499,0.559185057,6.697470399]
+logpar2 = [3.1947375882136346,-0.44117045659155996,0.4887406843856141,7.547531251335006,1.8418619264868286,0.6185794952749131,6.418605746982928];
 par2 = convert(Array{FT}, exp.(logpar2));
 sim_res2 = run_sim_2(par2...);
-#sim_res2 = run_sim_2(FT(31),FT(0.5), FT(2), FT(500),FT(5),FT(2),FT(1),FT(506));
 
+logpar3 = [3.921351743234797,-3.014527320790715,1.5251364876304812,7.579142934016304,0.6514512442653848,0.8172816825103031,6.025763939919354];
+par3 = convert(Array{FT}, exp.(logpar3));
+sim_res3 = run_sim_2(par3...);
+
+logpar4 = [3.3306495184466582,-1.1863319450414673,0.8007124448527485,7.667906818330927,1.38932802170813,0.9740829200017852,6.093147338959081];
+par4 = convert(Array{FT}, exp.(logpar4));
+sim_res4 = run_sim_2(par4...);
+
+logpar5 = [4.1756316574500945,-0.24211108908538048,1.056543324001581,7.823183350906499,2.0936252646767506,-0.8941035440564787,6.757837222870143];
+par5 = convert(Array{FT}, exp.(logpar5));
+sim_res5 = run_sim_2(par5...);
+
+#sim_res2 = run_sim_2(FT(31),FT(0.5), FT(2), FT(500),FT(5),FT(2),FT(1),FT(506));
+=#
 
 gravity_factor = (18.5+9)/2 * 1000/mpa2mm;
 
@@ -126,11 +151,11 @@ plot(s_arr, -psi_arr,color="orange")
 =#
 
 figure()
-plot((mean(sim_res1[2][:,3:4],dims=2) .- 0.067) / (0.45-0.067), pdLWP, "o")
-srel_arr = collect(0.6:0.01:0.95);
-n = 1.2; m = 1-1/n; a = 200;
+plot((sim_res1[2][:,end] .- 0.067) / (0.45-0.067), pdLWP, "o")
+srel_arr = collect(0.4:0.01:0.95);
+n = 1.4; m = 1-1/n; a = 200;
 psi_arr = (srel_arr .^ (-1/m) .-1) .^ (1/n);
-psi_fac = 1.5/psi_arr[srel_arr .== 0.75];
+psi_fac = 0.75/psi_arr[srel_arr .== 0.6];
 plot(srel_arr, -psi_arr*psi_fac,"k")
 
 

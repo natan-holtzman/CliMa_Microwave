@@ -81,7 +81,8 @@ end
 plant_hs.trunk.v_maximum[1] = FT(0.8)*total_water_vol
 
 for i in 1:n_root
-	plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol / n_root
+	#plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol / n_root
+	plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol * plant_hs.roots[i].area
 end
 
 w_soil = FT(smc0);		

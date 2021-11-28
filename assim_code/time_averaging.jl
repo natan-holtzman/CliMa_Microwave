@@ -49,6 +49,19 @@ function get_diurnal(x,navg)
 end
 
 
+function get_diurnal_summer(x,navg)
+	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
+		day_reshape = reshape(x,(navg,:));
+		day_list = collect(1:(size(day_reshape)[2])) .% 365;
+		summer_mask = (day_list .>= 150) .* (day_list .< 175);
+		summer_only = day_reshape[:,summer_mask];
+		return mean(summer_only,dims=2)[:,1];
+	else
+			return x[1:navg]
+	end
+end
+
+
 function get_daily(x,navg)
 	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
 			return mean(reshape(x,(navg,:)),dims=1)[1,:];

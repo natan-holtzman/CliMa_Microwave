@@ -26,7 +26,9 @@ function create_tree2(
 	#_r_index = [4,5,6,7]
 	
 	#distribute roots in lower half of soil column
-	_r_index = [i for i in eachindex(soil_bounds[1:(end-1)]) if abs(soil_bounds[i]) >= abs(soil_bounds[end]/2)];
+	#_r_index = [i for i in eachindex(soil_bounds[1:(end-1)]) if abs(soil_bounds[i]) >= abs(soil_bounds[end]/2)];
+	_r_index = eachindex(soil_bounds[1:(end-1)]);
+
 	_n_root = length(_r_index);
 
     _n_canopy = 0;
@@ -56,7 +58,28 @@ function create_tree2(
 	
     # create evenly distributed root system for now
     _roots = RootHydraulics{FT}[];
-    for i in _r_index
+    
+	for i in _r_index
+        _Δh = abs(soil_bounds[i+1] + soil_bounds[i]) / 2;
+		dZ = abs(soil_bounds[i+1]) - abs(soil_bounds[i]);
+		zfrac = dZ / abs(z_root);
+		#=
+		if i <= 4
+			zfrac = 0;
+		else
+			zfrac = 1/4;
+		end
+		=#
+        _rt = RootHydraulics{FT}(N=N_subunit,
+                    area=1*zfrac,
+                    k_max=25,#*zfrac,
+                    k_rhiz=5e14,#*zfrac,
+                    Δh=_Δh);
+        push!(_roots, _rt);
+    end
+	
+	#=
+	for i in _r_index
         _Δh = abs(soil_bounds[i+1] + soil_bounds[i]) / 2;
         _rt = RootHydraulics{FT}(N=N_subunit,
                     area=1/_n_root,
@@ -65,6 +88,7 @@ function create_tree2(
                     Δh=_Δh);
         push!(_roots, _rt);
     end
+	=#
 		
 
     # create Trunk

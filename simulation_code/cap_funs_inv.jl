@@ -125,7 +125,8 @@ function create_deriv_mat(plant_hs)
 	for root_i in 1:plant_hs.n_root
 
 		iRoot = plant_hs.roots[root_i]
-		krt = 2/(1/iRoot.k_element[1] + 1/trunk.k_element[1])
+		area_frac = iRoot.area #total root area is 1
+		krt = 2/(1/(iRoot.k_element[1]*area_frac) + 1/trunk.k_element[1])
 		#krt = trunk.k_element[1]
 
 		dzrt = (iRoot.Δh/2 + trunk.Δh/2)*1000/mpa2mm
@@ -146,7 +147,7 @@ function create_deriv_mat(plant_hs)
 		ans_rhs[itrunk] += -dzrt*krt
 		ans_rhs[i] += dzrt*krt
 		
-		ksr = iRoot.k_element[1]
+		ksr = iRoot.k_element[1]*area_frac
 		dzsr = iRoot.Δh/2*1000/mpa2mm
 		#dzsr = iRoot.Δh*1000/mpa2mm
 		
@@ -276,7 +277,7 @@ function update_cap_mat!(plant_hs, deltaT)
 	for iroot in 1:plant_hs.n_root
 		rootI = plant_hs.roots[iroot]
 		m = 1/rootI.pv.slope;
-		ksr = rootI.k_element[1]
+		ksr = rootI.k_element[1]*rootI.area #total root area is 1
 		ps = rootI.p_ups
 		dzr = rootI.Δh*1000/mpa2mm
 		vroot = rootI.v_maximum[1]

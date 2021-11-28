@@ -189,6 +189,7 @@ end
 smc_record = zeros(FT,N,length(node.swc));
 psi_record_leaf = zeros(FT,N,length(node.plant_hs.leaves));
 psi_record_branch = zeros(FT,N,length(node.plant_hs.leaves));
+qin_record = zeros(FT,N,length(node.plant_hs.roots));
 psi_record_trunk = zeros(FT,N);
 
 
@@ -348,15 +349,15 @@ for i in eachindex(df.Day)
 		end;
 	end
 		
-	subIter2 = 16
+	subIter2 = 8
 	
 	if scheme_number==3
-		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
-		#try
-		#	dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
-		#catch err
-		#	return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk #, node
-		#end
+		#dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		try
+			dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		catch err
+			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
+		end
 	end
 	
 	for subI2 in 1:subIter2
@@ -370,7 +371,7 @@ for i in eachindex(df.Day)
 			update_PVF!(node.plant_hs,deltaT/subIter2);
 		end
 		if scheme_number==3
-			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, FT(0))		
+			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, FT(0.0))		
 		end
 		
 		for i_root in eachindex(node.plant_hs.roots)
@@ -415,10 +416,11 @@ for i in eachindex(df.Day)
 		psi_record_branch[i,ican] = mean(node.plant_hs.branch[ican].p_element);
 	end
 	psi_record_trunk[i] = mean(node.plant_hs.trunk.p_element);
+	qin_record[i,:] = [x.q_in for x in node.plant_hs.roots];
 
 end;
 
-return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk #, node
+return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, qin_record#, node
 
 end
 
