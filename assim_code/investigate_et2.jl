@@ -15,8 +15,8 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2; #rain is mm/half hour, need to convert it to mm/time step
 
-N = 24*365*12
-istart = 24*365*0+1
+N = 24*365*1
+istart = 24*365*6+1
 soil0 = 0.3;
 
 include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med.jl"));
@@ -93,7 +93,7 @@ sim_res5 = run_sim_2(par5...);
 gravity_factor = (18.5+9)/2 * 1000/mpa2mm;
 
 leafpot = mean(sim_res1[3],dims=2);
-simTB = get_TB(sim_res1, leafpot, 0.041, 0.82, 0.051);
+simTB = get_TB(sim_res1, leafpot, 0.075, 0.82, 0.051);
 simTB0 = get_TB(sim_res1, leafpot, 0, 0.82, 0.051);
 simTB2 = get_TB(sim_res1, leafpot, 0.082, 0.82, 0.051);
 

@@ -103,6 +103,8 @@ in_Erad = in_rad_bak.E_direct .+ in_rad_bak.E_diffuse;
 #in_PPFD = sum( e2phot(dWL, in_Erad)[iPAR] ) * FT(1e6);
 in_PPFD = sum( Land.CanopyLayers.e2phot(wl_set.WL, in_Erad/1000)[iPAR] .* dWL[iPAR] ) * FT(1e6);
 
+maxvol = get_v_max(plant_hs);
+
 
 if scheme_number == 2
 
@@ -352,12 +354,37 @@ for i in eachindex(df.Day)
 	subIter2 = 8
 	
 	if scheme_number==3
-		#dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		#=
 		try
 			dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
 		catch err
 			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
 		end
+		=#
+		#=
+		try
+			dd1, dd2 = find_new_cap(plant_hs,deltaT);
+			if mean(dd1 .<= maxvol) == 1
+				push_cap!(plant_hs,dd1,dd2)
+			else
+				cap_iter = 100
+				for icap in 1:cap_iter
+					dd1, dd2 = find_new_cap(plant_hs,deltaT/cap_iter);
+					push_cap!(plant_hs,dd1,dd2)
+				end
+			end
+		catch err
+			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
+			#=
+			cap_iter = 4
+			for icap in 1:cap_iter
+				dd1, dd2 = find_new_cap(plant_hs,deltaT/cap_iter);
+				push_cap!(plant_hs,dd1,dd2)
+			end
+			=#
+		end
+		=#
 	end
 	
 	for subI2 in 1:subIter2

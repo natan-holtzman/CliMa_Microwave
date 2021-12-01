@@ -291,5 +291,42 @@ function update_cap_mat!(plant_hs, deltaT)
 	
 end
 
+function find_new_cap(plant_hs, deltaT)
+
+	volumes = get_v_prof2(plant_hs);
+	dmat, dvec = create_deriv_mat(plant_hs)
+
+	newvals, newints = solve_odes(dmat, dvec, volumes, deltaT)
+
+	return newvals,newints
+end
+
+function push_cap!(plant_hs, newvals, newints)
+	set_vol!(plant_hs,newvals)
+	
+	for iroot in 1:plant_hs.n_root
+		rootI = plant_hs.roots[iroot]
+		m = 1/rootI.pv.slope;
+		ksr = rootI.k_element[1]*rootI.area #total root area is 1
+		ps = rootI.p_ups
+		dzr = rootI.Δh*1000/mpa2mm
+		vroot = rootI.v_maximum[1]
+		integral_rootvol = newints[plant_hs.n_canopy*2+1+iroot];
+		rootI.q_in = ksr*(ps*deltaT - m/vroot*integral_rootvol + m*deltaT - dzr*deltaT)/deltaT
+	end
+	
+	update_pk_tree!(plant_hs)
+end
+
+function get_v_max(plant_hs)
+	root_p = [x.v_maximum[1] for x in plant_hs.roots]
+	trunk_p = plant_hs.trunk.v_maximum[1];
+	branch_p = [x.v_maximum[1] for x in plant_hs.branch]
+	leaf_p = [x.v_maximum[1]*x.area for x in plant_hs.leaves]
+	
+	p_list = vcat(leaf_p,branch_p,trunk_p,root_p)
+	
+	return p_list
+end
 
 
