@@ -65,6 +65,8 @@ df[!,"trunkflow"] = zeros(N)
 
 df[!,"leafStore"] = zeros(N)
 
+df[!,"ColumnSMC"] = zeros(N)
+
 #df[!,"fvis"] = zeros(N)
 df[!,"glw"] = zeros(N)
 #df[!,"GPP"] = zeros(N)
@@ -432,12 +434,14 @@ for i in eachindex(df.Day)
 	df.stempot[i] = mean(node.plant_hs.trunk.p_element);
 	df.leafpot[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf;
 	smc_record[i,:] = node.swc
+        df.ColumnSMC[i] = sum(node.swc .* diff(node.soil_bounds)) / 2
+
 	#df.Ecrit[i] = node.plant_ps[length(node.plant_hs.leaves)].ec;
 	#df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
 	df.leafStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].v_storage;
 	df.leafpotStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_storage;
 	df.VPD[i] = node.envirs[1].vpd
-	
+        	
 	for ican in eachindex(node.plant_hs.leaves)
 		psi_record_leaf[i,ican] = node.plant_hs.leaves[ican].p_leaf;
 		psi_record_branch[i,ican] = mean(node.plant_hs.branch[ican].p_element);
