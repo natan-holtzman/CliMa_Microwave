@@ -434,9 +434,9 @@ for i in eachindex(df.Day)
 	df.stempot[i] = mean(node.plant_hs.trunk.p_element);
 	df.leafpot[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf;
 	smc_record[i,:] = node.swc
-        df.ColumnSMC[i] = sum(node.swc .* diff(node.soil_bounds)) / 2
+        df.ColumnSMC[i] = sum(node.swc .* -diff(node.soil_bounds)) / 2
         swpI = [soil_p_25_swc(node.plant_hs.roots[1].sh, x) for x in node.swc];
-        df.ColumnSWP[i] = sum(swpI .* diff(node.soil_bounds)) / 2
+        df.ColumnSWP[i] = sum(swpI .* -diff(node.soil_bounds)) / 2
 	#df.Ecrit[i] = node.plant_ps[length(node.plant_hs.leaves)].ec;
 	#df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
 	df.leafStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].v_storage;
