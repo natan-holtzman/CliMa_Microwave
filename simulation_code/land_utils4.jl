@@ -1,7 +1,7 @@
 #update the stomatal conductance for empirical stomatal models
 function update_gsw!(clayer::CanopyLayer{FT},
             sm::EmpiricalStomatalModel{FT},
-            photo_set::AbstractPhotoModelParaSet{FT},
+            photo_set::C3ParaSet{FT},
             envir::AirLayer{FT},
             Δt::FT,
 			betafac::FT;
@@ -27,7 +27,7 @@ end
 #update the stomatal conductance for Wang optimal stomatal model
 function update_gsw!(clayer::CanopyLayer{FT},
             sm::OSMWang{FT},
-            photo_set::AbstractPhotoModelParaSet{FT},
+            photo_set::C3ParaSet{FT},
             envir::AirLayer{FT},
             Δt::FT;
             τ::FT = FT(1e-6)
@@ -70,7 +70,7 @@ end
 #modified by skipping fluorescence calculations
 
 function gas_exchange_nofluor!(
-            photo_set::AbstractPhotoModelParaSet{FT},
+            photo_set::C3ParaSet{FT},
             canopyi::CanopyLayer{FT},
             envir::AirLayer{FT},
             drive::GswDrive,
@@ -103,7 +103,7 @@ function gas_exchange_nofluor!(
     canopyi.Ap[ind] = canopyi.ps.Ap;
     canopyi.Ag[ind] = canopyi.ps.Ag;
     canopyi.An[ind] = canopyi.ps.An;
-    canopyi.ϕs[ind] = canopyi.ps.ϕs;
+    canopyi.φs[ind] = canopyi.ps.φs;
 
     # update the pressures
     canopyi.p_i[ind] = canopyi.ps.p_i;
@@ -116,7 +116,7 @@ end
 
 
 function gas_exchange_new!(
-            photo_set::AbstractPhotoModelParaSet{FT},
+            photo_set::C3ParaSet{FT},
             canopyi::CanopyLayer{FT},
             envir::AirLayer{FT},
             drive::GswDrive
@@ -124,7 +124,7 @@ function gas_exchange_new!(
     # update the conductances for each "leaf"
     for i in eachindex(canopyi.g_sw)
         canopyi.ps.APAR = canopyi.APAR[i];
-        leaf_ETR!(photo_set, canopyi.ps);
+        Photosynthesis.leaf_ETR!(photo_set, canopyi.ps);
         gas_exchange_nofluor!(photo_set, canopyi, envir, drive, i);
     end
 

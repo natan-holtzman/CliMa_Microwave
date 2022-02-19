@@ -59,6 +59,12 @@ function create_tree2(
     # create evenly distributed root system for now
     _roots = RootHydraulics{FT}[];
     
+	soil_thick = abs.(soil_bounds[2:end] - soil_bounds[1:(end-1)]);
+	soil_mid = abs.(soil_bounds[2:end] + soil_bounds[1:(end-1)])/2;
+	#root_dist_len = exp.(-1*abs(2/z_root)*soil_mid);
+	root_dist_len = exp.(-2*soil_mid);
+	root_dist_layer = root_dist_len .* soil_thick / sum(root_dist_len .* soil_thick);
+	
 	for i in _r_index
         _Δh = abs(soil_bounds[i+1] + soil_bounds[i]) / 2;
 		dZ = abs(soil_bounds[i+1]) - abs(soil_bounds[i]);
@@ -71,7 +77,8 @@ function create_tree2(
 		end
 		=#
         _rt = RootHydraulics{FT}(N=N_subunit,
-                    area=1*zfrac,
+                    #area=1*zfrac,
+					area=FT(root_dist_layer[i]),
                     k_max=25,#*zfrac,
                     k_rhiz=5e14,#*zfrac,
                     Δh=_Δh);

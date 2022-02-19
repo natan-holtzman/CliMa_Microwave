@@ -94,6 +94,38 @@ function update_Kmax0!(node::SPACMono{FT}, kmax::FT) where {FT<:AbstractFloat}
     return nothing
 end
 
+function update_Kmax_ratio!(node::SPACMono{FT}, kmax::FT, ratio::Array{FT}) where {FT<:AbstractFloat}
+    # Root:Stem:Leaf conductance ratio is set as 1:2:2.
+    #    For trees, roots: 2X, trunk: 8X, branch: 8X, leaves: 4X
+    #    For palms, roots: 2X, trunk: 4X, leaves: 4X
+    #    For grasses, roots: 2X, leaves: 2X
+
+	resist_sum = sum(1 ./ ratio);
+	ratio_norm = ratio * resist_sum;
+	
+    # 1. update the hydraulic conductance in Roots
+    for root in node.plant_hs.roots
+        root.k_max      = ratio_norm[1] * kmax / node.plant_hs.n_root;
+        root.k_element .= root.k_max * root.N;
+    end
+
+    # 2. If is a tree
+    if typeof(node.plant_hs) <: TreeLikeOrganism
+        node.plant_hs.trunk.k_max      = ratio_norm[2] * kmax;
+        node.plant_hs.trunk.k_element .= node.plant_hs.trunk.k_max *
+                                         node.plant_hs.trunk.N;
+        for stem in node.plant_hs.branch
+            stem.k_max      = ratio_norm[3] * kmax / node.plant_hs.n_canopy;
+            stem.k_element .= stem.k_max * stem.N;
+        end
+        for leaf in node.plant_hs.leaves
+            leaf.k_sla      = ratio_norm[4] * kmax / node.plant_hs.n_canopy / node.la;
+            leaf.k_element .= leaf.k_sla * leaf.N;
+        end
+    end
+
+    return nothing
+end
 
 
 
