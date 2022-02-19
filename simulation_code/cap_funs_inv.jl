@@ -9,12 +9,11 @@ function update_pk_leaf!(tissue::LeafHydraulics{FT})
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_sla
 end
 	
-function update_pk_nonleaf!(tissue::AbstractHydraulicOrgan{FT})
+function update_pk_nonleaf!(tissue::Land.PlantHydraulics.AbstractHydraulicOrgan{FT})
 	tissue.p_storage = (tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
 	tissue.p_element = tissue.p_storage
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_max
 end
-	
 	
 function update_pk_tree!(plant_hs)
 
@@ -33,6 +32,16 @@ function update_pk_tree!(plant_hs)
 		update_pk_nonleaf!(iRoot)
 	end
 
+end
+
+#conserve the total leaf water volume when changing LAI
+#alternatively, this water could be removed or added to branches
+function update_pv_leaf!(plant_hs, lai_old, lai_new)
+	for can_i in 1:plant_hs.n_canopy
+		iLeaf = plant_hs.leaves[can_i]	
+		iLeaf.v_storage *= (lai_old / lai_new)
+		update_pk_leaf!(iLeaf)
+	end
 end
 
 #The capacitance model solves a set of ODEs at each timestep
@@ -121,11 +130,13 @@ function create_deriv_mat(plant_hs)
 
 	
 	i = itrunk+1
+	
+	total_k = sum([x.area/x.Δh for x in plant_hs.roots]);
 
 	for root_i in 1:plant_hs.n_root
 
 		iRoot = plant_hs.roots[root_i]
-		area_frac = iRoot.area #total root area is 1
+		area_frac = iRoot.area/iRoot.Δh/total_k  #total root area is 1		
 		krt = 2/(1/(iRoot.k_element[1]*area_frac) + 1/trunk.k_element[1])
 		#krt = trunk.k_element[1]
 
@@ -304,19 +315,25 @@ end
 function push_cap!(plant_hs, newvals, newints)
 	set_vol!(plant_hs,newvals)
 	
+	total_k = sum([x.area/x.Δh for x in plant_hs.roots]);
+
+	
 	for iroot in 1:plant_hs.n_root
 		rootI = plant_hs.roots[iroot]
 		m = 1/rootI.pv.slope;
-		ksr = rootI.k_element[1]*rootI.area #total root area is 1
+		ksr = rootI.k_element[1]*rootI.area/rootI.Δh/total_k #total root area is 1
 		ps = rootI.p_ups
-		dzr = rootI.Δh*1000/mpa2mm
+		dzr = rootI.Δh/2*1000/mpa2mm
 		vroot = rootI.v_maximum[1]
 		integral_rootvol = newints[plant_hs.n_canopy*2+1+iroot];
+		
+		
 		rootI.q_in = ksr*(ps*deltaT - m/vroot*integral_rootvol + m*deltaT - dzr*deltaT)/deltaT
 	end
 	
 	update_pk_tree!(plant_hs)
 end
+
 
 function get_v_max(plant_hs)
 	root_p = [x.v_maximum[1] for x in plant_hs.roots]
