@@ -37,27 +37,28 @@ K_STEFAN = FT(Stefan());
 #storage volume and PV curves
 
 
-function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice,deltaT,alpha,n)
+function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice,deltaT,alpha,n,full_can,full_angles,k_soil)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1
 #vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult = parlist
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice,alpha,n);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice,alpha,n,full_can,full_angles);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,
 		latitude, leaves_rt, n_canopy, photo_set, plant_hs, plant_ps,
-		rt_con, soil_opt, stomata_model, wl_set, n_root = node;
+		rt_con, soil_opt, stomata_model, wl_set, n_root, soil_bounds = node;
 
 		
 #don't need to do the following two lines now that air layers are fixed
 #node.plant_hs.branch[1].v_maximum = node.plant_hs.branch[2].v_maximum
 #node.plant_hs.branch[1].v_storage = node.plant_hs.branch[2].v_storage
 
-
+#old
 canopyPV = PVCurveLinear{Float32}(1/20f0, FT(1e-4));
 trunkPV = PVCurveLinear{Float32}(1/5f0, FT(1e-4));
+
 
 for i_can in 1:n_canopy
 	plant_hs.leaves[i_can].pv = canopyPV
@@ -82,7 +83,7 @@ plant_hs.trunk.v_maximum[1] = FT(0.8)*total_water_vol
 
 for i in 1:n_root
 	#plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol / n_root
-	plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol * plant_hs.roots[i].area
+	plant_hs.roots[i].v_maximum[1] = FT(0.05)*total_water_vol*FT(1/8) #* plant_hs.roots[i].area
 end
 
 w_soil = FT(smc0);		
@@ -93,26 +94,55 @@ for root in plant_hs.roots
 end;
 
 #set the plant water storage so the corresponding xylem potential is slightly below the soil water potential
-pot_init = 1+0.05*ψ_soil
+#pot_init = 1+0.05*ψ_soil
+#pot_init = FT(0.5)
+pot_init = ψ_soil - 0.025
+
 
 for i in 1:n_canopy
-	plant_hs.leaves[i].v_storage = FT(pot_init) * plant_hs.leaves[i].v_maximum
-	plant_hs.branch[i].v_storage = FT(pot_init) * plant_hs.branch[i].v_maximum
+#pot = volumes[1][i] ./ leafI.v_maximum .- FT(1)) / leafI.pv.slope
+	plant_hs.leaves[i].v_storage = (FT(pot_init)*plant_hs.leaves[i].pv.slope + FT(1)) * plant_hs.leaves[i].v_maximum
+	plant_hs.branch[i].v_storage = (FT(pot_init)*plant_hs.branch[i].pv.slope + FT(1)) * plant_hs.branch[i].v_maximum
 end
 
-plant_hs.trunk.v_storage = FT(pot_init) * plant_hs.trunk.v_maximum
+plant_hs.trunk.v_storage = (FT(pot_init)*plant_hs.trunk.pv.slope + FT(1)) * plant_hs.trunk.v_maximum
 
 for i in 1:n_root
-	plant_hs.roots[i].v_storage = FT(pot_init) * plant_hs.roots[i].v_maximum
+	plant_hs.roots[i].v_storage = (FT(pot_init)*plant_hs.roots[i].pv.slope + FT(1)) * plant_hs.roots[i].v_maximum
 end
 
 #then calculate the steady state plant water storage
 #and set plant state to that
 update_pk_tree!(plant_hs)
-volumes0 = get_v_prof2(plant_hs);
-dmat0, dvec0 = create_deriv_mat(plant_hs)
-set_vol!(plant_hs, -inv(dmat0)*dvec0)
+
+#volumes0 = get_v_prof2(plant_hs);
+#dmat0, dvec0 = create_deriv_mat(plant_hs)
+#set_vol!(plant_hs, -inv(dmat0)*dvec0)
+
+f_to_integrate(u,p,t) = all_deriv(u,plant_hs,node.ga,k_soil,node.soil_bounds);
+tspan = (FT(0.0),FT(60*60*12));
+current_vol = vcat(get_vol_object(plant_hs, node.swc)...);
+
+#=
+vol_list = zeros(10000,23);
+
+volI = vcat(get_vol_object(plant_hs, node.swc)...);
+
+for ti in 1:(24*10)
+	vol_list[ti,:] = volI
+	derivs = f_to_integrate(volI,1,1)[1];
+	global volI = volI + derivs*60*60;
+	#set_vol!(plant_hs, node.swc, vec_to_vols(sol.u[end]))
+end
+=#
+
+println("Finding steady state")
+prob = ODEProblem(f_to_integrate,current_vol,tspan);
+sol = solve(prob);
+set_vol!(plant_hs, node, vec_to_vols(sol.u[end]))
+
 update_pk_tree!(plant_hs)
+println("Steady state found")
 
 return node
 

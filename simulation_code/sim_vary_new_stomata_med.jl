@@ -197,7 +197,7 @@ qin_record = zeros(FT,N,length(node.plant_hs.roots));
 psi_record_trunk = zeros(FT,N);
 
 
-rbase =  Q10TD{FT}(0, 298.15, 1.7)
+rbase =  Q10TD{FT}(4, 298.15, 1.7)
 
 # iterate through the weather data
 for i in eachindex(df.Day)

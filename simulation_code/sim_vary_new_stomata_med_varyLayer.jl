@@ -40,7 +40,8 @@ include(string(PROJECT_HOME,"/simulation_code/cap_funs_inv.jl"))
 include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV_old.jl"))
 
 function run_sim_varyB(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N,
- smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n,full_can, full_angles)
+ smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n,full_can, full_angles,
+ slope_runoff, root_dist_par,canopy_pvslope,trunk_pvslope)
 
 df = deepcopy(df_raw[istart:(istart+N-1),:]);
 
@@ -80,7 +81,9 @@ df[!,"Runoff"] = zeros(N)
 #df[!,"pl2"] = zeros(N)
 
 #if scheme_number == 3
-node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n,full_can,full_angles);
+node = create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,1,deltaT,alpha,n,
+full_can,full_angles,root_dist_par,
+canopy_pvslope, trunk_pvslope);
 #else
 #	node = create_spac(OSMWang{FT}(),vcmax_par,k_plant,z_soil, FT(40),alpha,n);
 #end
@@ -423,7 +426,7 @@ for i in eachindex(df.Day)
 			update_PVF!(node.plant_hs,deltaT/subIter2);
 		end
 		if scheme_number==3
-			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, FT(0.5))		
+			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_runoff)		
 		end
 		
 		for i_root in eachindex(node.plant_hs.roots)

@@ -37,13 +37,16 @@ K_STEFAN = FT(Stefan());
 #storage volume and PV curves
 
 
-function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,nslice,deltaT,alpha,n,full_can,full_angles)
+function create_moflux_node(vcmax_par, k_plant, z_soil, smc0, storage_mult,
+	nslice,deltaT,alpha,n,full_can,full_angles,root_dist_par,
+	canopy_pvslope, trunk_pvslope)
 #parlist = convert(Array{FT,1}, [22, 1.5, 5, 1e-5, 2.5,2,700,0.45,0.38,1])
 #N = 10
 #istart = 1
 #vcmax_par, p_crit, k_plant, k_soil, b_soil, p20, z_soil, n_soil, smc0, storage_mult = parlist
 
-node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice,alpha,n,full_can,full_angles);
+node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40),
+ nslice,alpha,n,full_can,full_angles,root_dist_par);
 
  
 @unpack angles, can_opt, can_rad, canopy_rt, envirs, f_SL, ga, in_rad,
@@ -56,8 +59,8 @@ node = create_spac(OSMWang{FT}(),vcmax_par,k_plant, z_soil, FT(40), nslice,alpha
 #node.plant_hs.branch[1].v_storage = node.plant_hs.branch[2].v_storage
 
 #old
-canopyPV = PVCurveLinear{Float32}(1/20f0, FT(1e-4));
-trunkPV = PVCurveLinear{Float32}(1/5f0, FT(1e-4));
+canopyPV = PVCurveLinear{Float32}(canopy_pvslope, FT(1e-4));
+trunkPV = PVCurveLinear{Float32}(trunk_pvslope, FT(1e-4));
 
 
 for i_can in 1:n_canopy

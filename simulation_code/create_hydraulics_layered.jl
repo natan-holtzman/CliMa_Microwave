@@ -6,7 +6,8 @@ function create_tree2(
             z_canopy::FT,
             soil_bounds::Array{FT,1},
             air_bounds::Array{FT,1},
-			N_subunit::Int
+			N_subunit::Int,
+            root_dist_par::FT
 ) where {FT<:AbstractFloat}
     # determine how many layers in roots and canopy
     #=
@@ -62,7 +63,7 @@ function create_tree2(
 	soil_thick = abs.(soil_bounds[2:end] - soil_bounds[1:(end-1)]);
 	soil_mid = abs.(soil_bounds[2:end] + soil_bounds[1:(end-1)])/2;
 	#root_dist_len = exp.(-1*abs(2/z_root)*soil_mid);
-	root_dist_len = exp.(-2*soil_mid);
+	root_dist_len = exp.(-root_dist_par*soil_mid);
 	root_dist_layer = root_dist_len .* soil_thick / sum(root_dist_len .* soil_thick);
 	
 	for i in _r_index

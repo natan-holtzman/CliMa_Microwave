@@ -27,7 +27,8 @@ function create_spac(
 	alpha::FT = FT(1.368),
 	n::FT = FT(2.6257),
 	full_can::Int = 1,
-	full_angles::Int = 1
+	full_angles::Int = 1,
+	root_dist_par::FT = 2
 ) where {FT<:AbstractFloat} 
 (
 
@@ -59,7 +60,7 @@ function create_spac(
 	end;
 	
 	_tree_hs = create_tree2(FT(-1*_rootdepth), FT(9), FT(18.5), _soil_bounds,
-						   _air_bounds, N_slice);
+						   _air_bounds, N_slice, root_dist_par);
 	for _root in _tree_hs.roots
 		_root.sh = deepcopy(_soil_hs);
 	end;

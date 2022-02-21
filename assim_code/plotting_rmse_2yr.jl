@@ -11,6 +11,8 @@ rcParams["lines.linewidth"] = 2;
 rcParams["font.size"] = 18;
 rcParams["mathtext.default"] = "regular";
 
+pygui(true)
+
 #=
 #all
 leafRMSE =  [0.022440029317634377, 0.2233237350733526, 0.16241515258946543]
