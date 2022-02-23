@@ -169,11 +169,10 @@ function create_spac(
 
     # update fitted Vcmax, Kmax, and Chlrophyll content
     update_VJRWW!(_node, vcmax);
-    #update_Kmax_ratio!(_node, kmax, convert(Array{FT},[2,8,0.25,0.25]));
-    #update_Kmax_ratio!(_node, kmax, convert(Array{FT},[1,10,1,0.1]));
-	update_Kmax_ratio!(_node, kmax, convert(Array{FT},[0.25,8,0.25,0.25]));
-    #update_Kmax_ratio!(_node, kmax, convert(Array{FT},[2,8,0.25,0.25]));
-    update_Cab!(_node, chl);
+
+	#update_Kmax_ratio!(_node, kmax, convert(Array{FT},[0.25,8,0.25,0.25]));
+	update_Kmax_ratio!(_node, kmax, convert(Array{FT},[2,8,4,2]));
+	update_Cab!(_node, chl);
     initialize_spac_canopy!(_node);
 	
     return _node

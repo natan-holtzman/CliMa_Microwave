@@ -286,5 +286,5 @@ function do_soil_nss_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_
 		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
 	end
 	
-	#return runoff
+	return runoff #in units of mm
 end	

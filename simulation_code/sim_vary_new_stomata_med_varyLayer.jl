@@ -414,7 +414,7 @@ for i in eachindex(df.Day)
 		end
 		=#
 	end
-	
+	total_runoff = 0
 	for subI2 in 1:subIter2
 		
 		if scheme_number==1
@@ -426,22 +426,26 @@ for i in eachindex(df.Day)
 			update_PVF!(node.plant_hs,deltaT/subIter2);
 		end
 		if scheme_number==3
-			do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_runoff)		
-		end
-		
-		for i_root in eachindex(node.plant_hs.roots)
-			rootI = node.plant_hs.root_index_in_soil[i_root]
-			node.plant_hs.roots[i_root].p_ups = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[rootI])
-		end
-				
-		
-		# update canopy layer p_ups, which will be passed to each leaf
-		for _i_can in eachindex(node.plant_hs.leaves)
-			_iHS = node.plant_hs.leaves[_i_can];
-			_iPS = node.plant_ps[_i_can];
-			_iPS.p_ups = _iHS.p_ups;
+			runoff_i = do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_runoff)		
+			total_runoff += runoff_i
 		end
 	end
+	#total_runoff /= subIter2
+	for i_root in eachindex(node.plant_hs.roots)
+		rootI = node.plant_hs.root_index_in_soil[i_root]
+		node.plant_hs.roots[i_root].p_ups = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[rootI])
+	end
+			
+	
+	# update canopy layer p_ups, which will be passed to each leaf
+	for _i_can in eachindex(node.plant_hs.leaves)
+		_iHS = node.plant_hs.leaves[_i_can];
+		_iPS = node.plant_ps[_i_can];
+		_iPS.p_ups = _iHS.p_ups;
+	end
+	
+
+	
 
 	# calculate respiration from other components
 	_r = Photosynthesis.photo_TD_from_set(rbase, t_soil);
@@ -466,6 +470,7 @@ for i in eachindex(df.Day)
     df.ColumnSMC[i] = sum(node.swc .* -diff(node.soil_bounds)) / abs(node.soil_bounds[end])
     swpI = [soil_p_25_swc(node.plant_hs.roots[1].sh, x) for x in node.swc];
     df.ColumnSWP[i] = sum(swpI .* -diff(node.soil_bounds)) / abs(node.soil_bounds[end])
+	df.Runoff[i] = total_runoff;
 	#df.Ecrit[i] = node.plant_ps[length(node.plant_hs.leaves)].ec;
 	#df.Pcrit[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_crt;
 	df.leafStore[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].v_storage;
