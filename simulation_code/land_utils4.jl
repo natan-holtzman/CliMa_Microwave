@@ -288,3 +288,113 @@ function do_soil_nss_drain!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_
 	
 	return runoff #in units of mm
 end	
+
+function do_soil_nss_drain2!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
+	layer_thick = -1*diff(node.soil_bounds)*1000
+
+	runoff = FT(0);
+		
+	for i_root in eachindex(node.plant_hs.roots)
+		soil_layerI = node.plant_hs.root_index_in_soil[i_root]
+		
+		out_layer = node.plant_hs.roots[i_root].q_in * FT(1/node.ga) * FT(18.02/1000) * deltaT; 
+        #mol/s over basal area to mol/s over ground area to mm/s to mm
+		
+		node.swc[soil_layerI] -= 1*out_layer / layer_thick[soil_layerI]
+		node.swc[soil_layerI] = max(node.plant_hs.roots[i_root].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[i_root].sh.Θs));
+	end	
+
+	smc_rain = node.swc[1] + 1*rain_in/layer_thick[1] #mm/timestep
+	smc_rain = max(min(smc_rain, node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	node.swc[1] = smc_rain
+	
+	k_soil = zeros(length(node.swc))
+	p_soil_tot = zeros(length(node.swc))
+	midpoints = zeros(length(node.swc))
+
+	for i_soil in eachindex(node.swc)
+		k_soil[i_soil] = soil_k_ratio_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])
+		midpoint = (node.soil_bounds[i_soil] + node.soil_bounds[i_soil+1]) /2 * 1000
+		midpoints[i_soil] = midpoint;
+		p_soil_tot[i_soil] = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])*mpa2mm + midpoint
+        #pressure head in mm
+    end
+
+	k_soil *= k_soil_max*1000 #m/s to mm/s
+
+	p_diff = -1*diff(p_soil_tot) #in mm
+	layer_len = -1*diff(midpoints)
+	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len * deltaT #mm/s * mm / mm * s = mm
+
+	#drainage = k_soil*FT(0.15*6)*deltaT
+    drainage = k_soil[end]*mpa2mm*(soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[end])- FT(-0.75))/FT(1000);
+
+	#drainage = 0
+	
+	runoff += drainage
+	
+	node.swc[1:(length(k_soil)-1)] -= q_down ./ layer_thick[1:(length(k_soil)-1)]
+	node.swc[2:length(k_soil)] += q_down ./ layer_thick[2:length(k_soil)]
+	
+	node.swc[length(k_soil)] -= 1*drainage*deltaT ./ layer_thick[length(k_soil)]
+	#node.swc -= drainage ./ layer_thick
+	
+	for i_soil in eachindex(node.swc)
+		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	end
+	
+	return runoff #in units of mm
+end	
+
+function do_soil_nss_drain3!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, drainage_pot::FT)
+	layer_thick = -1*diff(node.soil_bounds)*1000
+
+	runoff = FT(0);
+	
+    layer_flux = zeros(FT,length(layer_thick));
+	for i_root in eachindex(node.plant_hs.roots)
+		soil_layerI = node.plant_hs.root_index_in_soil[i_root]
+		
+		layer_flux[soil_layerI] -= node.plant_hs.roots[i_root].q_in * FT(1/node.ga) * FT(18.02/1000); #* deltaT; 
+  	end	
+
+    layer_flux[1] += rain_in/deltaT;
+	
+	k_soil = zeros(length(node.swc))
+	p_soil_tot = zeros(length(node.swc))
+	midpoints = zeros(length(node.swc))
+
+	for i_soil in eachindex(node.swc)
+		k_soil[i_soil] = soil_k_ratio_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])
+		midpoint = (node.soil_bounds[i_soil] + node.soil_bounds[i_soil+1]) /2 * 1000
+		midpoints[i_soil] = midpoint;
+		p_soil_tot[i_soil] = soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[i_soil])*mpa2mm + midpoint
+        #pressure head in mm
+    end
+
+	k_soil *= k_soil_max*1000 #m/s to mm/s
+
+	p_diff = -1*diff(p_soil_tot) #in mm
+	layer_len = -1*diff(midpoints)
+	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len;# * deltaT #mm/s * mm / mm * s = mm
+
+	#drainage = k_soil*FT(0.15*6)*deltaT
+    drainage = k_soil[end]*mpa2mm*(soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[end])- drainage_pot)/FT(1000);
+
+	#drainage = 0
+	
+	runoff += drainage
+	
+	layer_flux[1:(length(k_soil)-1)] -= q_down #./ layer_thick[1:(length(k_soil)-1)]
+	layer_flux[2:length(k_soil)] += q_down #./ layer_thick[2:length(k_soil)]
+	
+	layer_flux[length(k_soil)] -= 1*drainage #*deltaT ./ layer_thick[length(k_soil)]
+	#node.swc -= drainage ./ layer_thick
+    node.swc += layer_flux*deltaT ./ layer_thick;
+	
+	for i_soil in eachindex(node.swc)
+		node.swc[i_soil] = max(min(node.swc[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	end
+	
+	return runoff #in units of mm
+end	

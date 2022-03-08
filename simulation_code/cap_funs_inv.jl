@@ -1,3 +1,5 @@
+using DifferentialEquations
+
 mpa2mm = FT(10^6/9.8); #mPa of water pressure to mm of water height
 
 #functions to update the pressure and conductivity of a plant, after its storage volumes have already been updated
@@ -346,4 +348,50 @@ function get_v_max(plant_hs)
 	return p_list
 end
 
+function soil_ode!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil_max::FT, slope_index::FT)
+	layer_thick = -1*diff(node.soil_bounds)*1000
+	
+	#fluxes_inout = -[x.q_in for x in node.plant_hs.roots] /KG_H_2_MOL_S * FT(1/node.ga*deltaT/(60*60));
+	fluxes_inout = -[x.q_in for x in node.plant_hs.roots] *FT(18.02/1000)* FT(1/node.ga) #mol/s over basal to kg/s over ground;
+	#node.swc[soil_layerI] = max(node.plant_hs.roots[i_root].sh.Θr,min(node.swc[soil_layerI],node.plant_hs.roots[i_root].sh.Θs));
+	#fluxes_inout = zeros(FT,8);
+	max_rain = (node.plant_hs.roots[1].sh.Θs - node.swc[1])*layer_thick[1]/(60*60)
+	rain_rate = rain_in/(60*60);
+	#fluxes_inout[1] += rain_in/(60*60)*(node.swc[1] < node.plant_hs.roots[1].sh.Θs) #mm/hour to mm/s;
+	fluxes_inout[1] += min(rain_rate, max_rain)
+	#fluxes_inout *= 0;
+
+	wrc = node.plant_hs.roots[1].sh;
+	midpoints = (node.soil_bounds[2:end] + node.soil_bounds[1:(end-1)]) /2 * 1000;
+	layer_len = -1*diff(midpoints);
+
+	function soil_derivative(smc_vec,p,t)
+		k_soil = k_soil_max/(60*60) * [soil_k_ratio_swc(wrc, xi) for xi in smc_vec];
+		p_soil_tot = [soil_p_25_swc(wrc,xi) for xi in smc_vec]*mpa2mm .+ midpoints;
+		p_diff = -1*diff(p_soil_tot) #in mm
+		q_down = k_soil[1:(end-1)] .* p_diff ./ layer_len * deltaT #mm/s * mm / mm * s
+		free_drainage = k_soil[end]*slope_index*deltaT
+		ans = fluxes_inout ./ layer_thick;
+		ans[1:(end-1)] -= q_down ./ layer_thick[1:(end-1)];
+		ans[2:end] += q_down ./ layer_thick[2:end];
+		ans[end] -= free_drainage / layer_thick[end];
+
+		#shortfall_to_sat = node.plant_hs.roots[1].sh.Θs .- smc_vec;
+		#only_negative = ans .* (ans .< 0);
+		#ans[smc_vec .>= node.plant_hs.roots[1].sh.Θs] = only_negative[smc_vec .>= node.plant_hs.roots[1].sh.Θs]
+		return ans
+	end
+	u0 = node.swc;
+	tspan = (FT(0.0),deltaT)
+	problem1 = ODEProblem(soil_derivative,u0,tspan);
+	sol1 = solve(problem1);
+	finalsol = sol1.u[end];
+	runoff = 0;
+	
+	for i_soil in eachindex(node.swc)
+		node.swc[i_soil] = max(min(finalsol[i_soil], node.plant_hs.roots[1].sh.Θs),node.plant_hs.roots[1].sh.Θr);
+	end
+	
+	return finalsol #in units of mm
+end	
 
