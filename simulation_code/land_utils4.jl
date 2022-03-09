@@ -105,7 +105,7 @@ function gas_exchange_nofluor!(
     canopyi.An[ind] = canopyi.ps.An;
     try
     	canopyi.ϕs[ind] = canopyi.ps.ϕs;
-    except found_error
+	catch found_error
         canopyi.φs[ind] = canopyi.ps.φs;
     end
     # update the pressures
