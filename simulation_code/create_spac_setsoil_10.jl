@@ -38,7 +38,7 @@ function create_spac(
 	_soil_hs = VanGenuchten{FT}(stype = "Ozark",
 									α = alpha,
 									n = n,
-								   Θs = 0.45,
+								   Θs = 0.55,
 								   Θr = 0.067);
 	
 								   

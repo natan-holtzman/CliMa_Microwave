@@ -41,7 +41,7 @@ include(string(PROJECT_HOME,"/simulation_code/create_node_newvol_varyPV_old.jl")
 
 function run_sim_varyB(vcmax_par, k_rel_crit, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N,
  smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n,full_can, full_angles,
- slope_runoff, root_dist_par,canopy_pvslope,trunk_pvslope)
+ drainage_smc, root_dist_par,canopy_pvslope,trunk_pvslope)
 
 df = deepcopy(df_raw[istart:(istart+N-1),:]);
 
@@ -196,6 +196,8 @@ end
 
 
 smc_record = zeros(FT,N,length(node.swc));
+smc_record2 = zeros(FT,N,length(node.swc));
+
 psi_record_leaf = zeros(FT,N,length(node.plant_hs.leaves));
 psi_record_branch = zeros(FT,N,length(node.plant_hs.leaves));
 leaf_qin_record = zeros(FT,N,length(node.plant_hs.leaves));
@@ -216,6 +218,7 @@ psi_record_trunk = zeros(FT,N);
 
 
 rbase =  Photosynthesis.Q10TD{FT}(4, 298.15, 1.7)
+drainage_pot = soil_p_25_swc(node.plant_hs.roots[1].sh, drainage_smc);
 
 # iterate through the weather data
 for i in eachindex(df.Day)
@@ -339,7 +342,7 @@ for i in eachindex(df.Day)
 		# update the flow rates
 		for iLF in 1:(nSL+1)
 			f_CO₂ += iPS.An[iLF] * iPS.LAIx[iLF] * iPS.LA;
-			f_H₂O += iPS.g_lw[iLF] * (iPS.p_sat - iEN.p_H₂O) / iEN.p_atm *
+			f_H₂O += iPS.g_lw[iLF] * max(0,iPS.p_sat - iEN.p_H₂O) / iEN.p_atm *
 					 iPS.LAIx[iLF] * iPS.LA;
 		end;
 		
@@ -373,16 +376,20 @@ for i in eachindex(df.Day)
 			iPS = plant_ps[i_can];
 			iST = plant_hs.branch[i_can];
 			iLF.q_out = sum(iPS.g_lw .* iPS.LAIx) *
-					   (iPS.p_sat - iEN.p_H₂O) / iEN.p_atm #/ iPS.LAI ;
+					   max(0,iPS.p_sat - iEN.p_H₂O) / iEN.p_atm #/ iPS.LAI ;
 			#iLF.q_out = FT(max(0,df.LE[i])/44200)*node.ga/node.la;
 
 		end;
 	end
-		
-	subIter2 = 8
+	
+	next_with_rain = node.swc[1] + df.RAIN[i]/abs(1000*node.soil_bounds[2]);
+	subIter2 = 4
+	if next_with_rain > 0.4
+		subIter2 = 20
+	end
 	
 	if scheme_number==3
-		dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
+		#dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
 		#=
 		try
 			dd1, dd2 = update_cap_mat!(plant_hs,deltaT);
@@ -390,20 +397,28 @@ for i in eachindex(df.Day)
 			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
 		end
 		=#
-		#=
+		
 		try
 			dd1, dd2 = find_new_cap(plant_hs,deltaT);
+			push_cap!(plant_hs,dd1,dd2)
+			if mean(dd1 .> maxvol) > 0
+				return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, node
+			end
+#=
 			if mean(dd1 .<= maxvol) == 1
 				push_cap!(plant_hs,dd1,dd2)
 			else
-				cap_iter = 100
+				cap_iter = 4
 				for icap in 1:cap_iter
 					dd1, dd2 = find_new_cap(plant_hs,deltaT/cap_iter);
 					push_cap!(plant_hs,dd1,dd2)
 				end
 			end
+=#
 		catch err
-			return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
+			#return df, smc_record, psi_record_leaf, psi_record_branch, psi_record_trunk, node
+			return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, smc_record2, node
+
 			#=
 			cap_iter = 4
 			for icap in 1:cap_iter
@@ -412,9 +427,9 @@ for i in eachindex(df.Day)
 			end
 			=#
 		end
-		=#
 	end
 	total_runoff = 0
+	smcsol1 = 0*node.swc;
 	for subI2 in 1:subIter2
 		
 		if scheme_number==1
@@ -426,7 +441,8 @@ for i in eachindex(df.Day)
 			update_PVF!(node.plant_hs,deltaT/subIter2);
 		end
 		if scheme_number==3
-			runoff_i = do_soil_nss_drain!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_runoff)		
+			runoff_i = do_soil_nss_drain3!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, drainage_pot)		
+			#smcsol1 = soil_ode!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, slope_runoff)		
 			total_runoff += runoff_i
 		end
 	end
@@ -467,6 +483,8 @@ for i in eachindex(df.Day)
 	df.stempot[i] = mean(node.plant_hs.trunk.p_element);
 	df.leafpot[i] = node.plant_hs.leaves[length(node.plant_hs.leaves)].p_leaf;
 	smc_record[i,:] = node.swc
+	smc_record2[i,:] = smcsol1
+
     df.ColumnSMC[i] = sum(node.swc .* -diff(node.soil_bounds)) / abs(node.soil_bounds[end])
     swpI = [soil_p_25_swc(node.plant_hs.roots[1].sh, x) for x in node.swc];
     df.ColumnSWP[i] = sum(swpI .* -diff(node.soil_bounds)) / abs(node.soil_bounds[end])
@@ -500,7 +518,7 @@ for i in eachindex(df.Day)
 
 end;
 
-return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, node
+return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, smc_record2, node
 
 end
 
