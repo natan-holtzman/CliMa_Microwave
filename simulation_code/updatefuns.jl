@@ -1,67 +1,4 @@
-#=
-function initialize_spac_canopy!(
-            node::SPACMono{FT}
-) where {FT<:AbstractFloat}
-    # 0.1 create variables required
-    @unpack angles, envirs, in_rad, leaves_rt, n_canopy, plant_ps, photo_set,
-            rt_con, soil_opt, wl_set = node;
-    canopy_rt = node.canopy_rt;
-    can_opt = node.can_opt;
-    can_rad = node.can_rad;
-    plant_hs = node.plant_hs;
-    fraction_sl::Array{FT,1} = repeat(canopy_rt.lidf, outer=[canopy_rt.nAzi]) /
-                               length(canopy_rt.lazitab);
-    n_sl = length(canopy_rt.lidf) * length(canopy_rt.lazitab);
-
-    # fluspect the canopy layers
-    for ican in 1:n_canopy
-        fluspect!(leaves_rt[ican], wl_set);
-    end
-
-    # Four Different steps to compute Short-Wave RT
-    canopy_geometry!(canopy_rt, angles, can_opt, rt_con)
-    canopy_matrices!(leaves_rt, can_opt);
-    short_wave!(canopy_rt, can_opt, can_rad, in_rad,
-                soil_opt, rt_con);
-    canopy_fluxes!(canopy_rt, can_opt, can_rad, in_rad,
-                   soil_opt, leaves_rt, wl_set, rt_con);
-
-    # Compute Long Wave (Last term is LW incoming in W m^-2)
-    thermal_fluxes!(leaves_rt, can_opt, can_rad, canopy_rt,
-                    soil_opt, [FT(400.0)], wl_set);
-
-    # update the canopy leaf area partition information
-    for i_can in 1:n_canopy
-        rt_layer = n_canopy + 1 - i_can;
-        iPS      = plant_ps[i_can];
-
-        # calculate the fraction of sunlit and shaded leaves
-        f_view = (can_opt.Ps[rt_layer] + can_opt.Ps[rt_layer+1]) / 2;
-
-        for iLF in 1:n_sl
-            iPS.APAR[iLF] = can_rad.absPAR_sunCab[(rt_layer-1)*n_sl + iLF] *
-                            FT(1e6);
-            iPS.LAIx[iLF] = f_view * fraction_sl[iLF];
-        end
-        iPS.APAR[end] = can_rad.absPAR_shadeCab[rt_layer] * FT(1e6);
-        iPS.LAIx[end] = 1 - f_view;
-
-        update_leaf_TP!(photo_set, iPS, plant_hs.leaves[i_can], envirs[i_can]);
-
-        envirs[i_can].t_air = T_25(FT);
-        envirs[i_can].p_sat = saturation_vapor_pressure(T_25(FT));
-        envirs[i_can].p_H₂O = envirs[i_can].p_sat / 2;
-    end
-
-    return nothing
-end
-=#
-
-
-
-
-
-
+#these functions are copied, and slightly modified, from the code included with the GMD paper
 
 ###############################################################################
 #
@@ -157,6 +94,38 @@ function update_Kmax0!(node::SPACMono{FT}, kmax::FT) where {FT<:AbstractFloat}
     return nothing
 end
 
+function update_Kmax_ratio!(node::SPACMono{FT}, kmax::FT, ratio::Array{FT}) where {FT<:AbstractFloat}
+    # Root:Stem:Leaf conductance ratio is set as 1:2:2.
+    #    For trees, roots: 2X, trunk: 8X, branch: 8X, leaves: 4X
+    #    For palms, roots: 2X, trunk: 4X, leaves: 4X
+    #    For grasses, roots: 2X, leaves: 2X
+
+	resist_sum = sum(1 ./ ratio);
+	ratio_norm = ratio * resist_sum;
+	
+    # 1. update the hydraulic conductance in Roots
+    for root in node.plant_hs.roots
+        root.k_max      = ratio_norm[1] * kmax / node.plant_hs.n_root;
+        root.k_element .= root.k_max * root.N;
+    end
+
+    # 2. If is a tree
+    if typeof(node.plant_hs) <: TreeLikeOrganism
+        node.plant_hs.trunk.k_max      = ratio_norm[2] * kmax;
+        node.plant_hs.trunk.k_element .= node.plant_hs.trunk.k_max *
+                                         node.plant_hs.trunk.N;
+        for stem in node.plant_hs.branch
+            stem.k_max      = ratio_norm[3] * kmax / node.plant_hs.n_canopy;
+            stem.k_element .= stem.k_max * stem.N;
+        end
+        for leaf in node.plant_hs.leaves
+            leaf.k_sla      = ratio_norm[4] * kmax / node.plant_hs.n_canopy / node.la;
+            leaf.k_element .= leaf.k_sla * leaf.N;
+        end
+    end
+
+    return nothing
+end
 
 
 
@@ -205,6 +174,23 @@ function update_VJR!(node::SPACMono{FT}, ratio::FT) where {FT<:AbstractFloat}
 
     return nothing
 end
+
+
+function update_VJR_leaf!(iPS::CanopyLayer{FT}, ratio::FT) where {FT<:AbstractFloat}
+    # TODO change the ratio accordingly to photo_set
+    # TODO add another ratio V2J in photo_set
+    # Update Vcmax25, Jmax25 (1.67 Vcmax), and Rd25 (0.015 Vcmax)
+
+	iPS.ps.Vcmax   = iPS.ps.Vcmax25WW * ratio;
+	iPS.ps.Vcmax25 = iPS.ps.Vcmax25WW * ratio;
+	iPS.ps.Jmax    = iPS.ps.Jmax25WW * ratio;
+	iPS.ps.Jmax25  = iPS.ps.Jmax25WW * ratio;
+	iPS.ps.Rd      = iPS.ps.Rd25WW * ratio;
+	iPS.ps.Rd25    = iPS.ps.Rd25WW * ratio;
+
+    return nothing
+end
+
 
 
 
@@ -256,6 +242,37 @@ function update_Weibull!(node::SPACMono{FT}, b::FT) where {FT<:AbstractFloat}
 end
 
 
+function update_Weibull!(node::SPACMono{FT}, b::FT, c::FT) where {FT<:AbstractFloat}
+    # 1. update B and C for roots
+    for _root in node.plant_hs.roots
+        _root.vc.b = b;
+        _root.vc.c = c;
+    end
+
+    # 2. update B and C for trunk (if exists)
+    if !(typeof(node.plant_hs) <: GrassLikeOrganism)
+        node.plant_hs.trunk.vc.b = b;
+        node.plant_hs.trunk.vc.c = c;
+    end
+
+    # 3. update B and C for branches (if exist)
+    if typeof(node.plant_hs) <: TreeLikeOrganism
+        for _stem in node.plant_hs.branch
+            _stem.vc.b = b;
+            _stem.vc.c = c;
+        end
+    end
+
+    # 4. update B and C for leaves
+    for _leaf in node.plant_hs.leaves
+        _leaf.vc.b = b;
+        _leaf.vc.c = c;
+    end
+
+    return nothing
+end
+
+
 function update_Kmax!(node::SPACMono{FT}, kmax::FT) where {FT<:AbstractFloat}
     # Root:Stem:Leaf conductance ratio is set as 1:2:2.
     #    For trees, roots: 2X, trunk: 8X, branch: 8X, leaves: 4X
@@ -300,91 +317,6 @@ function update_Kmax!(node::SPACMono{FT}, kmax::FT) where {FT<:AbstractFloat}
             leaf.k_sla      = 2 * kmax / node.la;
             leaf.k_element .= leaf.k_sla * leaf.N;
         end
-    end
-
-    return nothing
-end
-
-
-
-
-function update_Kmax2!(node::SPACMono{FT}, kmax::FT) where {FT<:AbstractFloat}
-    # Root:Stem:Leaf conductance ratio is set as 1:2:2.
-    #    For trees, roots: 2X, trunk: 8X, branch: 8X, leaves: 4X
-    #    For palms, roots: 2X, trunk: 4X, leaves: 4X
-    #    For grasses, roots: 2X, leaves: 2X
-
-    # 1. update the hydraulic conductance in Roots
-    for root in node.plant_hs.roots
-        root.k_max      = 2 * kmax / node.plant_hs.n_root;
-        root.k_element .= root.k_max * root.N;
-    end
-
-    # 2. If is a tree
-    if typeof(node.plant_hs) <: TreeLikeOrganism
-        node.plant_hs.trunk.k_max      = 8 * kmax;
-        node.plant_hs.trunk.k_element .= node.plant_hs.trunk.k_max *
-                                         node.plant_hs.trunk.N;
-        for stem in node.plant_hs.branch
-            stem.k_max      = 8 * kmax / node.plant_hs.n_canopy;
-            stem.k_element .= stem.k_max * stem.N;
-        end
-        for leaf in node.plant_hs.leaves
-            leaf.k_sla      = 4 * kmax / node.la;
-            leaf.k_element .= leaf.k_sla * leaf.N;
-        end
-    end
-
-    # 3. If is a palm
-    if typeof(node.plant_hs) <: PalmLikeOrganism
-        node.plant_hs.trunk.k_max      = 4 * kmax;
-        node.plant_hs.trunk.k_element .= node.plant_hs.trunk.k_max *
-                                         node.plant_hs.trunk.N;
-        for leaf in node.plant_hs.leaves
-            leaf.k_sla      = 4 * kmax / node.la;
-            leaf.k_element .= leaf.k_sla * leaf.N;
-        end
-    end
-
-    # 4. If is a grass
-    if typeof(node.plant_hs) <: GrassLikeOrganism
-        for leaf in node.plant_hs.leaves
-            leaf.k_sla      = 2 * kmax / node.la;
-            leaf.k_element .= leaf.k_sla * leaf.N;
-        end
-    end
-
-    return nothing
-end
-
-
-
-
-function update_Weibull!(node::SPACMono{FT}, b::FT, c::FT) where {FT<:AbstractFloat}
-    # 1. update B and C for roots
-    for _root in node.plant_hs.roots
-        _root.vc.b = b;
-        _root.vc.c = c;
-    end
-
-    # 2. update B and C for trunk (if exists)
-    if !(typeof(node.plant_hs) <: GrassLikeOrganism)
-        node.plant_hs.trunk.vc.b = b;
-        node.plant_hs.trunk.vc.c = c;
-    end
-
-    # 3. update B and C for branches (if exist)
-    if typeof(node.plant_hs) <: TreeLikeOrganism
-        for _stem in node.plant_hs.branch
-            _stem.vc.b = b;
-            _stem.vc.c = c;
-        end
-    end
-
-    # 4. update B and C for leaves
-    for _leaf in node.plant_hs.leaves
-        _leaf.vc.b = b;
-        _leaf.vc.c = c;
     end
 
     return nothing
