@@ -205,7 +205,7 @@ for i in eachindex(df.Day)
 			return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, node
 		end
 	catch err
-		return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, smc_record2, node
+		return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, node
 	end
 
 	next_with_rain = node.swc[1] + df.RAIN[i]/abs(1000*node.soil_bounds[2]);
@@ -278,7 +278,9 @@ for i in eachindex(df.Day)
 
 end;
 
-return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, smc_record2, node
+return df, smc_record, root_qin_record, leaf_qout_record,
+ v_profile, p_profile,soil_p_profile, apar_record, anet_record,
+  gs_record, node
 
 end
 
