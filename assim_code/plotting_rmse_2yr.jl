@@ -8,7 +8,7 @@ using StatsBase
 
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams");
 rcParams["lines.linewidth"] = 2;
-rcParams["font.size"] = 18;
+rcParams["font.size"] = 12;
 rcParams["mathtext.default"] = "regular";
 
 pygui(true)
@@ -51,20 +51,33 @@ leafRMSE = [0.08945551524372355, 0.14251331000460887, 0.13241443754414872];
 etRMSE = [1.5222648547911854e-05, 0.00013099436536534266, 9.21809614358626e-05]*18.02/1000*60*60*24;
 rzRMSE = [0.003997532112235683, 0.008655108081845725, 0.005809986996467336];
 gppRMSE = [0.21847112634602872, 0.4596499061391961, 0.6818102285952408];
-
+=#
 #of all posterior models
 leafRMSE = [0.26133356838960564, 0.3074713890611421, 0.2918077098629171];
 etRMSE = [9.842854882620204e-05, 0.00016921201488709768, 0.0001639950079942043]*18.02/1000*60*60*24;
 rzRMSE = [0.011871646096340541, 0.014053328027630875, 0.012019206607290491];
 gppRMSE = [0.9254825193504083, 0.9754004090810706, 1.1506586915475916];
+
+#=
+leafClim = 0.49159888520831974
+etClim = 0.0005536780748759148*18.02/1000*60*60*24;
+GPPClim = 1.108767203419914
+SMCClim = 0.033217017084657637
 =#
 
+leafClim = 0.29
+etClim = 0.0005485*18.02/1000*60*60*24;
+GPPClim = 1.02
+SMCClim = 0.02039
+
+
 #hourly
+#=
 leafRMSE = [0.2700912852977157, 0.32065105501956126, 0.31745946727017765];
 etRMSE = [0.00021427381041728977, 0.0003089649531727586, 0.0003283132486278844]*18.02/1000*60*60*24;
 rzRMSE = [0.011871646096340541, 0.014053328027630875, 0.012019206607290491];
 gppRMSE = [1.6918560659021655, 1.72694208229437, 2.360289397605617];
-
+=#
 
 
 #=
@@ -81,33 +94,50 @@ rzRMSE = [0.009354288730134051, 0.01573702108409179, 0.011127186878137709];
 gppRMSE = [0.7958373144571512, 1.1167087093931025, 0.8835488547589718];
 =#
 
+#with new soil drainage, only drought
+leafRMSE = [0.3708963480381229, 0.7747645919304228, 1.3513359411628316];
+etRMSE = [0.0006387851877550574, 0.000489038870705169, 0.000609516078627799]*18.02/1000*60*60*24;
+rzRMSE =[0.052932234669433524, 0.03712856698811909, 0.06859739132784316];
+gppRMSE = [1.7483021927417743, 2.2840484995809023, 1.9240131724189131];
 
+#all years
+leafRMSE = [0.11883196748196301, 0.2617287555126143, 0.5319219121716251];
+etRMSE = [0.0003087018978885237, 0.00038174022588142445, 0.00039408562820244565]*18.02/1000*60*60*24;
+rzRMSE =[0.022971679828772417, 0.020572573892492677, 0.03924394442779017];
+gppRMSE = [1.3384870617159015, 2.1920721225574464, 1.8773748923191838];
 
-mylabels = ["All", "1AM/PM", "6AM/PM"];
+mylabels = ["Full\ndiurnal", "1AM/PM", "6AM/PM"];
 
 
 figure()
 subplot(141)
 bar([1,2,3],leafRMSE)
 xticks([1,2,3], mylabels)
-title("Leaf water potential (MPa)")
+title("Leaf water\npotential (MPa)")
+#plot([0.5,3.5],[1,1]*leafClim,"k--")
 
 subplot(142)
 bar([1,2,3],rzRMSE)
 xticks([1,2,3], mylabels)
-title("Column-average soil moisture")
+title("Column\nsoil moisture")
+#plot([0.5,3.5],[1,1]*SMCClim,"k--")
+
 
 subplot(143)
 bar([1,2,3],etRMSE)
 xticks([1,2,3], mylabels)
-title(L"Daily ET $(mm/day)$")
+title(string("Evapotranpiration\n", L"$(mm/day)$"))
 ticklabel_format(style="plain",axis="y")
+#plot([0.5,3.5],[1,1]*etClim,"k--")
+
 
 subplot(144)
 bar([1,2,3],gppRMSE)
 xticks([1,2,3], mylabels)
-title(L"Daily GPP $(\mu mol/m^2/s)$")
+title(string("Gross primary\nproduction ", L"$(\mu mol/m^2/s)$"))
 ticklabel_format(style="plain",axis="y")
+#plot([0.5,3.5],[1,1]*GPPClim,"k--")
+
 
 #tight_layout()
 

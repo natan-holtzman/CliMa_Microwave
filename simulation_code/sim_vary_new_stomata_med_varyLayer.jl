@@ -384,7 +384,7 @@ for i in eachindex(df.Day)
 	
 	next_with_rain = node.swc[1] + df.RAIN[i]/abs(1000*node.soil_bounds[2]);
 	subIter2 = 4
-	if next_with_rain > 0.4
+	if next_with_rain > 0.5
 		subIter2 = 20
 	end
 	

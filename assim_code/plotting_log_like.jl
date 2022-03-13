@@ -40,18 +40,10 @@ deltaT = FT(60*60);
 #alpha = FT(5);
 #nsoil = FT(1.2);
 
-alpha = FT(50)#FT(50);
-nsoil = FT(1.6);
+#alpha = FT(50)#FT(50);
+#nsoil = FT(1.6);
 
-#=
-sval = collect(FT,0.1:0.001:0.55);
-scurve = VanGenuchten{FT}(stype = "Ozark",       
-                                           α = FT(10),  
-                                           n = FT(1.5), 
-                                          Θs = 0.55,    
-                                          Θr = 0.067);
-spotval = [soil_p_25_swc(scurve,x) for x in sval];
-=#
+
 alpha = FT(10)#FT(50);
 nsoil = FT(1.5);
 
@@ -66,14 +58,14 @@ function run_sim_3layer(vcmax_par::FT, k_frac::FT, k_plant::FT,
       z_soil::FT, weibB::FT, vol_factor::FT, g1::FT, k_soil::FT,
       smc_runoff::FT, exp_root_dist::FT,
       canopy_pvslope::FT, trunk_pvslope::FT)
-	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(2), k_plant, 
+	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(4), k_plant, 
     k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil,0,0,
     smc_runoff, exp_root_dist,canopy_pvslope, trunk_pvslope);
 end
 
 c1 = 1
 
-pars0 = convert(Array{FT}, [60, 0.5, 24, 2000, 8, 2.0, 250,0.4e-6,
+pars0 = convert(Array{FT}, [40, 0.5, 12, 2000, 8, 1.0, 250,0.4e-6,
          0.35,2,1/20,1/20])
 sim_res1 = run_sim_3layer(pars0...);
 cm1 = mean(sim_res1[6][:,1:3],dims=2);
@@ -204,3 +196,101 @@ function plot_tree(x,y)
 			 "ko-")
 	end
 end
+
+#=
+figure()
+plot(sim_res1[6][:,1:3],color="green",alpha=0.5)
+plot(pdLWP,"ko")
+plot(sim_res1[6][:,4:6],color="orange",alpha=0.5)
+plot(sim_res1[6][:,7],color="blue",alpha=0.5)
+plot(sim_res1[6][:,8:15],color="brown",alpha=0.5)
+
+daylist = collect(1:length(sim_res1long[1].VPD))/24;
+figure()
+plot(daylist, sim_res1long[6][:,1:3],color="green",alpha=0.5)
+#plot(pdLWP2,"ko")
+plot(daylist, sim_res1long[6][:,4:6],color="orange",alpha=0.5)
+plot(daylist, sim_res1long[6][:,7],color="blue",alpha=0.5)
+plot(daylist,sim_res1long[6][:,8:15],color="brown",alpha=0.5)
+
+figure()
+plot(daylist[1:(24*5):end],get_daily(cm1_long,24*5))
+xlabel("Time (days since 1 Jan 2005)")
+ylabel("5-day average LWP (MPa)")
+
+ylabel("LWP (MPa)")
+
+=#
+#=
+pars1 = [3.1927648046462975,-2.6467226953772807,2.099458400464035,7.6636431524168485,2.200646613730597,-1.1787635223907147,5.74270506922163,-14.480768091978758,-1.1286712435746784,0.673368997239951,3.3204521717948343,-3.764499807981834,1.9399104710601602,7.329693071448318,2.3019307796709465,1.2814998731299516,5.5803917979572315,-14.278778878664784,-1.0954914081021205,0.7479192727655555,-826.554645047097,1.6900000000000002,0.05087957867351999,0.802651566774747,0.04858293737916987];
+pars1b = convert(Array{FT}, exp.(pars1[1:10]))
+
+post1 = convert(Array,CSV.read("assim_code/sample_output_mar9/postLeaf.csv",DataFrame));
+plot(daylist,post1,"r",alpha=0.33)
+plot(daylist,cm1_long,"k")
+xlim(365,365*2)
+ylabel("LWP (MPa)")
+xlabel("Time (days since 1 Jan 2005)")
+=#
+figure()
+subplot(2,2,1)
+plot(sim_res1[1].ETmod[(244*24):(246*24)])
+plot(sim_res1[1].ETmod[(253*24):(255*24)])
+ylim(-0.001,0.008)
+#xlabel("Time (hours)")
+title("Model ET (mol/m2/s)")
+
+subplot(2,2,2)
+plot(sim_res1[1].LE[(244*24):(246*24)]/42400)
+plot(sim_res1[1].LE[(253*24):(255*24)]/42400)
+ylim(-0.001,0.008)
+#xlabel("Time (hours)")
+title("Flux tower ET (mol/m2/s)")
+
+subplot(2,2,3)
+plot(mean(sim_res1[10][(244*24):(246*24),:],dims=2))
+plot(mean(sim_res1[10][(253*24):(255*24),:],dims=2))
+#xlabel("Time (hours)")
+title("Model stomatal\nconductance (mol/m2/s)")
+
+subplot(2,2,4)
+plot(cm1[(244*24):(246*24)])
+plot(cm1[(253*24):(255*24)])
+#xlabel("Time (hours)")
+title("Model LWP (MPa)")
+
+
+figure()
+subplot(2,2,1)
+plot(mean(sim_res1[8][(244*24):(246*24),:],dims=2))
+plot(mean(sim_res1[8][(253*24):(255*24),:],dims=2))
+#xlabel("Time (hours)")
+title("APAR (umol/m2/s)")
+
+subplot(2,2,2)
+plot(sim_res1[1].RelHum[(244*24):(246*24)])
+plot(sim_res1[1].RelHum[(253*24):(255*24)])
+title("Relative humidity")
+
+subplot(2,2,3)
+plot(sim_res1[1].T_AIR[(244*24):(246*24)])
+plot(sim_res1[1].T_AIR[(253*24):(255*24)])
+title("Temperature (deg C)")
+
+subplot(2,2,4)
+plot(sim_res1[1].VPD[(244*24):(246*24)])
+plot(sim_res1[1].VPD[(253*24):(255*24)])
+#xlabel("Time (hours)")
+title("VPD (Pa)")
+
+sval = collect(FT,0.1:0.001:0.55);
+scurve = VanGenuchten{FT}(stype = "Ozark",       
+                                           α = FT(10),  
+                                           n = FT(1.5), 
+                                          Θs = 0.55,    
+                                          Θr = 0.067);
+spotval = [soil_p_25_swc(scurve,x) for x in sval];
+
+figure()
+plot(sim_res1[1].SMC,pdLWP,"o")
+plot(sval,spotval)
