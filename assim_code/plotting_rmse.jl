@@ -23,6 +23,7 @@ rzRMSE = [0.0012556391476988972, 0.003711247616340684, 0.0016033746735104248];
 
 mylabels = ["All", "1 AM/PM", "6 AM/PM"];
 
+#=
 figure()
 subplot(131)
 bar([1,2,3],leafRMSE)
@@ -41,3 +42,49 @@ title(L"Daily ET $(mm/m^2/s)$")
 ticklabel_format(style="plain",axis="y")
 
 #tight_layout()
+=#
+
+gsRMSE = [0.0009707089849704303, 0.000809590695874667, 0.0012329717941626317]
+leafscaleRMSE = [0.02781028047973449, 0.01783460829728346, 0.03495551737372624]
+betaRMSE = [0.01874038306283515, 0.013533028689382927, 0.023987804499910826]
+
+figure()
+subplot(231)
+bar([1,2,3],leafRMSE)
+xticks([1,2,3], mylabels)
+title("Leaf water potential (MPa)")
+
+subplot(232)
+bar([1,2,3],leafscaleRMSE)
+xticks([1,2,3], mylabels)
+title("LWP divided by P63")
+ticklabel_format(style="plain",axis="y")
+
+subplot(233)
+bar([1,2,3],betaRMSE)
+xticks([1,2,3], mylabels)
+title("Beta factor")
+ticklabel_format(style="plain",axis="y")
+
+subplot(234)
+bar([1,2,3],gsRMSE)
+xticks([1,2,3], mylabels)
+title(L"Stomatal conductance $(mol/m^2/s)$")
+
+subplot(235)
+bar([1,2,3],etRMSE)
+xticks([1,2,3], mylabels)
+title(L"Daily ET $(mm/m^2/s)$")
+ticklabel_format(style="plain",axis="y")
+
+leafmean = convert(Array, CSV.read("leaf_mean_tab.csv",DataFrame,header=false));
+leafscale = convert(Array, CSV.read("leaf_scale_tab.csv",DataFrame,header=false));
+
+figure()
+for i in 1:3
+	plot(leafmean[i,:], 1 ./ leafscale[i,:],"o",label=mylabels[i])
+end
+plot(leafmean[1,end], 1 ./ leafscale[1,end],"k+",label="True model",markersize=25,markeredgewidth=3)
+xlabel("Mean LWP (MPa)")
+ylabel("Stomatal P63 (MPa)")
+legend()

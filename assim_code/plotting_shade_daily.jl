@@ -16,11 +16,11 @@ rcParams["font.size"] = 24;
 mpa2mm = 10^6/9.8;
 gravity_fac = (18.5+9)/2 * 1000/mpa2mm;
 
-pmean = CSV.read("lwp_means.csv",DataFrame, header=0);
-p25 = CSV.read("lwp_lower.csv",DataFrame,header=0) ;
-p75 = CSV.read("lwp_upper.csv",DataFrame,header=0) ;
+pmean = CSV.read("chain3_range/lwp_means.csv",DataFrame, header=0);
+p25 = CSV.read("chain3_range/lwp_lower.csv",DataFrame,header=0) ;
+p75 = CSV.read("chain3_range/lwp_upper.csv",DataFrame,header=0) ;
 
-ptrue = CSV.read("lwp_true.csv",DataFrame,header=0) ;
+ptrue = CSV.read("chain3_range/lwp_true.csv",DataFrame,header=0) ;
 
 
 colors_list = ["tab:blue","tab:green","tab:orange","tab:red"];
@@ -44,7 +44,7 @@ xlabel("Time (years)")
 ylabel("Leaf water potential (MPa)")
 #xlim(2011, 2013.5)
 
-
+#=
 
 spmean = CSV.read("swp_means.csv",DataFrame, header=0);
 sp25 = CSV.read("swp_lower.csv",DataFrame,header=0) ;
@@ -98,6 +98,6 @@ xlabel("Time (years)")
 ylabel("Soil moisture")
 #xlim(2011, 2013.5)
 
-
+=#
 
 #need to start at 0.3 soil moisture in year 3
