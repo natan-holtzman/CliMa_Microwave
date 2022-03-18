@@ -102,6 +102,8 @@ for i in eachindex(df.Day)
 	t_soil = FT(df.T_SOIL[1] + 273.15);
 	la_previous = FT(node.la);
 	update_LAI!(node, FT(df.LAI_modis[i]));
+	#update_LAI!(node, FT(2));
+
 	if i > 1
 		update_pv_leaf!(plant_hs, la_previous, node.la);
 	end
@@ -192,7 +194,7 @@ for i in eachindex(df.Day)
 		iLF = plant_hs.leaves[i_can];
 		iPS = plant_ps[i_can];
 		iST = plant_hs.branch[i_can];
-		iLF.q_out = sum(iPS.g_lw .* iPS.LAIx) *
+		iLF.q_out = sum(iPS.g_lw .* iPS.LAIx) * #iPS.LA *
 					max(0,iPS.p_sat - iEN.p_H₂O) / iEN.p_atm;
 		#iLF.q_out = FT(max(0,df.LE[i])/44200)*node.ga/node.la;
 		#uncomment the above line to instead force ET to be prescribed from the flux tower data

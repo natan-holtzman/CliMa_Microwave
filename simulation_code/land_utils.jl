@@ -205,7 +205,10 @@ function do_soil_nss_drain3!(node::SPACMono{FT}, rain_in::FT, deltaT::FT, k_soil
 
 	p_diff = -1*diff(p_soil_tot) #in mm
 	layer_len = -1*diff(midpoints)
-	q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len;# * deltaT #mm/s * mm / mm * s = mm
+
+    k_between = 2 ./ (1 ./ k_soil[1:(end-1)] + 1 ./ k_soil[2:end]);
+	#q_down = k_soil[1:length(k_soil)-1] .* p_diff ./ layer_len;# * deltaT #mm/s * mm / mm * s = mm
+	q_down = k_between.* p_diff ./ layer_len;# * deltaT #mm/s * mm / mm * s = mm
 
     drainage = k_soil[end]*mpa2mm*(soil_p_25_swc(node.plant_hs.roots[1].sh, node.swc[end])- drainage_pot)/FT(1000);
 	

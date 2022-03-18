@@ -131,12 +131,15 @@ function create_deriv_mat(plant_hs)
 	
 	i = itrunk+1
 	
-	total_k = sum([x.area/x.Δh for x in plant_hs.roots]);
+	total_area = sum([x.area/x.Δh for x in plant_hs.roots]);
+	#total_area = sum([x.area for x in plant_hs.roots]);
 
 	for root_i in 1:plant_hs.n_root
 
 		iRoot = plant_hs.roots[root_i]
-		area_frac = iRoot.area/iRoot.Δh/total_k  #total root area is 1		
+		area_frac = iRoot.area/iRoot.Δh/total_area  #total root area is 1		
+		#area_frac = iRoot.area/total_area  #total root area is 1		
+
 		krt = 2/(1/(iRoot.k_element[1]*area_frac) + 1/trunk.k_element[1])
 		#krt = trunk.k_element[1]
 
