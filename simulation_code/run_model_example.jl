@@ -29,8 +29,8 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 
 
 N = 24*365*1
-istart = 24*365*6 + 1; 
-soil0 = 0.35;
+istart = 24*365*2 + 1; 
+soil0 = 0.4;
 
 
 deltaT = FT(60*60);
@@ -47,7 +47,7 @@ function run_sim_3layer(vcmax_par::FT, k_frac::FT, k_plant::FT,
 end
 
 
-pars0 = convert(Array{FT}, [90, 0.25, 10, 2000, 4, 1.0, 400, 1e-6,
+pars0 = convert(Array{FT}, [90, 0.25, 10, 2000, 4, 1.0, 300, 0.4e-6,
          0.4,2,1/20,1/20]);
 sim_res1 = run_sim_3layer(pars0...);
 cm1 = mean(sim_res1[6][:,1:3],dims=2);

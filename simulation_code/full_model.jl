@@ -124,6 +124,8 @@ for i in eachindex(df.Day)
 	# update fluxes
 	f_H₂O = 0;
 	f_CO₂ = 0;
+	gppi = 0;
+
 	for i_can in 1:n_canopy
 		iEN = envirs[i_can];
 		iHS = plant_hs.leaves[i_can];
@@ -181,6 +183,7 @@ for i in eachindex(df.Day)
 		# update the flow rates
 		for iLF in 1:(nSL+1)
 			f_CO₂ += iPS.An[iLF] * iPS.LAIx[iLF] * iPS.LA;
+			gppi += iPS.Ag[iLF] * iPS.LAIx[iLF] * iPS.LA;
 			f_H₂O += iPS.g_lw[iLF] * max(0,iPS.p_sat - iEN.p_H₂O) / iEN.p_atm *
 					 iPS.LAIx[iLF] * iPS.LA;
 		end;
@@ -243,7 +246,7 @@ for i in eachindex(df.Day)
 	
 	# update the data frame
 	df.glw[i] = glw_mean
-	df.GPP[i] = f_CO₂ / ga;
+	df.GPP[i] = gppi / ga;
 	df.NPP[i] = f_CO₂ / ga - _r;
 	df.ETmod[i] = f_H₂O / ga;
 	df.trunk_in[i] = plant_hs.trunk.q_in
