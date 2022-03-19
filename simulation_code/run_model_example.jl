@@ -29,7 +29,7 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 
 
 N = 24*365*1
-istart = 24*365*1 + 1; 
+istart = 24*365*6 + 1; 
 soil0 = 0.35;
 
 
@@ -41,13 +41,13 @@ function run_sim_3layer(vcmax_par::FT, k_frac::FT, k_plant::FT,
       z_soil::FT, weibB::FT, vol_factor::FT, g1::FT, k_soil::FT,
       smc_runoff::FT, exp_root_dist::FT,
       canopy_pvslope::FT, trunk_pvslope::FT)
-	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(2), k_plant, 
+	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(4), k_plant, 
     k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil,0,0,
     smc_runoff, exp_root_dist,canopy_pvslope, trunk_pvslope);
 end
 
 
-pars0 = convert(Array{FT}, [60, 0.2, 10, 2000, 5, 1.0, 400, 0.4e-6,
+pars0 = convert(Array{FT}, [90, 0.25, 10, 2000, 4, 1.0, 400, 1e-6,
          0.4,2,1/20,1/20]);
 sim_res1 = run_sim_3layer(pars0...);
 cm1 = mean(sim_res1[6][:,1:3],dims=2);
@@ -101,6 +101,14 @@ plot(daylist, get_daily(sim_res1[1].ETmod,24)*18/1000*60*60*24,label="Model")
 xlabel("Time (day of year)")
 ylabel("ET (mm/day)")
 legend()
+
+figure()
+plot(daylist, get_daily(sim_res1[1].GPP_night,24),label="Eddy covariance")
+plot(daylist, get_daily(sim_res1[1].GPP,24),label="Model")
+xlabel("Time (day of year)")
+ylabel("GPP (umol/m2/s)")
+legend()
+
 
 figure()
 plot(cm1,pdLWP,"o",fillstyle="none")

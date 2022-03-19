@@ -14,14 +14,21 @@ include("../get_home_dir.jl")
 
 pygui(true)
 
+rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams");
+rcParams["lines.linewidth"] = 2;
+rcParams["font.size"] = 18;
+rcParams["mathtext.default"] = "regular";
 
-df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
+#df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_skipyear_hourly2.csv"), DataFrame);
+#df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_land_data_newLAI.csv"), DataFrame);
+df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_fluxnet_data.csv"), DataFrame);
+
 df_raw[!,"RAIN"] *= 2;
 
-avg_et_daily = mean(df_raw.LE/44200)*18.02/1000 * 60*60*24;
-avg_rain_daily = mean(df_raw.RAIN)*24;
+#avg_et_daily = mean(df_raw.LE/44200)*18.02/1000 * 60*60*24;
+#avg_rain_daily = mean(df_raw.RAIN)*24;
 
-include(string(PROJECT_HOME,"/simulation_code/sim_vary_new_stomata_med_varyLayer.jl"));
+include(string(PROJECT_HOME,"/simulation_code/full_model.jl"));
 include("time_averaging.jl")
 include("mironov.jl")
 include("tau_omega_funs.jl")
@@ -29,8 +36,8 @@ include("tau_omega_funs.jl")
 
 
 N = 24*365*1
-istart = 24*365*2 + 1; 
-soil0 = 0.375;
+istart = 24*365*1 + 1; 
+soil0 = 0.35;
 
 
 deltaT = FT(60*60);
@@ -44,9 +51,22 @@ deltaT = FT(60*60);
 #nsoil = FT(1.6);
 
 
-alpha = FT(10)#FT(50);
+alpha = FT(30)#FT(50);
+nsoil = FT(1.3);
+
+alpha = FT(6)#FT(50);
 nsoil = FT(1.5);
 
+
+alpha = FT(19.3)#FT(50);
+nsoil = FT(1.3);
+
+alpha = FT(10.9)#FT(50);
+nsoil = FT(1.5);
+
+
+#alpha = FT(178)#FT(50);
+#nsoil = FT(1.2);
 
 parnames = ["Kplant","Zsoil","Capacitance","Ksoil",
 "Terrain_slope","root_dist_factor",
@@ -58,15 +78,17 @@ function run_sim_3layer(vcmax_par::FT, k_frac::FT, k_plant::FT,
       z_soil::FT, weibB::FT, vol_factor::FT, g1::FT, k_soil::FT,
       smc_runoff::FT, exp_root_dist::FT,
       canopy_pvslope::FT, trunk_pvslope::FT)
-	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(4), k_plant, 
+	return run_sim_varyB(vcmax_par, k_frac, weibB, FT(2), k_plant, 
     k_soil, z_soil, istart, N, soil0, vol_factor, 1e-5, 3, df_raw, g1, deltaT, alpha, nsoil,0,0,
     smc_runoff, exp_root_dist,canopy_pvslope, trunk_pvslope);
 end
 
 c1 = 1
 
-pars0 = convert(Array{FT}, [40, 0.5, 12, 2000, 8, 1.0, 250,0.4e-6,
-         0.35,2,1/20,1/20])
+#pars0 = convert(Array{FT}, [120, 0.5, 5, 2000, 5, 1.0, 250,0.4e-6,
+#         0.35,5.84,1/20,1/20])
+pars0 = convert(Array{FT}, [60, 0.2, 10, 2000, 5, 1.0, 400, 0.4e-6,
+         0.4,2,1/20,1/20]);
 sim_res1 = run_sim_3layer(pars0...);
 cm1 = mean(sim_res1[6][:,1:3],dims=2);
 pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
@@ -83,7 +105,71 @@ vodC = 0.051;
 
 tb1 = get_TB_2(sim_res1[2][:,1], tsoil, tcan, cm1, laiM, vodA, vodB, vodC);
 
+#=
+sval = collect(FT,0.1:0.001:0.54);
+rsval = (sval .- 0.067)/(0.55-0.067);
+n1 = 1.2
+n2 = 1.9
+p1 = (rsval .^ (-1/(1-1/n1)) .- 1) .^ (1/n1);
+p2 = (rsval .^ (-1/(1-1/n2)) .- 1) .^ (1/n2);
+p1 *= -1/p1[126];
+p2 *= -1/p2[126];
 
+#-1 * (erwc ^ (-1/m) - 1) ^ (1/n) / α
+#m = 1-1/n
+scurve = VanGenuchten{FT}(stype = "Ozark",       
+                                           α = FT(178),  
+                                           n = FT(1.2), 
+                                          Θs = 0.55,    
+                                          Θr = 0.067);
+spotval = [soil_p_25_swc(scurve,x) for x in sval];
+
+scurve2 = VanGenuchten{FT}(stype = "Ozark",       
+                                           α = FT(10.9),  
+                                           n = FT(1.5), 
+                                          Θs = 0.55,    
+                                          Θr = 0.067);
+spotval2 = [soil_p_25_swc(scurve2,x) for x in sval];
+
+#m3 = 1-1/1.4;
+#p3 = -1* (rsval .^ (-1/m3) .- 1) .^ (1/1.4) / 20;
+=#
+
+figure()
+plot(get_daily(sim_res1[1].LE/40650,24))
+plot(get_daily(sim_res1[1].ETmod,24))
+
+#=
+figure()
+plot(sim_res1[1].SMC[7:24:end],pdLWP[7:24:end],"o")
+plot(sim_res1[2][7:24:end,1],cm1[7:24:end],".")
+plot(sval,spotval2)
+#plot(sval,p1*1.5)
+#plot(sval,p2)
+ylim(-5,0)
+
+figure()
+plot(sim_res1[1].SMC[7:24:end],-pdLWP[7:24:end],"o")
+plot(sim_res1[2][7:24:end,1],-cm1[7:24:end],".")
+plot(sval,-spotval)
+yscale("log")
+=#
+
+#=
+figure()
+plot(log.(sim_res1[1].SMC[7:24:end]),log.(-pdLWP[7:24:end]),"o")
+plot(log.(sim_res1[2][7:24:end,1]),log.(-cm1[7:24:end]),".")
+=#
+figure()
+plot(cm1,pdLWP,"o",fillstyle="none")
+plot([0,-4],[0,-4],color="grey")
+
+
+figure()
+plot(cm1[7:24:end])
+plot(pdLWP[7:24:end],"o")
+
+#=
 mynormfac = 1/36;
 synthetic_ll = zeros(1000)
 for ri in 1:1000
@@ -99,7 +185,7 @@ prior_min = [10, 0.01, 0.1, 500, 0.75,  0.01,100,1e-6,0.01,0.01];
 prior_max = [120,0.9,  50, 3000, 10, 10,1000,    5e-4,50.0,5];
 prior_dist = Product(Uniform.(log.(prior_min), log.(prior_max)));
 constLL = logpdf(prior_dist,log.(pars0[1:10]));
-
+=#
 #=
 chaindata = CSV.read("assim_code/sample_likelihood/post_par.csv",DataFrame);
 chaindata2 = CSV.read("assim_code/sample_likelihood/allobs_c2/post_par.csv",DataFrame);
@@ -111,7 +197,7 @@ chaindata2 = CSV.read("assim_code/sample_likelihood/only6_c2/post_par.csv",DataF
 chaindata3 = CSV.read("assim_code/sample_likelihood/only6_c3/post_par.csv",DataFrame);
 =#
 
-
+#=
 chaindata1 = CSV.read("assim_code/sample_like_2/all1/post_par.csv",DataFrame);
 chaindata2 = CSV.read("assim_code/sample_like_2/all2/post_par.csv",DataFrame);
 chaindata3 = CSV.read("assim_code/sample_like_2/all3/post_par.csv",DataFrame);
@@ -155,7 +241,7 @@ sim_res_samp = run_sim_3layer(convert(Array{FT},exp.(post_samp))...,FT(1/20),FT(
 cm_prior = mean(sim_res_prior[6][:,1:3],dims=2);
 cm_post = mean(sim_res_post[6][:,1:3],dims=2);
 cm_samp = mean(sim_res_samp[6][:,1:3],dims=2);
-
+=#
 N = 24*365*12
 istart = 24*365*0 + 1; 
 
@@ -181,20 +267,23 @@ wX = exp.(-(psi_list/2.5) .^ 2);
 #change in potential is inversely proportional to wX
 #runaway will occur when there is a positive feedback between ET and dP
 #i.e. if the change in 
-function plot_tree(x,y)
-	leaf_levels = [12,16,18]
+function plot_tree(x,y,node_example)
+	leaf_levels = [12,16,18.5]
 	trunk_level = 9
-	root_levels = collect(-8:1:-1)
+	soil_bounds = node_example.soil_bounds
+	root_levels = (soil_bounds[2:end] + soil_bounds[1:(end-1)])/2
 	figure()
 	for i in 1:3
 		plot([x[i],x[i+3],x[7]],[leaf_levels[i]+1,leaf_levels[i],trunk_level],
-			 "ko-")
+			 "gX-")
 	end
-	plot([1,1]*x[7],[0,trunk_level],"ko-")
 	for i in 1:8
 		plot([y[i],x[7+i],x[7]],[root_levels[i],root_levels[i],0],
-			 "ko-")
+			 "s-",color="brown")
 	end
+	plot([1,1]*x[7],[0,trunk_level],"ko-")
+	xlabel("Water potential (MPa)")
+	ylabel("Height (m)")
 end
 
 #=
@@ -232,6 +321,8 @@ xlim(365,365*2)
 ylabel("LWP (MPa)")
 xlabel("Time (days since 1 Jan 2005)")
 =#
+
+#=
 figure()
 subplot(2,2,1)
 plot(sim_res1[1].ETmod[(244*24):(246*24)])
@@ -282,15 +373,71 @@ plot(sim_res1[1].VPD[(244*24):(246*24)])
 plot(sim_res1[1].VPD[(253*24):(255*24)])
 #xlabel("Time (hours)")
 title("VPD (Pa)")
+=#
 
-sval = collect(FT,0.1:0.001:0.55);
-scurve = VanGenuchten{FT}(stype = "Ozark",       
-                                           α = FT(10),  
-                                           n = FT(1.5), 
-                                          Θs = 0.55,    
-                                          Θr = 0.067);
-spotval = [soil_p_25_swc(scurve,x) for x in sval];
+
+inight = 180*24 + 4;
+plot_tree(sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end])
+xlim(-3.5,0)
+
+daylist = collect(1:(365*24))/24;
 
 figure()
-plot(sim_res1[1].SMC,pdLWP,"o")
-plot(sval,spotval)
+plot(daylist,sim_res1[6][:,1:3],color="green",alpha=0.5)
+plot(daylist,sim_res1[6][:,4:6],color="blue",alpha=0.5)
+plot(daylist,sim_res1[6][:,7],color="k",alpha=0.5)
+plot(daylist,sim_res1[6][:,8:15],color="brown",alpha=0.5)
+xlabel("Time (day of year)")
+ylabel("Water potential (MPa)")
+plot([],[],color="green",alpha=0.5,label="Leaves")
+plot([],[],color="blue",alpha=0.5,label="Branches")
+plot([],[],color="k",alpha=0.5,label="Trunk")
+plot([],[],color="brown",alpha=0.5,label="Roots")
+legend()
+
+dolong = 0
+if dolong == 1
+
+	sim_res1long = run_sim_3layer(pars0...);
+	daylist = collect(1:(365*12));
+
+	figure()
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].LE/40650,24*5)*18/1000*60*60*24,"k",label="Eddy covariance")
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ETmod,24*5)*18/1000*60*60*24,"r",label="Model",alpha=0.75)
+	xlabel("Time (years)")
+	ylabel("ET (mm/day)")
+	legend()
+
+	figure()
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].GPP_night,24*5),"k",label="Eddy covariance")
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].GPP,24*5),"r",label="Model",alpha=0.75)
+	xlabel("Time (years)")
+	ylabel("GPP (umol/m^2/s)")
+	legend()
+
+
+	figure()
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].SMC,24*5),"k",label="Observed")
+	plot(daylist[1:5:end]/365,get_daily(sim_res1long[2][:,1],24*5),"r",label="Model",alpha=0.75)
+	#plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
+	xlabel("Time (years)")
+	ylabel("Surface soil moisture")
+	legend()
+
+	figure()
+	plot(daylist/365,cm1_long[7:24:end],"r",alpha=0.75,label="Model")
+	plot(daylist[1:1:end]/365,pdLWP2[7:24:end],"ko",label="Observations")
+	#plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
+	xlabel("Time (years)")
+	ylabel("Water potential (MPa)")
+	legend()
+
+end
+
+
+noonETobs = (sim_res1[1].LE/40650 ./ sim_res1[1].VPD)[12:24:end];
+noonETmod = (sim_res1[1].ETmod ./ sim_res1[1].VPD)[12:24:end];
+noonLAI = sim_res1[1].LAI_modis[12:24:end];
+
+noonETobs[noonETobs .<= 0] .= NaN;
+noonETmod[noonETmod .<= 0] .= NaN;
