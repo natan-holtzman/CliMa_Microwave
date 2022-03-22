@@ -70,43 +70,38 @@ prior_dist = Product(Uniform.(log.(prior_min), log.(prior_max)));
 struct MySimplexer <: Optim.Simplexer end
 Optim.simplexer(S::MySimplexer, initial_x) = [rand(prior_dist) for i = 1:length(initial_x)+1]
 
-function do_assim(obs_mask, norm_factor, outdir, vodA, vodB, vodC,obs_file)
+function do_assim(obs_mask_full, norm_factor, outdir, vodA, vodB, vodC,obs_file)
 
 obsdata = CSV.read(obs_file,DataFrame);
 
 obsH = convert(Array,obsdata.hpol)[(24*125+1):(24*125+N)];
 obsV = convert(Array,obsdata.vpol)[(24*125+1):(24*125+N)];
 
+obs_mask = obs_mask_full[(24*125+1):(24*125+N)];
+
 function log_p_nolabel(a, k0, alpha0, beta0, maxiter, stop_crit, error_var)
-	p = 0#logpdf(prior_dist, a);
 
-	if isinf(p)
-		return -Inf
-	else
-		try
-			sim_res = run_sim_2(convert(Array{FT}, exp.(a))...);
+p = -50000*(sum(a .< log.(prior_min)) + sum(a .> log.(prior_max)));
 
-			if isnan(mean(sim_res[1].leafpot))
-				return -Inf
+sim_res = 1;
+try
+	sim_res = run_sim_2(convert(Array{FT}, exp.(a))...);
+catch err_occurred
+	return -50000*11*2;
+end
 
-            else
-				canpot = mean(sim_res[6][:,1:3],dims=2); 
-				soilsurf = sim_res[2][:,1];
-                                n_obs = length(obsH[obs_mask]);
-                                n_to_skip = trunc(Int, n_obs / 240);
-                                optim_res = optim_vod_stages2(obsH[obs_mask], obsV[obs_mask], canpot[obs_mask], soilsurf[obs_mask],
-                                                                        tsoil[obs_mask], tcan[obs_mask], laiM[obs_mask], k0, alpha0, beta0, maxiter, stop_crit, 1e-5, n_to_skip)
-                                sim_TB = get_TB_2(soilsurf, tsoil, tcan, canpot, laiM,optim_res[1], optim_res[2],optim_res[3]);
+	canpot = mean(sim_res[6][:,1:3],dims=2); 
+	soilsurf = sim_res[2][:,1];
+        n_obs = length(obsH[obs_mask]);
+        n_to_skip = 5;#trunc(Int, n_obs / 240);
+        optim_res = optim_vod_stages2(obsH[obs_mask], obsV[obs_mask], canpot[obs_mask], soilsurf[obs_mask],
+                                      tsoil[obs_mask], tcan[obs_mask], laiM[obs_mask], k0, alpha0, beta0, maxiter, stop_crit, 1e-5, n_to_skip)
+        sim_TB = get_TB_2(soilsurf, tsoil, tcan, canpot, laiM,optim_res[1], optim_res[2],optim_res[3]);
 
-				p += norm_factor*logpdf(MvNormal(sim_TB[1][obs_mask], sqrt(error_var)), obsH[obs_mask]);
-				p += norm_factor*logpdf(MvNormal(sim_TB[2][obs_mask], sqrt(error_var)), obsV[obs_mask]);		
+	p += norm_factor*logpdf(MvNormal(sim_TB[1][obs_mask], sqrt(error_var)), obsH[obs_mask]);
+	p += norm_factor*logpdf(MvNormal(sim_TB[2][obs_mask], sqrt(error_var)), obsV[obs_mask]);		
 
-				return p
-			end
-		catch err_occurred
-			return -Inf, err_occurred
-		end
-	end
+	return p
 end
 
 function mywrapper(a)
@@ -133,9 +128,12 @@ a01 = mean(prior_dist);
 
 
 myopt = optimize(mywrapper, a01,NelderMead(initial_simplex = MySimplexer()),   
- Optim.Options(show_trace=true,iterations=100,store_trace=true))
+ Optim.Options(show_trace=true,iterations=500,store_trace=true))
 
-dfc = DataFrame(mymin=Optim.minimizer(myopt));
-CSV.write(string(outdir,"opt_par.csv"),dfc);
+dfmin = DataFrame(mymin=Optim.minimizer(myopt));
+CSV.write(string(outdir,"opt_par.csv"),dfmin);
+
+dftrace = DataFrame(mytrace=Optim.f_trace(myopt));
+CSV.write(string(outdir,"opt_err.csv"),dftrace);
 
 end
