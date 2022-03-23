@@ -199,7 +199,7 @@ function solve_odes(deriv_mat, deriv_const, init_cond, deltaT)
 	new_x = cprime + mateI * (init_cond-cprime)
 	int_x = cprime*deltaT + (inv_deriv * mateI - inv_deriv) * (init_cond-cprime)
 
-	return new_x, int_x
+	return real.(new_x), real.(int_x)
 end
 
 #this function takes a plant hydraulic system and returns the pressure of each leaf,branch,trunk,and root
