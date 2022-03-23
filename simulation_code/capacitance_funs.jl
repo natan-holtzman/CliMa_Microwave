@@ -2,7 +2,7 @@ mpa2mm = FT(10^6/9.8); #mPa of water pressure to mm of water height
 
 #functions to update the pressure and conductivity of a plant, after its storage volumes have already been updated
 function update_pk_leaf!(tissue::LeafHydraulics{FT})
-	tissue.p_storage = (tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
+	tissue.p_storage = min(0,tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
 	tissue.p_element[1] = tissue.p_storage
 	tissue.p_leaf = tissue.p_storage
 	tissue.p_ups = tissue.p_storage[1]
@@ -11,6 +11,7 @@ end
 	
 function update_pk_nonleaf!(tissue::Land.PlantHydraulics.AbstractHydraulicOrgan{FT})
 	tissue.p_storage = (tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
+	tissue.p_storage[tissue.p_storage .> 0] .= 0;
 	tissue.p_element = tissue.p_storage
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_max
 end
