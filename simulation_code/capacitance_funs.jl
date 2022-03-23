@@ -7,6 +7,8 @@ function update_pk_leaf!(tissue::LeafHydraulics{FT})
 	tissue.p_leaf = tissue.p_storage
 	tissue.p_ups = tissue.p_storage[1]
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_sla
+	tissue.k_element[tissue.k_element .< 1f-2*tissue.k_sla] .= 1f-2*tissue.k_sla;
+
 end
 	
 function update_pk_nonleaf!(tissue::Land.PlantHydraulics.AbstractHydraulicOrgan{FT})
@@ -14,6 +16,7 @@ function update_pk_nonleaf!(tissue::Land.PlantHydraulics.AbstractHydraulicOrgan{
 	tissue.p_storage[tissue.p_storage .> 0] .= 0;
 	tissue.p_element = tissue.p_storage
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_max
+	tissue.k_element[tissue.k_element .< 1f-2*tissue.k_max] .= 1f-2*tissue.k_max;
 end
 	
 function update_pk_tree!(plant_hs)
