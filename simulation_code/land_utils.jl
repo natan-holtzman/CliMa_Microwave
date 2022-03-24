@@ -73,11 +73,10 @@ function gas_exchange_nofluor!(
             photo_set::C3ParaSet{FT},
             canopyi::CanopyLayer{FT},
             envir::AirLayer{FT},
-            drive::GswDrive,
             ind::Int
 ) where {FT<:AbstractFloat}
     @unpack g_max, g_min = canopyi;
-
+#=
     # update the conductances
     if canopyi.g_sw[ind] > g_max
         canopyi.g_sw[ind] = g_max;
@@ -86,6 +85,8 @@ function gas_exchange_nofluor!(
     if canopyi.g_sw[ind] < g_min
         canopyi.g_sw[ind] = g_min;
     end
+=#
+    canopyi.g_sw[ind] = max(min(canopyi.g_sw[ind],g_max),g_min);
 
     canopyi.g_lw[ind] = 1 / ( 1 / canopyi.g_sw[ind] +
                               1 / canopyi.g_bw[ind] );
@@ -103,15 +104,16 @@ function gas_exchange_nofluor!(
     canopyi.Ap[ind] = canopyi.ps.Ap;
     canopyi.Ag[ind] = canopyi.ps.Ag;
     canopyi.An[ind] = canopyi.ps.An;
+    #=
     try
     	canopyi.ϕs[ind] = canopyi.ps.ϕs;
 	catch found_error
         canopyi.φs[ind] = canopyi.ps.φs;
     end
+    =#
     # update the pressures
     canopyi.p_i[ind] = canopyi.ps.p_i;
     canopyi.p_s[ind] = canopyi.ps.p_s;
-
     return nothing
 end
 
@@ -126,7 +128,7 @@ function gas_exchange_new!(
     for i in eachindex(canopyi.g_sw)
         canopyi.ps.APAR = canopyi.APAR[i];
         Photosynthesis.leaf_ETR!(photo_set, canopyi.ps);
-        gas_exchange_nofluor!(photo_set, canopyi, envir, drive, i);
+        gas_exchange_nofluor!(photo_set, canopyi, envir, i);
     end
 
     return nothing
