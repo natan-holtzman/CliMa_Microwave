@@ -1,4 +1,6 @@
 include("../../../get_home_dir.jl")
+using Pkg
+Pkg.activate(string(PROJECT_HOME,"/feb_j171"));
 
 using DataFrames
 using CSV

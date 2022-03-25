@@ -16,7 +16,7 @@ import pandas as pd
 
 #true_val = [31,0.5, 16, 2000, 5, 0.33, 506];
 
-par_names = ["Vcmax $(\mu mol/m^2/s)$", "Stomatal P63 (-MPa)", "Max. xylem cond-\nuctance $(mol/m^2/s/MPa)$",  "Rooting depth (mm)", "Xylem P63 (-MPa)",
+par_names = ["Vcmax $(\mu mol/m^2/s)$", "Stomatal P63 (-MPa)", "Max. xylem cond-\nuctance $(mol/m^2/s/MPa)$",  "Soil depth (mm)", "Xylem P63 (-MPa)",
  "Max. water storage\nvolume $(kg/m^2)$","Medlyn g1 $(Pa^{1/2})$","Soil conductivity $(\mu m/s)$","Soil boundary\ncondition","Root distrib. ($m^{-1}$)",
 "PLC steepness"];
 
@@ -88,7 +88,7 @@ true_val = [90, 3, 10, 2000, 4, 1.0*12, 300,0.4,
 #print(par_post.shape)
 #print(par_post2.shape)
 
-obs_names = ["All", "1 AM/PM", "6 AM/PM", "1 AM"]
+obs_names = ["Full diurnal", "1 AM/PM", "6 AM/PM", "1 AM"]
 
 j = 0
 
@@ -103,9 +103,13 @@ for ax in ax_all.ravel()[:11]:#[:7]:
     #toplot2 = np.transpose(par_post2[:,5500::90,j])
     #toplot3 = np.transpose(par_post3[:,5500::90,j])
     #toplot_both = np.concatenate((toplot,toplot2,toplot3),axis=0)
-    vpi = ax.violinplot(np.transpose(allpars[:,:,j]))
-    for patch, color in zip(vpi['bodies'], colors_list[:3]):         
-        patch.set_color(color)
+    vpi = ax.violinplot(np.transpose(allpars[:,:,j]),showmedians=True)
+    for element in vpi.keys():
+        if element=="bodies":
+            for patch, color in zip(vpi[element], colors_list[:3]):         
+                patch.set_color(color)
+        else:
+            vpi[element].set_color(colors_list[:3])
     ax.set_ylim(np.log(prior_min[j]), np.log(prior_max[j]))
     #ax.set_yscale("log")
     ax.set_xticks([])
@@ -119,16 +123,16 @@ for ax in ax_all.ravel()[:11]:#[:7]:
 
 last_ax = ax_all.ravel()[-1]
 for coli in range(3):
-    last_ax.plot([],[],color=colors_list[coli], label=obs_names[coli])
-last_ax.legend()
+    last_ax.plot([],[],color=colors_list[coli], label=obs_names[coli],linewidth=4,alpha=0.75)
+last_ax.legend(loc="center",borderpad=2)
 last_ax.set_xticks([])
 last_ax.set_yticks([])
-
+last_ax.axis("off")
 
 #ax_all[1,3].axis("off")
 
 plt.tight_layout()
-plt.savefig("violin_11parC2.png")
+plt.savefig("violin_11parC2o4.png")
 
 #plt.figure()
 #errs = np.sqrt(np.concatenate((par_post[:,5500::90,-4], par_post2[:,5500::90,-4], par_post3[:,5500::90,-4]), axis=1))

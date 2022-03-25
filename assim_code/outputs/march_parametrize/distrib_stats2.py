@@ -87,12 +87,12 @@ def wrapR2(tab):
     allstats = [getR2(posterior[:,i],truthval) for i in range(posterior.shape[1])]
     return np.array(allstats)
 
-def meanR2_old(tab):
+def meanR2(tab):
     truthval = tab[:,-1]
     postmean = np.nanmean(tab[:,:-1],1)
     return getRMSE(postmean, truthval)
 
-def meanR2(tab):
+def meanR2_new(tab):
     diffs = np.reshape(tab[:,:-1] - tab[:,-1].reshape(-1,1), (-1,1))
     return np.sqrt(np.nanmean(diffs**2))
 
@@ -141,6 +141,8 @@ leafscale_tab = []
 leafmean = []
 scalefac = []
 
+leafpost_midnight = []
+leafpost_noon = []
 
 for i in range(3):
     g0 = np.array(pd.read_csv(out_folder+subdir_list[i]+"postLeaf.csv"))[:,:-1];
@@ -155,38 +157,61 @@ for i in range(3):
     
     #leafpost.append(g3[5::24,:])
     leafpost.append(get_daily_2d(g3,24)[summer_1,:])
-    #leafpost.append(g3[summer_24,:])
+    leafpost_midnight.append(g3[3::24,:])
+    leafpost_noon.append(g3[15::24,:])    
+#leafpost.append(g3[summer_24,:])
 
-    p0 = np.array(pd.read_csv(out_folder+subdir_list[i]+"post_par.csv"))[2000::100,:10]
-    p1 = np.array(pd.read_csv(out_folder+subdir_list2[i]+"post_par.csv"))[2000::100,:10]
-    p2 = np.array(pd.read_csv(out_folder+subdir_list3[i]+"post_par.csv"))[2000::100,:10]
+    p0 = np.array(pd.read_csv(out_folder+subdir_list[i]+"post_par.csv"))[6000::100,:11]
+    p1 = np.array(pd.read_csv(out_folder+subdir_list2[i]+"post_par.csv"))[6000::100,:11]
+    p2 = np.array(pd.read_csv(out_folder+subdir_list3[i]+"post_par.csv"))[6000::100,:11]
     p3 = np.concatenate((p0,p1,p2),axis=0)
     leafpars.append(p3[:,:])
 
 #vcmax_par::FT, k_frac::FT, k_plant::FT,  z_soil::FT, weibB::FT, vol_factor::FT, g1::FT)
 
     leafscale = g3*1
-    leafscale[:,:-1] /= -np.exp(p3[:,4])*(1-np.exp(p3[:,1]))
+    #leafscale[:,:-1] /= -np.exp(p3[:,4])*(1-np.exp(p3[:,1]))
+    leafscale[:,:-1] /= -np.exp(p3[:,1])
     leafscale[:,-1] /= -3
     print(leafscale.shape)
-    leafscale_tab.append(get_daily_2d(leafscale,24))
-    betafac.append(get_daily_2d(np.exp(-1*leafscale**4),24))
+    leafscale_tab.append(get_daily_2d(leafscale,24)[summer_1,:])
+
+    betafacI = 0*leafscale
+    betafacI[:,:-1] = np.exp(-1*leafscale[:,:-1] ** np.exp(p3[:,10]))
+    betafacI[:,-1] = np.exp(-1*leafscale[:,-1]**4)
+    betafac.append(get_daily_2d(betafacI,24)[summer_1,:])
 
     leafmean.append(np.nanmean(g3,0))
     scalefac.append(np.nanmean(leafscale/g3,0))
 
 
-print("Leaf")
+print("Leaf daily mean")
 leaftab = [meanR2(x) for x in leafpost]
 print(leaftab)
+print(np.mean(leafpost[1][:,-1]))
+
+print("Leaf 3 AM")
+leaftab = [meanR2(x) for x in leafpost_midnight]
+print(leaftab)
+print(np.mean(leafpost_midnight[1][:,-1]))
+
+print("Leaf 3 PM")
+leaftab = [meanR2(x) for x in leafpost_noon]
+print(leaftab)
+print(np.mean(leafpost_noon[1][:,-1]))
+
 
 print("Scaled leaf potential")
 leaftab = [meanR2(x) for x in leafscale_tab]
 print(leaftab)
 
+print(np.mean(leafscale_tab[1][:,-1]))
+
+
 print("Beta factor")
 leaftab = [meanR2(x) for x in betafac]
 print(leaftab)
+print(np.mean(betafac[1][:,-1]))
 
 #meantab = np.array(leafmean)
 #scaletab = np.array(scalefac)
@@ -263,11 +288,11 @@ for i in range(3):
 print("ET")
 ETtab = [meanR2(x) for x in leafpost]
 print(ETtab)
+print(np.mean(leafpost[1][:,-1]))
 
+#et_allmean = [np.nanmean(x[:,:-1],1) for x in leafpost] + [leafpost[0][:,-1]]
 
-et_allmean = [np.nanmean(x[:,:-1],1) for x in leafpost] + [leafpost[0][:,-1]]
-
-np.savetxt("et_means.csv",np.array(et_allmean),delimiter=",")
+#np.savetxt("et_means.csv",np.array(et_allmean),delimiter=",")
 
 
 leafpost = []
@@ -284,6 +309,7 @@ for i in range(3):
 print("GPP")
 ETtab = [meanR2(x) for x in leafpost]
 print(ETtab)
+print(np.mean(leafpost[1][:,-1]))
 
 
 
@@ -301,6 +327,7 @@ for i in range(3):
 print("Canopy cond")
 GStab = [meanR2(x) for x in leafpost]
 print(GStab)
+print(np.mean(leafpost[1][:,-1]))
 
 
 
@@ -334,6 +361,7 @@ for i in range(3):
 print("Column soil")
 roottab = [meanR2(x) for x in leafpost]
 print(roottab)
+print(np.mean(leafpost[1][:,-1]))
 
 
 
