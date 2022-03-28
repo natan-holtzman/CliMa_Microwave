@@ -1,4 +1,4 @@
-include("./optim_post_mode.jl")
+include("./optim_full.jl")
 
 #function do_assim(obs_mask, norm_factor, outdir, vodA, vodB, vodC)
 
