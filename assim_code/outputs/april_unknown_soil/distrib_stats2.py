@@ -26,13 +26,9 @@ par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth"
 #for each run in FixET, get the parameters
 out_folder = "./";
 
-subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/"]
-subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/"]
-subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/"]
-
-
-
-
+subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/", "o1and6_c2/"]
+subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/"]
+subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/"]
 
 obs_names = ["All", "1 AM/PM", "6 AM/PM"]
 

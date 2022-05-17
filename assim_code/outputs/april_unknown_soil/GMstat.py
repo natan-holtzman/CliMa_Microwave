@@ -26,9 +26,9 @@ par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth"
 #for each run in FixET, get the parameters
 out_folder = "./";
 
-subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/"]
-subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/"]
-subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/"]
+subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/", "o1and6_c2/", "o16offset_c2/"]
+subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/", "o16offset_c3/"]
+subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/","o16offset_c1/"]
 
 
 
@@ -129,7 +129,7 @@ colors_list = ["tab:blue","tab:green","tab:orange","tab:red"]
 leafpars = []
 
 
-for i in range(3):
+for i in range(4,5):
     p0 = np.array(pd.read_csv(out_folder+subdir_list[i]+"post_par.csv"))[-4000:,:12]
     p1 = np.array(pd.read_csv(out_folder+subdir_list2[i]+"post_par.csv"))[-4000:,:12]
     p2 = np.array(pd.read_csv(out_folder+subdir_list3[i]+"post_par.csv"))[-4000:,:12]
@@ -152,7 +152,7 @@ def getGM(x):
     R = ((L-1)/L*W + B/L) / W
     return R
 print("Gelman Rubin statistic")
-for i in range(3):
+for i in range(1):
     print(getGM(leafpars[i]))
 
 
