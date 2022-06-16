@@ -50,7 +50,7 @@ end
 
 
 
-function get_TB_2(smc_mod, Tsoil, Tcan, leafpot, laiM, pvs, alpha, beta,omega,rhfac)
+function get_TB_2(smc_mod, Tsoil, Tcan, leafpot, laiM, pvs, alpha, beta,rhfac,omega)
 
 #smc_mod = sim_res[2][:,1];
 
@@ -243,18 +243,18 @@ while (itercount < maxiter) & (err_diff > stop_crit)
 	grad_beta = overall_grad(diffH, rhfac*fH, dgamma_dbeta, gamma) + overall_grad(diffV, rhfac*fV, dgamma_dbeta, gamma);
 	
 	grad_rhfac_H = diffH .* (-gamma .* Tsoil .* fH + (1-omega) .* (1 .- gamma) .* gamma .* fH .* Tcan);	
-        grad_rhfac_V = diffV .* (-gamma .* Tsoil .* fV + (1-omega) .* (1 .- gamma) .* gamma .* fV .* Tcan);
+    grad_rhfac_V = diffV .* (-gamma .* Tsoil .* fV + (1-omega) .* (1 .- gamma) .* gamma .* fV .* Tcan);
 	grad_rhfac = mean(grad_rhfac_H + grad_rhfac_V);
 
-	grad_omega_H = diffH .* -(1-gamma)*(1 .+ gamma*(rhfac*fH)) .* Tcan
-	grad_omega_H = diffV .* -(1-gamma)*(1 .+ gamma*(rhfac*fV)) .* Tcan	
+	grad_omega_H = diffH .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fH)) .* Tcan
+	grad_omega_V = diffV .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fV)) .* Tcan	
 	grad_omega = mean(grad_omega_H + grad_omega_V);
 
 	k = k - step_size*grad_k;
 	alpha = alpha - step_size*grad_alpha;
 	beta = beta - step_size*grad_beta;
 	rhfac = rhfac - step_size*grad_rhfac;
-	omega = rhfac - step_size*grad_omega;
+	omega = omega - step_size*grad_omega;
 
 	#k = min(max(0.01,k - step_size*grad_k),0.25);
 	#alpha = min(max(0.25,alpha - step_size*grad_alpha),2);
