@@ -39,12 +39,12 @@ obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset"];
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
 
 d24 = np.arange(24*365*12) % (24*365)
-#summer_24 = (d24 >= 150)*(d24 < 275)
-summer_24 = d24 >= 0
+summer_24 = (d24 >= 150)*(d24 < 275)
+#summer_24 = d24 >= 0
 
 d1 = np.arange(365*12) % 365 
-#summer_1 = (d1 >= 150)*(d1 < 275)
-summer_1 = d1 >= 0
+summer_1 = (d1 >= 150)*(d1 < 275)
+#summer_1 = d1 >= 0
 
 y1 = np.floor(np.arange(365*12) / 365)
 #summer_1 = ((y1 < 6)+(y1 > 9)) * summer_1
@@ -52,8 +52,8 @@ y1 = np.floor(np.arange(365*12) / 365)
 
 y24 = np.floor(np.arange(24*365*12)/(24*365))
 
-#summer_1 = (((y1 == 0) + (y1 == 2) + (y1 == 6)) > 0) * summer_1
-#summer_24 = (((y24 == 0) + (y24 == 2) + (y24 == 6)) > 0) * summer_24
+summer_1 = (((y1 == 0) + (y1 == 2) + (y1 == 6)) > 0) * summer_1
+summer_24 = (((y24 == 0) + (y24 == 2) + (y24 == 6)) > 0) * summer_24
 
 
 #summer_1 = (summer_1==0)
@@ -254,6 +254,8 @@ all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
+np.save("dry_rmse.npy",np.array(all_errs))
+
 
 titles = ["Leaf water potential","Soil moisture","ET","GPP"]
 units = ["MPa","$m^3/m^3$","mm/day","$\mu mol/m^2/s$"]
@@ -275,6 +277,8 @@ for ax in ax_all.ravel():#[:7]:
     mymax = ax.get_ylim()
     ax.set_ylim(0,mymax[1])
     ylim_units = ax.get_ylim()
+    ax.plot([-1,6],[np.median(all_errs[j][:,0])]*2,"--", color="tab:blue")
+    ax.set_xlim(0.25,5.75)
     ax2 = ax.twinx()
     ax2.set_ylim(100 * np.array(ylim_units) / all_means[j])
     ax2.set_ylabel("Percent")
@@ -284,6 +288,6 @@ for ax in ax_all.ravel():#[:7]:
 
 plt.tight_layout()
 
-plt.savefig("err_violin_fix_slope_all5.png")
+#plt.savefig("err_all_sept19.png")
 
 

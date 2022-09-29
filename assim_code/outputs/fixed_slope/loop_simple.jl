@@ -14,6 +14,12 @@ mask1[2:(24*3):end] .= 1;
 mask1[(2+12):(24*3):end] .= 1;
 mask1 = mask1 .== 1;
 
+mask1_all = zeros(datalen);
+mask1_all[2:24:end] .= 1;
+mask1_all[(2+12):24:end] .= 1;
+mask1_all = mask1_all .== 1;
+
+
 mask1o = zeros(datalen);
 mask1o[2:(24*3):end] .= 1;
 mask1o = mask1o .== 1;
@@ -45,7 +51,9 @@ function run_scenario(scenario, sout, s_in, my_init)
 
   elseif scenario == "o6AMPM"
     do_assim(mask6, 1, sout, vA, vB, vC,vO, s_in, my_init)
-  
+
+  elseif scenario == "o1AMPM_all"
+    do_assim(mask1_all, 1.0/3, sout, vA, vB, vC,vO, s_in, my_init)   
 
   elseif scenario == "o1AM"
     do_assim(mask1o, 2, sout, vA, vB, vC,vO, s_in, my_init)
