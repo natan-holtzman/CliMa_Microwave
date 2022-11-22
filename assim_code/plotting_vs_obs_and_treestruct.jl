@@ -21,11 +21,11 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_fluxnet_data.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2;
 
-N = 24*365*12
-istart = 24*365*0 + 1; 
+#N = 24*365*12
+#istart = 24*365*0 + 1; 
 
-#N = 24*365*1
-#istart = 24*365*2 + 1; 
+N = 24*365*1;
+istart = 24*365*2 + 1; 
 
 soil0 = 0.4;
 

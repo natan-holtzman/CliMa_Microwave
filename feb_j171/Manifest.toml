@@ -437,6 +437,12 @@ git-tree-sha1 = "d7ab55febfd0907b285fbf8dc0c73c0825d9d6aa"
 uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 version = "1.3.0"
 
+[[deps.EmeraldConstants]]
+deps = ["DocStringExtensions", "Test"]
+git-tree-sha1 = "fff28dae7585fbe4c2a7645edb08baca0f800556"
+uuid = "f1e47f7f-56cf-4a63-9b2b-695e95ad7a29"
+version = "0.1.0"
+
 [[deps.ExponentialUtilities]]
 deps = ["ArrayInterface", "LinearAlgebra", "Printf", "Requires", "SparseArrays"]
 git-tree-sha1 = "3e1289d9a6a54791c1ee60da0850f4fd71188da6"
@@ -1463,10 +1469,10 @@ uuid = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 version = "0.2.0"
 
 [[deps.WaterPhysics]]
-deps = ["DocStringExtensions", "PkgUtility", "Test", "UnPack"]
-git-tree-sha1 = "621ddd55a029c81fa3e776d3ee1383b1d51287c8"
+deps = ["DocStringExtensions", "EmeraldConstants", "PkgUtility", "Test", "UnPack"]
+git-tree-sha1 = "2ca56b50c07bb8d6e6c214c8dabafb97cad479bf"
 uuid = "20dd5ee6-61da-454b-ac5d-c09c2977e03a"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]

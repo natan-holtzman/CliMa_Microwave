@@ -12,7 +12,7 @@ function update_pk_leaf!(tissue::LeafHydraulics{FT})
 end
 	
 function update_pk_nonleaf!(tissue::Land.PlantHydraulics.AbstractHydraulicOrgan{FT})
-	tissue.p_storage = (tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
+	tissue.p_storage = min.(0,tissue.v_storage ./ tissue.v_maximum .- FT(1)) / tissue.pv.slope
 	tissue.p_storage[tissue.p_storage .> 0] .= 0;
 	tissue.p_element = tissue.p_storage
 	tissue.k_element = exp.(-(tissue.p_element ./ -tissue.vc.b) .^ tissue.vc.c) * tissue.k_max

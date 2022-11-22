@@ -173,6 +173,11 @@ for i in eachindex(df.Day)
 	glw_mean = 0	
 	subIter = 15
 	
+
+	#if i==3399
+#		break
+#	end
+
 	for i_can in 1:n_canopy
 		
 		iEN = envirs[i_can];
@@ -211,10 +216,12 @@ for i in eachindex(df.Day)
 		#uncomment the above line to instead force ET to be prescribed from the flux tower data
 	end;
 	
+
 	try  #try to run the plant hydraulics. if an error is returned, exit gracefully
 		dd1, dd2 = find_new_cap(plant_hs,deltaT);
 		push_cap!(plant_hs,dd1,dd2)
 		#if mean(dd1 .> maxvol) > 0
+		#	prinln("Max vol exceeded")
 		#	return df, smc_record, root_qin_record, leaf_qout_record, v_profile, p_profile,soil_p_profile, apar_record, anet_record, gs_record, node
 		#end
 	catch err
@@ -234,7 +241,7 @@ for i in eachindex(df.Day)
 	total_runoff = 0
 	for subI2 in 1:subIter2
 		runoff_i = do_soil_nss_drain3!(node, FT(df.RAIN[i])/subIter2, deltaT/subIter2, k_soil, drainage_pot)		
-		total_runoff += runoff_i/subI2
+		total_runoff += runoff_i/subIter2
 	end
 	for i_root in eachindex(node.plant_hs.roots)
 		rootI = node.plant_hs.root_index_in_soil[i_root]
@@ -283,6 +290,7 @@ for i in eachindex(df.Day)
 	psi_record_trunk[i] = mean(node.plant_hs.trunk.p_element);
 	root_qin_record[i,:] = [x.q_in for x in node.plant_hs.roots];
 	leaf_qout_record[i,:] = [x.q_out*x.area for x in node.plant_hs.leaves];
+
 	apar_record[i,:] = [sum(x.APAR .* x.LAIx) for x in node.plant_ps];
 
 	anet_record[i,:] = [sum(x.An .* x.LAIx) for x in node.plant_ps];
@@ -292,6 +300,10 @@ for i in eachindex(df.Day)
 	soil_p_profile[i,:] = swpI;	
 
 	v_profile[i,:] = get_v_prof2(node.plant_hs);
+
+	#if isnan(sum([x.q_out*x.area for x in node.plant_hs.leaves]))
+	#	break
+	#end
 
 end;
 
