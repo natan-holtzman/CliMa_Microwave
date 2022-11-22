@@ -1,4 +1,5 @@
 using DataFrames
+
 using CSV
 #using Plots
 using Random
@@ -63,7 +64,9 @@ end
 
 function tcan_model_forward_constmean(Tsoil,slopes,intercepts,mask)
     t1 = hourmat[mask,:]*intercepts + Tsoil[mask] .* (hourmat[mask,:]*slopes);
-    return t1;# .- mean(t1) .+ mean(Tsoil[mask]);
+    return t1 .- mean(t1) .+ mean(Tsoil[mask]);
+    #return t1 / std(t1) * std(Tsoil[mask]);
+
 end
 
 
@@ -99,7 +102,7 @@ function obs_opt(soilsurf1,canpot1,tsoil,laiM,obs_mask,k0, alpha0, beta0, omega0
     obs_pars0 = [k0, alpha0, beta0, omega0,slopes0,intercepts0];
     initpar_flat = vcat(obs_pars0...);
 
-    min2 = Optim.minimizer(optimize(get_loss_flat, overall_grad_flat!, initpar_flat, BFGS()));
+    min2 = Optim.minimizer(optimize(get_loss_flat, overall_grad_flat!, initpar_flat, LBFGS()));
 
     #slopes2 = min2[5:(5+23)];
     #intercepts2 = min2[(5+23+1):end];

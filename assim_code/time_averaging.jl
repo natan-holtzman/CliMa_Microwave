@@ -73,3 +73,9 @@ end
 function get_daily2d(x,navg)
 	return mean(reshape(x,(navg,:,size(x)[2])),dims=1)[1,:,:];
 end
+
+
+
+function get_diurnal2d(x,navg)
+	return mean(reshape(x,(navg,:,size(x)[2])),dims=2)[:,1,:];
+end

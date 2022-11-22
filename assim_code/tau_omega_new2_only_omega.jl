@@ -106,9 +106,9 @@ while (itercount < maxiter) & (err_diff > stop_crit)
 	grad_alpha = overall_grad(diffH, rhfac*fH, dgamma_dalpha, gamma) + overall_grad(diffV, rhfac*fV, dgamma_dalpha, gamma);
 	grad_beta = overall_grad(diffH, rhfac*fH, dgamma_dbeta, gamma) + overall_grad(diffV, rhfac*fV, dgamma_dbeta, gamma);
 	
-	grad_omega_H = diffH .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fH)) .* Tcan
-	grad_omega_V = diffV .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fV)) .* Tcan	
-	grad_omega = mean(grad_omega_H + grad_omega_V);
+	grad_omega_H = diffH .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fH)) .* Tcan;
+	grad_omega_V = diffV .* -(1 .- gamma) .* (1 .+ gamma .* (rhfac*fV)) .* Tcan;
+	grad_omega = mean(grad_omega_H) + mean(grad_omega_V);
 
 	k = k - step_size*grad_k;
 	alpha = alpha - step_size*grad_alpha;
