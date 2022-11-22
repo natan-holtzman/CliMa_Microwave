@@ -7,27 +7,34 @@ using Land.Photosynthesis
 using Land.CanopyLayers
 using Land.PlantHydraulics
 using Land.SoilPlantAirContinuum
+import Land.SoilPlantAirContinuum.SPACMono
+
+using WaterPhysics
 using Land.StomataModels
 using Thermodynamics
 
 using CLIMAParameters
-using CLIMAParameters:AbstractEarthParameterSet
-using CLIMAParameters.Planet: grav
+#using CLIMAParameters:AbstractEarthParameterSet
+#using CLIMAParameters.grav
 
 const FT = Float32
 
-struct EarthParameterSet <: AbstractEarthParameterSet end
-const param_set = EarthParameterSet()
+#struct EarthParameterSet <: AbstractEarthParameterSet end
+#const param_set = EarthParameterSet()
+
+#import CLIMAParameters
+#param_set = CLIMAParameters.EARTH_PARAMETER_SET 
+
 
 KG_H_2_MOL_S = FT(55.55 / 3600);
 mpa2mm = FT(10^6/9.8);
-K_STEFAN = FT(Stefan());
+K_STEFAN = FT(5.670e-8);
 
-include(string(PROJECT_HOME,"/simulation_code/create_spac.jl"))
+include(string("create_spac.jl"))
 
-include(string(PROJECT_HOME,"/simulation_code/land_utils.jl"))
-include(string(PROJECT_HOME,"/simulation_code/capacitance_funs.jl"))
-include(string(PROJECT_HOME,"/simulation_code/initialize_node.jl"))
+include(string("land_utils.jl"))
+include(string("capacitance_funs.jl"))
+include(string("initialize_node.jl"))
 
 function run_sim_varyB(vcmax_par, beta_weibB, k_weibB, k_weibC, k_plant, k_soil, z_soil, istart, N,
  smc0, storage_mult, buffrate,scheme_number,df_raw,g1,deltaT,alpha,n,full_can, full_angles,
@@ -109,7 +116,7 @@ for i in eachindex(df.Day)
 	end
 
 	# update PAR related information
-	zenith = zenith_angle(latitude, FT(df.Day[i]), FT(df.Hour[i]),
+	zenith = Land.SoilPlantAirContinuum.zenith_angle(latitude, FT(df.Day[i]), FT(df.Hour[i]),
 						  FT(df.Minu[i]));
 	zenith = min(88, zenith);
 	angles.sza = zenith;
@@ -137,8 +144,9 @@ for i in eachindex(df.Day)
 		iEN.p_atm = df.P_ATM[i] * 1000;
 		iEN.p_a   = iEN.p_atm * 4e-4;
 		iEN.p_O₂  = iEN.p_atm * 0.209;
-		iEN.p_sat = saturation_vapor_pressure( param_set, iEN.t_air , Liquid());
-		
+		#iEN.p_sat = saturation_vapor_pressure( param_set, iEN.t_air , Liquid());
+		iEN.p_sat = WaterPhysics.saturation_vapor_pressure(iEN.t_air);
+	
 		iEN.RH    = FT(df.RelHum[i]);
 		iEN.p_H₂O = iEN.RH * iEN.p_sat;
 		iEN.vpd   = (FT(1)-iEN.RH) * iEN.p_sat;

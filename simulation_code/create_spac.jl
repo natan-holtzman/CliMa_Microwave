@@ -1,5 +1,5 @@
-include(string(PROJECT_HOME,"/simulation_code/updatefuns.jl"))
-include(string(PROJECT_HOME,"/simulation_code/create_hydraulics.jl"))
+include(string("updatefuns.jl"))
+include(string("create_hydraulics.jl"))
 
 function make_layers(_totaldepth)
 	linear_layers = collect(0:0.1:0.8);
@@ -123,7 +123,7 @@ function create_spac(
 	#update_Kmax_ratio!(_node, kmax, convert(Array{FT},[0.25,8,0.25,0.25]));
 	update_Kmax_ratio!(_node, kmax, convert(Array{FT},[2,8,4,2]));
 	update_Cab!(_node, chl);
-    initialize_spac_canopy!(_node);
+    Land.SoilPlantAirContinuum.initialize_spac_canopy!(_node);
 	
     return _node
 )
