@@ -21,11 +21,13 @@ include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_fluxnet_data.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2;
 
+#df_raw.LAI_modis = 0.9 .+ 5/3*(df_raw.LAI_modis .- 0.9);
+
 #N = 24*365*12
 #istart = 24*365*0 + 1; 
 
-N = 24*365*1;
-istart = 24*365*2 + 1; 
+N = 24*365*12;
+istart = 24*365*0 + 1; 
 
 soil0 = 0.4;
 
@@ -55,9 +57,10 @@ end
 
 pars0 = convert(Array{FT}, [90, 3, 10, 2000, 1, 1.0, 300, 0.4e-6,
        0.4,2,1.5,1]);
+pars1 = convert(Array{FT}, [60, 3, 10, 2000, 1, 1.0, 500, 0.4e-6,
+       0.4,2,1.7,1]);
 
-
-sim_res1 = run_sim_0(pars0...);
+sim_res1 = run_sim_0(pars1...);
 
 
 cm1 = mean(sim_res1[6][:,1:3],dims=2);
@@ -65,6 +68,13 @@ pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
 
 mydates = DateTime.(sim_res1[1].DateTime, "yyyy-mm-dd HH:MM:SS");
 daylist = Date.(mydates)[1:24:end];
+
+dry_year = [2005,2012,2013];
+drystart = [Date(x,6,1) for x in dry_year];
+dryend = [Date(x,9,30) for x in dry_year];
+
+#150 - 275
+#year 1, 3, 7
 
 
 function plot_tree(x,y,node_example)
@@ -86,6 +96,7 @@ function plot_tree(x,y,node_example)
 	ylabel("Height (m)")
 end
 
+#=
 inight = 237*24 + 4;
 plot_tree(sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end])
 xlim(-3.5,0)
@@ -95,7 +106,7 @@ inight = 237*24 + 12;
 plot_tree(sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end])
 xlim(-3.5,0)
 title("Noon")
-
+=#
 
 figure()
 plot(daylist[1:5:end],get_daily(sim_res1[1].LE/40650,24*5)*18/1000*60*60*24,"k",label="Eddy covariance")
@@ -103,6 +114,7 @@ plot(daylist[1:5:end],get_daily(sim_res1[1].ETmod,24*5)*18/1000*60*60*24,"r",lab
 xlabel("Time")
 ylabel("ET (mm/day)")
 legend()
+
 
 figure()
 plot(daylist[1:5:end],get_daily(sim_res1[1].GPP_night,24*5),"k",label="Eddy covariance")
@@ -116,9 +128,15 @@ figure()
 plot(daylist[1:5:end],get_daily(sim_res1[1].SMC,24*5),"k",label="Observed")
 plot(daylist[1:5:end],get_daily(sim_res1[2][:,1],24*5),"r",label="Model",alpha=0.75)
 #plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
+axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Assimilation period")
+axvspan(drystart[1],dryend[1],color="grey",alpha=0.33,label="Dry summers")
+for j in 2:3
+	axvspan(drystart[j],dryend[j],color="grey",alpha=0.33)
+end
 xlabel("Time")
 ylabel("Surface soil moisture")
 legend()
+
 
 pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
 

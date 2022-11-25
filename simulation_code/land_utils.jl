@@ -107,18 +107,19 @@ function gas_exchange_nofluor!(
     leaf_photosynthesis!(photo_set, canopyi.ps, envir, GCO₂Mode(),
                          canopyi.g_lc[ind]);
    
-    #canopyi.Ac[ind] = canopyi.ps.Ac;
-    #canopyi.Aj[ind] = canopyi.ps.Aj;
-    #canopyi.Ap[ind] = canopyi.ps.Ap;
-    #canopyi.Ag[ind] = canopyi.ps.Ag;
-    #canopyi.An[ind] = canopyi.ps.An;
+    canopyi.Ac[ind] = canopyi.ps.Ac;
+    canopyi.Aj[ind] = canopyi.ps.Aj;
+    canopyi.Ap[ind] = canopyi.ps.Ap;
+    canopyi.Ag[ind] = canopyi.ps.Ag;
+    canopyi.An[ind] = canopyi.ps.An;
 
+    #=
     canopyi.Ac[ind] = set_na_0(canopyi.ps.Ac);
     canopyi.Aj[ind] = set_na_0(canopyi.ps.Aj);
     canopyi.Ap[ind] = set_na_0(canopyi.ps.Ap);
     canopyi.Ag[ind] = set_na_0(canopyi.ps.Ag);
     canopyi.An[ind] = set_na_0(canopyi.ps.An);
-
+=#
     #=
     try
     	canopyi.ϕs[ind] = canopyi.ps.ϕs;
@@ -127,8 +128,8 @@ function gas_exchange_nofluor!(
     end
     =#
     # update the pressures
-    canopyi.p_i[ind] = set_na_0(canopyi.ps.p_i);
-    canopyi.p_s[ind] = set_na_0(canopyi.ps.p_s);
+    canopyi.p_i[ind] = canopyi.ps.p_i;
+    canopyi.p_s[ind] = canopyi.ps.p_s;
     return nothing
 end
 
