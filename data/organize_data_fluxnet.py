@@ -120,9 +120,24 @@ lw_out = fillbad(np.array(rawdata['LW_OUT']))
 
 relhum = fillbad(np.array(rawdata['RH']))
 wind = fillbad(np.array(rawdata['WS_F']))
-le = fillbad(np.array(rawdata['LE_CORR']))
+#%%
+le_corr = fillbad(np.array(rawdata['LE_CORR']))
+le = fillbad(np.array(rawdata['LE_F_MDS']))
 
+le25 = np.array(rawdata['LE_CORR_25'])
+le75 = np.array(rawdata['LE_CORR_25'])
+le[(le25== -9999) | (le75== -9999) ] = np.nan
+
+le_randunc = np.array(rawdata['LE_RANDUNC'])
+le[le_randunc == -9999] = np.nan
+
+le[(le < 0)*(solar_umol_in > 0)] = np.nan
+#%%
 smc = fillbad(np.array(rawdata['SWC_F_MDS_1']))
+smc_qc = np.array(rawdata["SWC_F_MDS_1_QC"])
+smc[smc_qc== -9999] = np.nan
+
+#%%
 
 ts = fillbad(np.array(rawdata['TS_F_MDS_1']))
 
@@ -158,9 +173,13 @@ obs_time = [datetime.datetime.strptime(
     for i in range(len(obs))]
 obs['DateTime'] = [x+datetime.timedelta(hours=6) for x in obs_time]
 common_names = pd.unique(obs[' Species_Common_Name'])
-obsWO = obs.loc[obs[' Species_Common_Name']=='white oak']
-obsWOm = obsWO.groupby('DateTime').mean()
-y2data = pd.merge(rawdata,obsWOm,on='DateTime',how='left')
+#obsWO = obs.loc[obs[' Species_Common_Name']=='white oak']
+#obsWOm = obsWO.groupby('DateTime').mean()
+#%%
+obs_allsp = obs.groupby('DateTime').mean()
+
+#%%
+y2data = pd.merge(rawdata,obs_allsp,on='DateTime',how='left')
 #daypot = np.array(y2data[' PLWP'])[12::48]
 #%%
 oakpot = np.array(y2data[' PLWP'])
@@ -172,8 +191,10 @@ obs_time_MD = [datetime.datetime.strptime(
 
 
 mid_day['DateTime'] = [x+datetime.timedelta(hours=6) for x in obs_time_MD]
-obsWO_MD = mid_day.loc[mid_day['Species_Symbol']=='QUAL']
-obsWO_MDmean = obsWO_MD.groupby('DateTime').mean()
+#obsWO_MD = mid_day.loc[mid_day['Species_Symbol']=='QUAL']
+#obsWO_MDmean = obsWO_MD.groupby('DateTime').mean()
+obsWO_MDmean = mid_day.groupby('DateTime').mean()
+
 #%%
 y2data = pd.merge(y2data,obsWO_MDmean,on='DateTime',how='left')
 #%%
@@ -208,7 +229,10 @@ mydf_all = pd.DataFrame({'DateTime':np.array(rawdata['DateTime']),
                       'LWP_midday':oakpot_MD,
                       })
 #%%
-df_skipyear = mydf_all.loc[(mydf_all["YEAR"] != 2004) & (mydf_all["YEAR"] != 2011)].reset_index()
+#df_skipyear = mydf_all.loc[(mydf_all["YEAR"] != 2004) & (mydf_all["YEAR"] != 2011)].reset_index()
+df_skipyear = mydf_all.loc[(mydf_all["YEAR"] != 2004) ].reset_index()
+
+
 #%%
 def df_avg(df,N):
     newlen = int(len(df)/N);
@@ -224,5 +248,5 @@ def df_avg(df,N):
 #%%
 df_24 = df_avg(df_skipyear,2)
 #%%
-df_24.to_csv('moflux_fluxnet_data.csv')
+df_24.to_csv('moflux_fluxnet_data_nov2022_lef.csv')
 #%%
