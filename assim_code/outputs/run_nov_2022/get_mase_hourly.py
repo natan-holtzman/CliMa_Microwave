@@ -6,14 +6,16 @@ plt.rcParams["lines.linewidth"] = 1;
 plt.rcParams["font.size"] = 12;
 plt.rcParams["mathtext.default"] = "regular"
 
+
 df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
 #dry_year = [2005, 2012, 2013, 2014]
-#summer_24 = np.ones(len(df_raw)) == 1
-summer_24 = np.array(df_raw.YEAR) > 0 #==2007
+summer_24 = np.array((df_raw.Day >= 152)&(df_raw.Day <= 273))==1#&( df_raw.YEAR.isin(dry_year))) == 1
+#summer_24 = np.ones(len(df_raw))==1
 summer_1 = summer_24[::24]
 
-print("ALL YEARS")
+
+print("DRY SUMMERS")
 #prior_min = [ 0.1,  1e-6, 500, 0.75, 0.75,0.01];
 #prior_max = [ 100, 2e-5, 3000, 10, 8,10];
 
@@ -44,30 +46,6 @@ obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset","o1AMPM_all"];
 
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
 
-#d24 = np.arange(24*365*12) % (24*365)
-#summer_24 = (d24 >= 150)*(d24 < 275)
-#summer_24 = d24 >= 0
-
-#d1 = np.arange(365*12) % 365 
-#summer_1 = (d1 >= 150)*(d1 < 275)
-#summer_1 = d1 >= 0
-
-#y1 = np.floor(np.arange(365*12) / 365) + 2005
-#summer_1 = ((y1 < 6)+(y1 > 9)) * summer_1
-#summer_1 = (y1 == 6)*summer_1
-
-#y24 = np.floor(np.arange(24*365*12)/(24*365)) + 2005
-
-#summer_1 = (((y1 == 2005) + (y1 == 2012) + (y1 == 6)) > 0) * summer_1
-#summer_24 = (((y24 == 2005) + (y24 == 2012) + (y24 == 6)) > 0) * summer_24
-
-
-#summer_1 = (summer_1==0)
-#summer_24 = (summer_24==0)
-
-
-#summer_24 = ((y24<6)+(y24>9)) * summer_24
-#summer_24 = (y24 == 6)*summer_24
 
 #leaf_post = np.array(leaf_post)
 
@@ -111,7 +89,7 @@ def meanR2_med(tab):
 
 def meanR2_dist(tab):
     diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
-    return np.sqrt(np.nanmean(diffs**2,0))
+    return np.nanmean(np.abs(diffs),0)
 
 def meanR2_dist_unbiased(tab):
     std_post = tab[:,:-1]*1
@@ -175,7 +153,7 @@ for i in range(5):
             pass
         else:
             g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-            g0 = get_daily_2d(g0,24)[summer_1,:]
+            g0 = g0[summer_24,:]
             p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
  
         datalist.append(g0[:,:-1])
@@ -201,7 +179,7 @@ leaftab = [meanR2(x) for x in leafpost]
 
 print("Leaf normalized")
 LWPerrs = np.array([meanR2(x) for x in normpost])
-LWPmean = np.abs(np.mean(normpost[0][:,-1]))
+LWPmean = np.abs(np.std(normpost[0][:,-1]))
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
@@ -217,7 +195,7 @@ def do_compare(fname,daily):
 			else:
 				g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
 				if daily:
-					g0 = get_daily_2d(g0,24)[summer_1,:]
+					g0 = g0[summer_24,:]
 				else:
 					g0 = g0[summer_1,:]
 			datalist.append(g0[:,:-1])
@@ -229,7 +207,7 @@ def do_compare(fname,daily):
 	ETtab = np.array([meanR2(x) for x in leafpost])
 	#np.savetxt(outname,ETtab)#print(ETtab)
 	#print(np.mean(leafpost[1][:,-1]))
-	return ETtab,np.mean(g0[:,-1])
+	return ETtab,np.std(g0[:,-1])
 
 
 fname = "postET.csv"
@@ -252,10 +230,14 @@ print(fname)
 SMCerrs,SMCmean = do_compare(fname,1)
 
 
+#plt.figure()
+#plt.box(ETerrs)
+
+
 all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-np.save("rmse_nov25.npy",np.array(all_errs))
+np.save("mase_dec31_hourly_summer.npy",np.array(all_errs))
 
 

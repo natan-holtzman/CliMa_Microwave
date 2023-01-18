@@ -10,7 +10,7 @@ df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
 #dry_year = [2005, 2012, 2013, 2014]
 #summer_24 = np.ones(len(df_raw)) == 1
-summer_24 = np.array(df_raw.YEAR) > 0 #==2007
+summer_24 = np.array(df_raw.YEAR) >= 0
 summer_1 = summer_24[::24]
 
 print("ALL YEARS")
@@ -165,89 +165,46 @@ grav_pot = 13.5*1000/mpa2mm;
 leafpost = []
 normpost = []
 
-fname = "postLeaf.csv"
+fname = "prior_output/postLeaf.csv"
 
-for i in range(5):
-    datalist = []
-    normlist = []
-    for chainI in range(1,4):
-        if i == 1 and chainI == 99:
-            pass
-        else:
-            g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-            g0 = get_daily_2d(g0,24)[summer_1,:]
-            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
+g0 = np.array(pd.read_csv(fname));
+g0 = get_daily_2d(g0,24)[summer_1,:]
+p0 = np.array(pd.read_csv("prior_sample_inlog.csv")).T
  
-        datalist.append(g0[:,:-1])
-        normlist.append((g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,40) - grav_pot )
-    datalist.append(g0[:,-1].reshape(-1,1))
-    normlist.append(g0[:,-1].reshape(-1,1))
-    data_all = np.concatenate(datalist,axis=1)
-    norm_all = np.concatenate(normlist,axis=1)   
-    
-    leafpost.append(data_all)
-    normpost.append(norm_all)
-
+normlist = [(g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,120) - grav_pot ]
+normlist.append(g0[:,-1].reshape(-1,1))
+normlist = np.concatenate(normlist,axis=1)
     #leafpost.append(get_daily_2d(g3,24)[summer_1,:])
     #leafpost_midnight.append(g3[3::24,:])
     #leafpost_noon.append(g3[15::24,:])    
 
 
-print("Leaf daily mean")
-leaftab = [meanR2(x) for x in leafpost]
-#print(leaftab)
-#print(np.mean(leafpost[1][:,-1]))
-
-
 print("Leaf normalized")
-LWPerrs = np.array([meanR2(x) for x in normpost])
-LWPmean = np.abs(np.mean(normpost[0][:,-1]))
+LWPerrs = np.array(meanR2(normlist))
+LWPmean = np.abs(np.mean(normlist[:,-1]))
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
 
 def do_compare(fname,daily):
-	leafpost = []
-
-	for i in range(5):
-		datalist = []
-		for chainI in range(1,4):
-			if i == 1 and chainI == 99:
-				pass
-			else:
-				g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-				if daily:
-					g0 = get_daily_2d(g0,24)[summer_1,:]
-				else:
-					g0 = g0[summer_1,:]
-			datalist.append(g0[:,:-1])
-		datalist.append(g0[:,-1].reshape(-1,1))
-		data_all = np.concatenate(datalist,axis=1)
-		leafpost.append(data_all)
-		#g3[:,np.mean(g3==0,0) > 0.1] = np.nan
-
-	ETtab = np.array([meanR2(x) for x in leafpost])
-	#np.savetxt(outname,ETtab)#print(ETtab)
-	#print(np.mean(leafpost[1][:,-1]))
+	g0 = np.array(pd.read_csv(fname));
+	g0 = get_daily_2d(g0,24)[summer_1,:]
+	ETtab = np.array(meanR2(g0))
 	return ETtab,np.mean(g0[:,-1])
 
 
-fname = "postET.csv"
+fname = "prior_output/postET.csv"
 print(fname)
 ETerrs,ETmean = do_compare(fname,1)
 ETerrs *= 18.02/1000*60*60*24;
 ETmean *= 18.02/1000*60*60*24
 
 
-fname = "postGPP.csv"
+fname = "prior_output/postGPP.csv"
 print(fname)
 GPPerrs,GPPmean = do_compare(fname,1)
 
-fname = "postGSW.csv"
-print(fname)
-GSWerrs,GSWmean = do_compare(fname,1)
-
-fname = "postSWS.csv"
+fname = "prior_output/postSWS.csv"
 print(fname)
 SMCerrs,SMCmean = do_compare(fname,1)
 
@@ -256,6 +213,6 @@ all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-np.save("rmse_nov25.npy",np.array(all_errs))
+np.save("rmse_prior.npy",np.array(all_errs))
 
 

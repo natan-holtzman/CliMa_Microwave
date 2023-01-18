@@ -10,7 +10,7 @@ df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
 #dry_year = [2005, 2012, 2013, 2014]
 #summer_24 = np.ones(len(df_raw)) == 1
-summer_24 = np.array(df_raw.YEAR) > 0 #==2007
+summer_24 = np.array(df_raw.YEAR)==2007
 summer_1 = summer_24[::24]
 
 print("ALL YEARS")
@@ -79,8 +79,8 @@ obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
 #RZSMtab =  np.array(pd.read_csv(out_folder+"postRZ.csv"));
 #ETtab =  np.array(pd.read_csv(out_folder+"postET.csv"));
 
-def getcor(x,y):
-    return np.corrcoef(x,y)[0,1]
+def getcor(tab):
+    return np.array([np.corrcoef(tab[:,j],tab[:,-1])[0,1] for j in range(tab.shape[1]-1)])
 
 def getRMSE(x,y):
     return np.sqrt(np.mean((x-y)**2))
@@ -112,6 +112,7 @@ def meanR2_med(tab):
 def meanR2_dist(tab):
     diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
     return np.sqrt(np.nanmean(diffs**2,0))
+
 
 def meanR2_dist_unbiased(tab):
     std_post = tab[:,:-1]*1
@@ -157,6 +158,25 @@ def wrapRMSE(tab):
     return np.array(allstats)
 
 
+def get_anom(x):
+    xclim = np.mean(x.reshape(-1,365),0)
+    xstd = np.std(x.reshape(-1,365),0)
+    zanom = (x - np.tile(xclim,13))/np.tile(xstd,13)
+    return zanom
+
+def do_analysis(tabx):
+    #lwp_means = [np.mean(tabx[:,j]) for j in range(tabx.shape[1])]
+    #lwp_relative = [tabx[:,j]/np.mean(tabx[:,j]) for j in range(tabx.shape[1])]
+    #relative_clim = [np.mean(x.reshape(-1,365),0) for x in lwp_relative]
+    relative_anom = [get_anom(x) for x in lwp_relative]
+    return [np.array(lwp_means),getcor(np.array(relative_clim).T),
+            getcor(np.array(relative_anom).T)]
+
+
+#def do_analysis(listx):
+#    to_unwrap = [do_analysis_base(x) for x in listx]
+#    return [np.stack([x[i] for x in to_unwrap],1) for i in range(3)]
+
 j = 0
 
 mpa2mm = 10**6 / 9.8
@@ -168,8 +188,8 @@ normpost = []
 fname = "postLeaf.csv"
 
 for i in range(5):
-    datalist = []
-    normlist = []
+    #datalist = []
+    #normlist = []
     for chainI in range(1,4):
         if i == 1 and chainI == 99:
             pass
@@ -178,35 +198,43 @@ for i in range(5):
             g0 = get_daily_2d(g0,24)[summer_1,:]
             p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
  
-        datalist.append(g0[:,:-1])
-        normlist.append((g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,40) - grav_pot )
-    datalist.append(g0[:,-1].reshape(-1,1))
-    normlist.append(g0[:,-1].reshape(-1,1))
-    data_all = np.concatenate(datalist,axis=1)
-    norm_all = np.concatenate(normlist,axis=1)   
+     #   datalist.append(g0[:,:-1])
+        normpost.append((g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,40) - grav_pot )
+   # datalist.append(g0[:,-1].reshape(-1,1))
+   # normlist.append(g0[:,-1].reshape(-1,1))
+   # data_all = np.concatenate(datalist,axis=1)
+   # norm_all = np.concatenate(normlist,axis=1)   
     
-    leafpost.append(data_all)
-    normpost.append(norm_all)
+  #  leafpost.append(data_all)
+  #  normpost.append(norm_all)
+
+normpost.append(g0[:,-1].reshape(-1,1))
+normpost = np.concatenate(normpost,axis=1)
+print(normpost.shape)
 
     #leafpost.append(get_daily_2d(g3,24)[summer_1,:])
     #leafpost_midnight.append(g3[3::24,:])
     #leafpost_noon.append(g3[15::24,:])    
 
 
-print("Leaf daily mean")
-leaftab = [meanR2(x) for x in leafpost]
+#print("Leaf daily mean")
+#leaftab = [meanR2(x) for x in leafpost]
 #print(leaftab)
 #print(np.mean(leafpost[1][:,-1]))
 
 
 print("Leaf normalized")
-LWPerrs = np.array([meanR2(x) for x in normpost])
-LWPmean = np.abs(np.mean(normpost[0][:,-1]))
+#print([x.shape for x in normpost])
+#LWPerrs = np.array([meanR2(x) for x in normpost])
+LWPcor =  getcor(normpost)
+
+
+#LWPmean = np.abs(np.mean(normpost[0][:,-1]))
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
-
-def do_compare(fname,daily):
+daily = 1
+def do_compare(fname):
 	leafpost = []
 
 	for i in range(5):
@@ -220,42 +248,32 @@ def do_compare(fname,daily):
 					g0 = get_daily_2d(g0,24)[summer_1,:]
 				else:
 					g0 = g0[summer_1,:]
-			datalist.append(g0[:,:-1])
-		datalist.append(g0[:,-1].reshape(-1,1))
-		data_all = np.concatenate(datalist,axis=1)
-		leafpost.append(data_all)
-		#g3[:,np.mean(g3==0,0) > 0.1] = np.nan
-
-	ETtab = np.array([meanR2(x) for x in leafpost])
-	#np.savetxt(outname,ETtab)#print(ETtab)
-	#print(np.mean(leafpost[1][:,-1]))
-	return ETtab,np.mean(g0[:,-1])
+			leafpost.append(g0[:,:-1])
+	leafpost.append(g0[:,-1].reshape(-1,1))
+	data_all = np.concatenate(leafpost,axis=1)
+	return getcor(data_all)
 
 
 fname = "postET.csv"
 print(fname)
-ETerrs,ETmean = do_compare(fname,1)
-ETerrs *= 18.02/1000*60*60*24;
-ETmean *= 18.02/1000*60*60*24
+ETcor = do_compare(fname)
 
 
 fname = "postGPP.csv"
 print(fname)
-GPPerrs,GPPmean = do_compare(fname,1)
-
-fname = "postGSW.csv"
-print(fname)
-GSWerrs,GSWmean = do_compare(fname,1)
+GPPcor = do_compare(fname)
 
 fname = "postSWS.csv"
 print(fname)
-SMCerrs,SMCmean = do_compare(fname,1)
+SMCcor = do_compare(fname)
 
 
-all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
-all_means = [LWPmean, SMCmean, ETmean, GPPmean]
-print(all_means)
+#all_clim_errs = [LWPclim_err,SMCclim_err,ETclim_err,GPPclim_err];
+all_cors = [LWPcor, SMCcor, ETcor, GPPcor]
+#all_anom_errs = [LWPanom_err,SMCanom_err,ETanom_err,GPPanom_err];
 
-np.save("rmse_nov25.npy",np.array(all_errs))
+#np.save("means_nov25.npy",np.array(all_means))
+#np.save("clim_cor_nov25.npy",np.array(all_clim_errs))
+np.save("cor_2007.npy",np.array(all_cors))
 
 

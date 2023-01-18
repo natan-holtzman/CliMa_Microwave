@@ -9,8 +9,7 @@ plt.rcParams["mathtext.default"] = "regular"
 df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
 #dry_year = [2005, 2012, 2013, 2014]
-#summer_24 = np.ones(len(df_raw)) == 1
-summer_24 = np.array(df_raw.YEAR) > 0 #==2007
+summer_24 = np.array(df_raw.YEAR) ==2007
 summer_1 = summer_24[::24]
 
 print("ALL YEARS")
@@ -127,6 +126,8 @@ def meanR2_dist_unbiased(tab):
 def meanR2(tab):
     return meanR2_dist(tab)
 
+def getmean(tab):
+    return np.nanmean(tab,0)
 
 def get_diurnal_2d(x,nstep):
     y = np.reshape(x, (-1, nstep, x.shape[-1]))
@@ -137,7 +138,7 @@ def get_diurnal_1d(x,nstep):
     return np.mean(y, axis=0)
 def get_daily_2d(x,nstep):
     y = np.reshape(x, (-1, nstep, x.shape[-1]))
-    return np.mean(y, axis=1)
+    return y[:,6,:] - y[:,14]
 #outvar = [leaftab[1::24,:],get_diurnal(leaftab,24),
 #	  RZSMtab[:,:] ]
 
@@ -256,6 +257,6 @@ all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-np.save("rmse_nov25.npy",np.array(all_errs))
+np.save("d52_rmse_all.npy",np.array(all_errs))
 
 
