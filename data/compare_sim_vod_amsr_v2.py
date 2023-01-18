@@ -35,10 +35,10 @@ amsrDtwain["VODt"] = setna(amsrDtwain[' mean_LPRM_AMSRE_D_SOILM3_002_opt_depth_x
 #amsrAtwain["VODt"] = setna(amsrAtwain[' mean_LPRM_AMSRE_A_SOILM3_002_opt_depth_x'])
 #%%
 
-amsrDtwain = pd.read_csv("amsr_mof_6year.csv",parse_dates=[0], skiprows=8)
+#amsrDtwain = pd.read_csv("amsr_mof_6year.csv",parse_dates=[0], skiprows=8)
 #amsrAtwain = pd.read_csv("amsrAmoflux.csv",parse_dates=[0], skiprows=8)
 
-amsrDtwain["VODt"] = setna(amsrDtwain[' mean_LPRM_AMSRE_D_SOILM3_002_opt_depth_x'])
+#amsrDtwain["VODt"] = setna(amsrDtwain[' mean_LPRM_AMSRE_D_SOILM3_002_opt_depth_x'])
 #amsrAtwain["VODt"] = setna(amsrAtwain[' mean_LPRM_AMSRE_A_SOILM3_002_opt_depth_x'])
 #%%
 #ascending is 1:30 PM, descending is 1:30 AM
@@ -69,6 +69,7 @@ plt.plot(morningdata["DateTime"], morningdata["LAI_modis"],"g")
 plt.subplot(3,1,3)
 plt.plot(morningdata["DateTime"], morningdata["VODt"],"ro")
 #%%
+plt.figure()
 plt.plot(morningdata["LAI_modis"], morningdata["VODt"],"o")
 #%%
 lai_all = np.array(morningdata["LAI_modis"])
@@ -140,15 +141,18 @@ psifac = 1 + 0.067*psi_all
 # psifac = 1 + 0.085*psi_all
 #%%
 #plt.plot(vod_all,".")
-plt.plot(morningdata.DateTime,vod_smooth,label="AMSR-E")
-plt.plot(morningdata.DateTime,laifac*psifac,label="Model")
+plt.figure()
+plt.plot(morningdata.DateTime,vod_smooth,label="LPRM")
+plt.plot(morningdata.DateTime,laifac*psifac,label="CliMA")
 plt.ylabel("VOD")
 plt.xlabel("Time")
 plt.legend()
 #%%
+plt.figure()
 plt.plot(laifac*psifac, vod_smooth,"o")
 plt.plot([0.8,1],[0.8,1])
 #%%
+plt.figure()
 plt.plot(vod_all,"ko")
 plt.plot(laifac*psifac,"r",linewidth=3)
 #%%
@@ -160,6 +164,7 @@ def myfun(x):
 myopt = scipy.optimize.minimize(myfun,x0=np.array([0.067,0.82,0.051]),
                                 bounds = ((0,1),(0,2),(0,1)))
 #%%
+plt.figure()
 laifac = myopt.x[1] + myopt.x[2]*lai_all
 psifac = 1 + myopt.x[0]*psi_all
 
