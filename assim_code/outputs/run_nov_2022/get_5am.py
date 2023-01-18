@@ -1,13 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import scipy.stats
-
 #sim_res1 = run_sim_2(FT(22),FT(0.33), FT(2),FT(1e-5), FT(600),FT(4.0),FT(3),FT(1),FT(600));
 plt.rcParams["lines.linewidth"] = 1;
 plt.rcParams["font.size"] = 12;
 plt.rcParams["mathtext.default"] = "regular"
 
+df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
+df_raw = df_raw.iloc[:(24*365*13)]
+#dry_year = [2005, 2012, 2013, 2014]
+summer_24 = np.array(df_raw.YEAR) > ==2007
+summer_1 = summer_24[::24]
 
 print("ALL YEARS")
 #prior_min = [ 0.1,  1e-6, 500, 0.75, 0.75,0.01];
@@ -34,28 +37,28 @@ out_folder = "./";
 #subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/", "o16offset_c3/"]
 #subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/", "o16offset_c1/"]
 
-obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset"];
+obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset","o1AMPM_all"];
 
 
 
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
 
-d24 = (np.arange(24*365*12) % (24*365)) / 24
+#d24 = np.arange(24*365*12) % (24*365)
 #summer_24 = (d24 >= 150)*(d24 < 275)
-summer_24 = d24 >= 0
+#summer_24 = d24 >= 0
 
-d1 = np.arange(365*12) % 365 
+#d1 = np.arange(365*12) % 365 
 #summer_1 = (d1 >= 150)*(d1 < 275)
-summer_1 = d1 >= 0
+#summer_1 = d1 >= 0
 
-y1 = np.floor(np.arange(365*12) / 365)
+#y1 = np.floor(np.arange(365*12) / 365) + 2005
 #summer_1 = ((y1 < 6)+(y1 > 9)) * summer_1
 #summer_1 = (y1 == 6)*summer_1
 
-y24 = np.floor(np.arange(24*365*12)/(24*365))
+#y24 = np.floor(np.arange(24*365*12)/(24*365)) + 2005
 
-#summer_1 = (((y1 == 0) + (y1 == 2) + (y1 == 6)) > 0) * summer_1
-#summer_24 = (((y24 == 0) + (y24 == 2) + (y24 == 6)) > 0) * summer_24
+#summer_1 = (((y1 == 2005) + (y1 == 2012) + (y1 == 6)) > 0) * summer_1
+#summer_24 = (((y24 == 2005) + (y24 == 2012) + (y24 == 6)) > 0) * summer_24
 
 
 #summer_1 = (summer_1==0)
@@ -123,6 +126,8 @@ def meanR2_dist_unbiased(tab):
 def meanR2(tab):
     return meanR2_dist(tab)
 
+def getmean(tab):
+    return np.nanmean(tab,0)
 
 def get_diurnal_2d(x,nstep):
     y = np.reshape(x, (-1, nstep, x.shape[-1]))
@@ -133,7 +138,7 @@ def get_diurnal_1d(x,nstep):
     return np.mean(y, axis=0)
 def get_daily_2d(x,nstep):
     y = np.reshape(x, (-1, nstep, x.shape[-1]))
-    return np.mean(y, axis=1)
+    return y[:,6,:]
 #outvar = [leaftab[1::24,:],get_diurnal(leaftab,24),
 #	  RZSMtab[:,:] ]
 
@@ -171,7 +176,7 @@ for i in range(5):
             pass
         else:
             g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-            g0 = g0[summer_24,:]
+            g0 = get_daily_2d(g0,24)[summer_1,:]
             p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
  
         datalist.append(g0[:,:-1])
@@ -213,7 +218,7 @@ def do_compare(fname,daily):
 			else:
 				g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
 				if daily:
-					g0 = g0[summer_24,:]
+					g0 = get_daily_2d(g0,24)[summer_1,:]
 				else:
 					g0 = g0[summer_1,:]
 			datalist.append(g0[:,:-1])
@@ -245,39 +250,13 @@ GSWerrs,GSWmean = do_compare(fname,1)
 
 fname = "postSWS.csv"
 print(fname)
-SMCerrs,SMCmean = do_compare(fname,0)
-
-
-plt.figure()
-plt.box(ETerrs)
+SMCerrs,SMCmean = do_compare(fname,1)
 
 
 all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-def prob_better(x):
-	probs = np.zeros(5)
-	dists = []
-	for i in range(1,5):
-		m1, m2 = np.meshgrid(x[0],x[i],indexing='ij')
-		mydiff = m2 - m1
-		probs[i] = np.mean(mydiff > 0)
-		dists.append(mydiff.reshape(-1,1)[:,0])
-	dists = np.array(dists)
-	return probs, dists
-
-alldiffs = []
-
-for i in range(4):
-	print(np.nanmedian(all_errs[i][0]))
-	for j in range(1,5):
-		utest = scipy.stats.mannwhitneyu(all_errs[i][0], all_errs[i][j])
-		print(np.nanmedian(all_errs[i][j]),", ", utest.pvalue)
-	#alldiffs.append(d1)
-
-
-
-
+np.save("am5_rmse_all.npy",np.array(all_errs))
 
 

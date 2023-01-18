@@ -7,7 +7,15 @@ plt.rcParams["font.size"] = 12;
 plt.rcParams["mathtext.default"] = "regular"
 
 
-print("ALL YEARS")
+df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
+df_raw = df_raw.iloc[:(24*365*13)]
+#dry_year = [2005, 2012, 2013, 2014]
+summer_24 = np.array((df_raw.Day >= 152)&(df_raw.Day <= 273))==1#&( df_raw.YEAR.isin(dry_year))) == 1
+#summer_24 = np.ones(len(df_raw))==1
+summer_1 = summer_24[::24]
+
+
+print("DRY SUMMERS")
 #prior_min = [ 0.1,  1e-6, 500, 0.75, 0.75,0.01];
 #prior_max = [ 100, 2e-5, 3000, 10, 8,10];
 
@@ -32,36 +40,12 @@ out_folder = "./";
 #subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/", "o16offset_c3/"]
 #subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/", "o16offset_c1/"]
 
-obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset"];
+obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset","o1AMPM_all"];
 
 
 
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
 
-d24 = np.arange(24*365*12) % (24*365)
-#summer_24 = (d24 >= 150)*(d24 < 275)
-summer_24 = d24 >= 0
-
-d1 = np.arange(365*12) % 365 
-#summer_1 = (d1 >= 150)*(d1 < 275)
-summer_1 = d1 >= 0
-
-y1 = np.floor(np.arange(365*12) / 365)
-#summer_1 = ((y1 < 6)+(y1 > 9)) * summer_1
-#summer_1 = (y1 == 6)*summer_1
-
-y24 = np.floor(np.arange(24*365*12)/(24*365))
-
-#summer_1 = (((y1 == 0) + (y1 == 2) + (y1 == 6)) > 0) * summer_1
-#summer_24 = (((y24 == 0) + (y24 == 2) + (y24 == 6)) > 0) * summer_24
-
-
-#summer_1 = (summer_1==0)
-#summer_24 = (summer_24==0)
-
-
-#summer_24 = ((y24<6)+(y24>9)) * summer_24
-#summer_24 = (y24 == 6)*summer_24
 
 #leaf_post = np.array(leaf_post)
 
@@ -105,7 +89,7 @@ def meanR2_med(tab):
 
 def meanR2_dist(tab):
     diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
-    return np.sqrt(np.nanmean(diffs**2,0))
+    return np.nanmean(np.abs(diffs),0)
 
 def meanR2_dist_unbiased(tab):
     std_post = tab[:,:-1]*1
@@ -161,7 +145,7 @@ normpost = []
 
 fname = "postLeaf.csv"
 
-for i in range(3):
+for i in range(5):
     datalist = []
     normlist = []
     for chainI in range(1,4):
@@ -169,7 +153,7 @@ for i in range(3):
             pass
         else:
             g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-            #g0 = get_daily_2d(g0,24)[summer_1,:]
+            g0 = g0[summer_24,:]
             p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
  
         datalist.append(g0[:,:-1])
@@ -195,7 +179,7 @@ leaftab = [meanR2(x) for x in leafpost]
 
 print("Leaf normalized")
 LWPerrs = np.array([meanR2(x) for x in normpost])
-LWPmean = np.abs(np.mean(normpost[0][:,-1]))
+LWPmean = np.abs(np.std(normpost[0][:,-1]))
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
@@ -203,17 +187,17 @@ LWPmean = np.abs(np.mean(normpost[0][:,-1]))
 def do_compare(fname,daily):
 	leafpost = []
 
-	for i in range(3):
+	for i in range(5):
 		datalist = []
 		for chainI in range(1,4):
 			if i == 1 and chainI == 99:
 				pass
 			else:
 				g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-				#if daily:
-				#	g0 = get_daily_2d(g0,24)[summer_1,:]
-				#else:
-				#	g0 = g0[summer_1,:]
+				if daily:
+					g0 = g0[summer_24,:]
+				else:
+					g0 = g0[summer_1,:]
 			datalist.append(g0[:,:-1])
 		datalist.append(g0[:,-1].reshape(-1,1))
 		data_all = np.concatenate(datalist,axis=1)
@@ -223,7 +207,7 @@ def do_compare(fname,daily):
 	ETtab = np.array([meanR2(x) for x in leafpost])
 	#np.savetxt(outname,ETtab)#print(ETtab)
 	#print(np.mean(leafpost[1][:,-1]))
-	return ETtab,np.mean(g0[:,-1])
+	return ETtab,np.std(g0[:,-1])
 
 
 fname = "postET.csv"
@@ -243,47 +227,17 @@ GSWerrs,GSWmean = do_compare(fname,1)
 
 fname = "postSWS.csv"
 print(fname)
-SMCerrs,SMCmean = do_compare(fname,0)
+SMCerrs,SMCmean = do_compare(fname,1)
 
 
-plt.figure()
-plt.box(ETerrs)
+#plt.figure()
+#plt.box(ETerrs)
 
 
 all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-
-titles = ["Leaf water potential","Soil moisture","ET","GPP"]
-units = ["MPa","$m^3/m^3$","mm/day","$\mu mol/m^2/s$"]
-colors_list = ["tab:blue","tab:green","tab:orange","tab:red","tab:purple"]
-xcoords = range(1,6)
-j = 0
-fig, ax_all = plt.subplots(2,2,figsize=(8,5))
-for ax in ax_all.ravel():#[:7]:
-    vpi = ax.violinplot(np.transpose(all_errs[j]),showmedians=True)
-    for element in vpi.keys():
-        if element=="bodies":
-            for patch, color in zip(vpi[element], colors_list):
-                patch.set_color(color)
-        else:
-            vpi[element].set_color(colors_list)
-    ax.set_xticks([],[])
-    ax.set_title(titles[j])
-    ax.set_ylabel(units[j])
-    mymax = ax.get_ylim()
-    ax.set_ylim(0,mymax[1])
-    ylim_units = ax.get_ylim()
-    ax2 = ax.twinx()
-    ax2.set_ylim(100 * np.array(ylim_units) / all_means[j])
-    ax2.set_ylabel("Percent")
-
-#ticklabel_format(style="plain",axis="y")
-    j += 1
-
-plt.tight_layout()
-
-plt.savefig("err_violin_fix_slope_hourly.png")
+np.save("mase_dec31_hourly_summer.npy",np.array(all_errs))
 
 

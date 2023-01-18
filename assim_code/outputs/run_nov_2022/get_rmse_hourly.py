@@ -9,8 +9,9 @@ plt.rcParams["mathtext.default"] = "regular"
 
 df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
-dry_year = [2005, 2012, 2013, 2014]
-summer_24 = np.array((df_raw.Day >= 152)&(df_raw.Day <= 273)&( df_raw.YEAR.isin(dry_year))) == 1
+#dry_year = [2005, 2012, 2013, 2014]
+#summer_24 = np.array((df_raw.Day >= 152)&(df_raw.Day <= 273)&( df_raw.YEAR.isin(dry_year))) == 1
+summer_24 = np.ones(len(df_raw))==1
 summer_1 = summer_24[::24]
 
 
@@ -237,6 +238,6 @@ all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]
 print(all_means)
 
-np.save("dry_rmse_nov25_hourly.npy",np.array(all_errs))
+np.save("rmse_dec4_hourly.npy",np.array(all_errs))
 
 

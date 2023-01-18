@@ -9,8 +9,8 @@ plt.rcParams["mathtext.default"] = "regular"
 
 df_raw = pd.read_csv("../../../data/moflux_fluxnet_data_nov2022_lef.csv");
 df_raw = df_raw.iloc[:(24*365*13)]
-dry_year = [2005, 2012, 2013, 2014]
-summer_24 = np.array((df_raw.Day >= 152)&(df_raw.Day <= 273)&( df_raw.YEAR.isin(dry_year))) == 1
+summer_24 = np.ones(len(df_raw)) == 1
+
 summer_1 = summer_24[::24]
 
 
@@ -90,13 +90,6 @@ def meanR2_dist(tab):
     diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
     return np.sqrt(np.nanmean(diffs**2,0))
 
-def ubRMSE_dist(tab):
-    true_val = tab[:,-1].reshape(-1,1)
-    est_val = tab[:,:-1]
-    renorm = (est_val-np.mean(est_val,0))/np.std(est_val,0)*np.std(true_val) + np.mean(true_val)
-    diffs =  renorm - true_val
-    return  np.sqrt(np.nanmean(diffs**2,0))     
-
 def meanR2_dist_unbiased(tab):
     std_post = tab[:,:-1]*1
     std_post -= np.nanmean(std_post,0).reshape(1,-1)
@@ -109,7 +102,7 @@ def meanR2_dist_unbiased(tab):
 
 
 def meanR2(tab):
-    return ubRMSE_dist(tab)
+    return meanR2_dist(tab)
 
 
 def get_diurnal_2d(x,nstep):
@@ -140,6 +133,11 @@ def wrapRMSE(tab):
     allstats = [getRMSE(posterior[:,i],truthval) for i in range(posterior.shape[1])]
     return np.array(allstats)
 
+def get_range(tab):
+    q25 = np.quantile(tab,0.25,axis=1)
+    q50 = np.quantile(tab,0.5,axis=1) 
+    q75 = np.quantile(tab,0.75,axis=1)
+    return np.stack((q25,q50,q75),1)
 
 j = 0
 
@@ -159,13 +157,11 @@ for i in range(5):
             pass
         else:
             g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
-            g0 = get_daily_2d(g0,24)[summer_1,:]
+            g0 = g0[summer_24,:]
             p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
  
         datalist.append(g0[:,:-1])
         normlist.append((g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,40) - grav_pot )
-    datalist.append(g0[:,-1].reshape(-1,1))
-    normlist.append(g0[:,-1].reshape(-1,1))
     data_all = np.concatenate(datalist,axis=1)
     norm_all = np.concatenate(normlist,axis=1)   
     
@@ -176,16 +172,19 @@ for i in range(5):
     #leafpost_midnight.append(g3[3::24,:])
     #leafpost_noon.append(g3[15::24,:])    
 
+leafpost.append(g0[:,-1].reshape(-1,1))
+normpost.append(g0[:,-1].reshape(-1,1))
+
+
 
 print("Leaf daily mean")
-leaftab = [meanR2(x) for x in leafpost]
+leaftab = np.array([get_range(x) for x in leafpost])
 #print(leaftab)
 #print(np.mean(leafpost[1][:,-1]))
 
 
 print("Leaf normalized")
-LWPerrs = np.array([meanR2(x) for x in normpost])
-LWPmean = np.abs(np.mean(normpost[0][:,-1]))
+LWPerrs = np.array([get_range(x) for x in normpost])
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
@@ -201,49 +200,46 @@ def do_compare(fname,daily):
 			else:
 				g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
 				if daily:
-					g0 = get_daily_2d(g0,24)[summer_1,:]
+					g0 = g0[summer_24,:]
 				else:
 					g0 = g0[summer_1,:]
 			datalist.append(g0[:,:-1])
-		datalist.append(g0[:,-1].reshape(-1,1))
 		data_all = np.concatenate(datalist,axis=1)
 		leafpost.append(data_all)
 		#g3[:,np.mean(g3==0,0) > 0.1] = np.nan
-
-	ETtab = np.array([meanR2(x) for x in leafpost])
+	leafpost.append(g0[:,-1].reshape(-1,1))
+	ETtab = np.array([get_range(x) for x in leafpost])
 	#np.savetxt(outname,ETtab)#print(ETtab)
 	#print(np.mean(leafpost[1][:,-1]))
-	return ETtab,np.mean(g0[:,-1])
+	return ETtab
 
 
 fname = "postET.csv"
 print(fname)
-ETerrs,ETmean = do_compare(fname,1)
-ETerrs *= 18.02/1000*60*60*24;
-ETmean *= 18.02/1000*60*60*24
+ETerrs = do_compare(fname,1)
+#ETerrs *= 18.02/1000*60*60*24;
+#ETmean *= 18.02/1000*60*60*24
 
 
 fname = "postGPP.csv"
 print(fname)
-GPPerrs,GPPmean = do_compare(fname,1)
+GPPerrs = do_compare(fname,1)
 
-fname = "postGSW.csv"
-print(fname)
-GSWerrs,GSWmean = do_compare(fname,1)
+#fname = "postGSW.csv"
+#print(fname)
+#GSWerrs,GSWmean = do_compare(fname,1)
 
 fname = "postSWS.csv"
 print(fname)
-SMCerrs,SMCmean = do_compare(fname,1)
+SMCerrs = do_compare(fname,1)
 
 
-plt.figure()
-plt.box(ETerrs)
+#plt.figure()
+#plt.box(ETerrs)
 
 
 all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
-all_means = [LWPmean, SMCmean, ETmean, GPPmean]
-print(all_means)
 
-np.save("dry_ubrmse_nov25.npy",np.array(all_errs))
+np.save("iqr_vars_nov25.npy",np.array(all_errs))
 
 
