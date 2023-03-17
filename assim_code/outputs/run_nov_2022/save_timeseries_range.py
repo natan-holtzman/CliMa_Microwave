@@ -134,10 +134,12 @@ def wrapRMSE(tab):
     return np.array(allstats)
 
 def get_range(tab):
+    q05 = np.quantile(tab,0.05,axis=1)
     q25 = np.quantile(tab,0.25,axis=1)
     q50 = np.quantile(tab,0.5,axis=1) 
     q75 = np.quantile(tab,0.75,axis=1)
-    return np.stack((q25,q50,q75),1)
+    q95 = np.quantile(tab,0.95,axis=1)
+    return np.stack((q05,q25,q50,q75,q95),1)
 
 j = 0
 
@@ -149,7 +151,7 @@ normpost = []
 
 fname = "postLeaf.csv"
 
-for i in range(5):
+for i in range(4):
     datalist = []
     normlist = []
     for chainI in range(1,4):
@@ -192,7 +194,7 @@ LWPerrs = np.array([get_range(x) for x in normpost])
 def do_compare(fname,daily):
 	leafpost = []
 
-	for i in range(5):
+	for i in range(4):
 		datalist = []
 		for chainI in range(1,4):
 			if i == 1 and chainI == 99:
@@ -238,8 +240,8 @@ SMCerrs = do_compare(fname,1)
 #plt.box(ETerrs)
 
 
-all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
+all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs,leaftab];
 
-np.save("iqr_vars_nov25.npy",np.array(all_errs))
+np.save("output_quantiles.npy",np.array(all_errs))
 
 

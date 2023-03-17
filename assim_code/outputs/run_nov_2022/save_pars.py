@@ -184,7 +184,7 @@ allpars = []
 
 fname = "postLeaf.csv"
 
-for i in range(5):
+for i in range(4):
     #datalist = []
     #normlist = []
     for chainI in range(1,4):
@@ -193,7 +193,8 @@ for i in range(5):
         else:
             #g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
             #g0 = get_daily_2d(g0,24)[summer_1,:]
-            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
+#            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
+            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[:,:13]
  
      #   datalist.append(g0[:,:-1])
         allpars.append(p0)
@@ -228,4 +229,4 @@ for i in range(5):
 
 #print(leaftab)
 #print(np.mean(normpost[1][:,-1]))
-np.save("pars_nov25.npy",np.concatenate(allpars,axis=0))
+np.save("pars_feb27.npy",np.concatenate(allpars,axis=0))
