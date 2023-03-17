@@ -23,12 +23,13 @@ plt.rcParams['font.size']=15
 colors_list = ["#E69F00","#56B4E9","#009E73","#CC79A7","#0072B2"]
 
 #colors_list = ["tab:blue","tab:green","tab:orange","tab:red","tab:purple","black"]
-obs_names = ["Hourly", "1 AM/PM", "6 AM/PM","1+6","1+6 offset","True model"]
+obs_names = ["HOURLY", "1 AM/PM", "6 AM/PM","1+6","1+6 offset","True model"]
 
 
 #%%
 ubrmse_all = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\all_ubrmse_nov30.npy")
 rmse_all = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\all_rmse_nov25.npy")
+
 mean_full = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\means_nov25.npy")
 bias_all = (mean_full[:,:-1] - mean_full[:,np.array([-1])]).reshape(4,5,120) 
 
@@ -64,14 +65,14 @@ def add_sig(ax,pvalues,centers):
     for scenario in range(1,4):
         if pvalues[scenario] < 0.05:
             if centers[scenario] < centers[0]:
-                sig_lab = "-*"
+                sig_lab = "(-)"
             else:
-                sig_lab = "+*"
+                sig_lab = "(+)"
         else:
-            sig_lab = "ns"
+            sig_lab = "(ns)"
         newtix.append(sig_lab)
     for ti in range(1,4):
-        ax.text(ti+1,max0,newtix[ti],horizontalalignment="center")
+        ax.text(ti+1,max0,newtix[ti],horizontalalignment="center",fontsize=18)
         
 
 def colored_box(ax,data):
@@ -99,7 +100,7 @@ mymax = ax.get_ylim()[1]
 #ax.set_ylim(0,mymax)
 #ax.set_title("(a)",loc="left",fontsize=28)
 ax.text(-0.1,1.1,"(a)",fontsize=24,transform=ax.transAxes)
-ax.set_title("RMSE of pre-dawn LWP (MPa)")
+ax.set_title("RMSE of pre-dawn $LWP^o$ (MPa)")
 ax.set_xticks(range(1,5),obs_names[:4])
 
 ax = ax_all[0,1]
@@ -109,7 +110,7 @@ mymax = ax.get_ylim()[1]
 #ax.set_ylim(0,mymax)
 #ax.set_title("(c)",loc="left",fontsize=28)
 ax.text(-0.1,1.1,"(b)",fontsize=24,transform=ax.transAxes)
-ax.set_title("RMSE of diurnal $\Delta$LWP (MPa)")
+ax.set_title("RMSE of diurnal $\Delta LWP^o$ (MPa)")
 ax.set_xticks(range(1,5),obs_names[:4])
 
 #ax.set_xticks(range(1,6),obs_names[:-1])
@@ -141,7 +142,12 @@ fig.suptitle("Errors in assimilation year",fontsize=24)
 
 fig.tight_layout()
 #%%
-#add_ubrmse = np.sqrt(rmse_all**2 - bias_all**2)
+
+rmse3hr_all = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\rmse_3hr_jan18.npy")
+cor3hr_all = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\cor_3hr_jan18.npy")
+
+
+add_ubrmse = np.sqrt(rmse3hr_all**2 - bias_all**2)
 #%%
 # plt.rcParams['font.size']=20
 
