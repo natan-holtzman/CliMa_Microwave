@@ -1,20 +1,23 @@
+include("../../../get_home_dir.jl")
+using Pkg
+Pkg.activate(string(PROJECT_HOME,"/feb_j171"));
 
 using DataFrames
 using CSV
-using PyPlot
+#using PyPlot
 using Dates
 
-include("../get_home_dir.jl")
 
 #pygui(true)
 
+#=
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams");
 rcParams["lines.linewidth"] = 1;
 rcParams["lines.markersize"] = 2;
 
 rcParams["font.size"] = 15;
 rcParams["mathtext.default"] = "regular";
-
+=#
 
 #include(string(PROJECT_HOME,"/assim_code/mironov.jl"));
 #include(string(PROJECT_HOME,"/assim_code/tau_omega_new2_only_omega.jl"));
@@ -132,7 +135,7 @@ println("prior run")
 soilPrior = [];
 radPrior = [];
 
-for i in 1:5
+for i in 1:120
     println(i)
     simI = run_sim_1(convert(Array{FT},exp.(priorpar_tab[i,:]))...);
     if sum(isnan.(simI[2][:,1])) == 0
@@ -142,10 +145,11 @@ for i in 1:5
     end
 end
 
+println("posterior run")
 soilPost = [];
 radPost = [];
 
-for i in 1:5
+for i in 1:120
     println(i)
     simI = run_sim_1(convert(Array{FT},exp.(postpar_tab[i,:]))...);
     push!(soilPost,simI[2][:,1]);
@@ -161,6 +165,7 @@ end
 =#
 #function that takes in an ax, an averaging fun, and 3 input datasets
 
+#=
 function myplot3_old(ax,afun,data0,dataP,dataH,extract_fun,xvals)
     vP = hcat([afun(extract_fun(x),24) for x in dataP]...);
     vH = hcat([afun(extract_fun(x),24) for x in dataH]...);
@@ -185,7 +190,7 @@ function myplot3(ax,afun,data0,dataP,dataH,extract_fun,xvals)
     ax.fill_between(xvals,row_quant(vH,0.25),row_quant(vH,0.75),color="r",alpha=0.5,label="HOURLY retrieval",linewidth=1)
     ax.set_xlim(xvals[1],xvals[end])
 end
-
+=#
 
 function pickVOD(x)
     return x[3][:,1]
@@ -207,7 +212,7 @@ function diurnal_nomean(x,d)
     y = get_diurnal(x,d)
     return y; # .- mean(y)
   end
-
+#=
 vodP = deepcopy(radPrior);
 vodH = deepcopy(radPost);
 
@@ -251,5 +256,36 @@ tight_layout()
 
 fig.subplots_adjust(top=0.9)
 
-fig.savefig("testfig_mar22d.png")
+fig.savefig("testfig_mar22e.png")
+=#
+
+dataP = deepcopy(radPrior);
+dataH = deepcopy(radPost);
+
+all_vod_P =  hcat([pickVOD(x) for x in dataP]...);
+all_vod_H =  hcat([pickVOD(x) for x in dataH]...);
+CSV.write("vod_prior.csv",DataFrame(all_vod_P, :auto));
+CSV.write("vod_hourly.csv",DataFrame(all_vod_H, :auto));
+
+
+all_vod_P =  hcat([pickTbh(x) for x in dataP]...);
+all_vod_H =  hcat([pickTbh(x) for x in dataH]...);
+CSV.write("tbh_prior.csv",DataFrame(all_vod_P, :auto));
+CSV.write("tbh_hourly.csv",DataFrame(all_vod_H, :auto));
+
+
+all_vod_P =  hcat([pickTbv(x) for x in dataP]...);
+all_vod_H =  hcat([pickTbv(x) for x in dataH]...);
+CSV.write("tbv_prior.csv",DataFrame(all_vod_P, :auto));
+CSV.write("tbv_hourly.csv",DataFrame(all_vod_H, :auto));
+
+
+CSV.write("ssm_prior.csv",DataFrame(soilPrior, :auto));
+CSV.write("ssm_hourly.csv",DataFrame(soilPost, :auto));
+
+
+
+
+
+
 

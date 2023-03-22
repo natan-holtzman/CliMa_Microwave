@@ -26,7 +26,7 @@ out_folder = "./";
 #true_val = [22,0.33, 2, 1e-5,600, 4, 3, 1, 600];
 par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth", "Kplant location", "Kplant shape","Volume factor","Medlyn g1"];
 
-
+order_index = np.array([-1, -4, -3, -2,  0,  6,  1,  2,  5,  4,  3,  8,  9, 10, 11,  7])
 #plt.rcParams["lines.linewidth"] = 1;
 #plt.rcParams["font.size"] = 16;
 
@@ -185,48 +185,16 @@ allpars = []
 fname = "postLeaf.csv"
 
 for i in range(4):
-    #datalist = []
+    datalist = []
     #normlist = []
     for chainI in range(1,4):
-        if i == 1 and chainI == 99:
-            pass
-        else:
             #g0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+fname));
             #g0 = get_daily_2d(g0,24)[summer_1,:]
 #            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[6000::100,:13]
-            p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[:,:13]
- 
-     #   datalist.append(g0[:,:-1])
-        allpars.append(p0)
-   # datalist.append(g0[:,-1].reshape(-1,1))
-   # normlist.append(g0[:,-1].reshape(-1,1))
-   # data_all = np.concatenate(datalist,axis=1)
-   # norm_all = np.concatenate(normlist,axis=1)   
-    
-  #  leafpost.append(data_all)
-  #  normpost.append(norm_all)
+        p0 = np.array(pd.read_csv(out_folder+obs_types[i]+"_c"+str(chainI)+"/"+"post_par.csv"))[:,order_index]
+        p0[:,4:] = np.exp(p0[:,4:]); p0[:,8] *= 12; p0[:,9] += p0[:,6]
+        datalist.append(p0)
+    #datalist = np.array(datalist)
+    allpars.append(datalist)
 
-#normpost.append(g0[:,-1].reshape(-1,1))
-#normpost = np.concatenate(normpost,axis=1)
-#print(normpost.shape)
-
-    #leafpost.append(get_daily_2d(g3,24)[summer_1,:])
-    #leafpost_midnight.append(g3[3::24,:])
-    #leafpost_noon.append(g3[15::24,:])    
-
-
-#print("Leaf daily mean")
-#leaftab = [meanR2(x) for x in leafpost]
-#print(leaftab)
-#print(np.mean(leafpost[1][:,-1]))
-
-
-#print([x.shape for x in normpost])
-#LWPerrs = np.array([meanR2(x) for x in normpost])
-
-
-#LWPmean = np.abs(np.mean(normpost[0][:,-1]))
-
-#print(leaftab)
-#print(np.mean(normpost[1][:,-1]))
-np.save("pars_feb27.npy",np.concatenate(allpars,axis=0))
+np.save("pars_save.npy",np.array(allpars))
