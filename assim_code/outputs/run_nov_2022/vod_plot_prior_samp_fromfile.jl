@@ -156,11 +156,16 @@ function diurnal_nomean(x,d)
 dayser = 1:365;
 hser = 0:23;
 println("plotting")
-fig, axes = subplots(4,2,figsize=(11,15))
+fig, axes = subplots(4,2,figsize=(15,15))
+axes[1,1].plot([],[],"bs",alpha=0.1,label="Prior, 0.05:0.95 quartiles",markersize=12)
+axes[1,1].plot([],[],"bs",alpha=0.3,label="Prior, 0.25:0.75 quartiles",markersize=12)
+
+axes[1,1].plot([],[],"rs",alpha=0.1,label="HOURLY retrieval, 0.05:0.95 quartiles",markersize=12)
+axes[1,1].plot([],[],"rs",alpha=0.3,label="HOURLY retrieval, 0.25:0.75 quartiles",markersize=12)
+
 axes[1,1].plot([],[],"k--",label="True model")
-axes[1,1].plot([],[],"b",alpha=0.67,label="Prior distribution")
-axes[1,1].plot([],[],"r",alpha=0.67,label="HOURLY retrieval")
-fig.legend(loc="upper center",bbox_to_anchor=(0.5,0.97),ncol=3)
+
+fig.legend(loc="upper center",bbox_to_anchor=(0.5,1),ncol=3,fontsize=20)
 
 
 vodP = Array(CSV.read("vod_prior.csv",DataFrame));
@@ -211,5 +216,5 @@ tight_layout()
 
 fig.subplots_adjust(top=0.9)
 
-fig.savefig("testfig_mar22f3.png")
+fig.savefig("testfig_mar23d.png")
 
