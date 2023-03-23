@@ -64,6 +64,8 @@ plt.plot(lai_site['DateTime'],lai_site["LAI_S"],"o-")
 plt.plot(lai_site['DateTime'],lai_site["LAI_SW"],"o-")
 plt.plot(lai_site['DateTime'],lai_site["LAI_W"],"o-")
 plt.plot(lai_site['DateTime'],lai_site["LAI_NW"],"o-")
+#%%
+plt.plot(lai_site['DateTime'],lai_site["LAI_mean_site"],"o-")
 
 #%%
 lai2 = pd.merge(lai2, lai_site[['DateTime','LAI_mean_site']],how='left',on='DateTime')
@@ -94,7 +96,7 @@ plt.plot([0,5],[0,5],"k")
 #%%
 plt.plot(df_both["day"],3.5/5.7*(df_both["MODIS"] - 0.51)+0.92)
 #plt.plot(df_both["day"],(df_both["MODIS"]-1)*4/5.5+1)
-plt.plot(df_both["day"],df_both["site"],"o")
+plt.plot(df_both["day"],df_both["site"])
 #plt.xlim()
 #%%
 #plt.plot(4/5.5*(df_both["MODIS"] - 1)+1, df_both["site"],"o")

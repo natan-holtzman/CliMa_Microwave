@@ -26,7 +26,7 @@ df_raw[!,"RAIN"] *= 2;
 #N = 24*365*12
 #istart = 24*365*0 + 1; 
 
-N = 24*365*13;
+N = 24*365*1;
 istart = 24*365*0 + 1; 
 
 soil0 = 0.4;
@@ -132,19 +132,63 @@ function plot_tree_relative(plant_psi,soil_psi,node_example)
 	yticks([],[])
 end
 
+
+function plot_tree_1trunk(plant_psi,soil_psi,node_example)
+	leaf_levels = [8,12,16]
+	trunk_level = 9/2;
+	soil_bounds = node_example.soil_bounds
+	root_levels = (soil_bounds[2:end] + soil_bounds[1:(end-1)])*2
+	figure()
+	for i in 1:3
+		plot([plant_psi[i],plant_psi[i+3],plant_psi[7]],[leaf_levels[i]+1,leaf_levels[i],trunk_level],
+			 "gX-")
+	end
+	for i in 1:8
+		plot([soil_psi[i],plant_psi[7+i],plant_psi[7]],[root_levels[i],root_levels[i],trunk_level],
+			 "s-",color="brown")
+	end
+	plot([1]*plant_psi[7],[trunk_level],"ko",markersize=10)
+	xlabel("Water potential (MPa)")
+	ylabel("Relative height (not to scale)")
+	yticks([],[])
+end
+
+
+
+function plot_tree_1trunk_fig(ax,plant_psi,soil_psi,node_example)
+	leaf_levels = [8,12,16]
+	trunk_level = 9/2;
+	soil_bounds = node_example.soil_bounds
+	root_levels = (soil_bounds[2:end] + soil_bounds[1:(end-1)])*3
+	for i in 1:3
+		ax.plot([plant_psi[i],plant_psi[i+3],plant_psi[7]],[leaf_levels[i]+1,leaf_levels[i],trunk_level],
+			 "gX-",markersize=4)
+	end
+	for i in 1:8
+		ax.plot([soil_psi[i],plant_psi[7+i],plant_psi[7]],[root_levels[i],root_levels[i],trunk_level],
+			 "s-",color="brown",markersize=4)
+	end
+	ax.plot([1]*plant_psi[7],[trunk_level],"ko",markersize=8)
+	ax.set_yticks([],[])
+end
+
+fig, axes = subplots(2,1)
+inight = 275*24 + 6;
+plot_tree_1trunk_fig(axes[1,1],sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
+axes[1,1].set_xlim(-2.5,0)
+axes[1,1].set_title("(a) 5 AM",fontsize=20,loc="left")
+
+
+inight = 275*24 + 13;
+plot_tree_1trunk_fig(axes[2,1],sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
+axes[2,1].set_xlim(-2.5,0)
+axes[2,1].set_title("(b) Noon",fontsize=20,loc="left")
+
+#xlabel("Water potential (MPa)")
+#ylabel("Relative height (not to scale)")
+
+
 #=
-inight = 237*24 + 4;
-plot_tree_relative(sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
-xlim(-3.5,0)
-title("5 AM")
-
-inight = 175*24 + 13;
-plot_tree_relative(sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
-xlim(-3.5,0)
-title("Noon")
-=#
-
-
 function get_daily_missing(x,navg)
 	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
             xres = reshape(x,(navg,:));
@@ -238,4 +282,5 @@ plot(daylist[1:5:end],get_daily(sim_res1[2][:,1],24*5),"r",label="Model",alpha=0
 xlabel("Time")
 ylabel("Surface soil moisture")
 legend()
+=#
 =#

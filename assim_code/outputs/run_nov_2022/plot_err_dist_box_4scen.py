@@ -18,7 +18,7 @@ out_folder = "./";
 
 #obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset"];
 
-obs_names = ["Hourly", "1 AM/PM", "6 AM/PM","1+6"]
+obs_names = ["HOURLY", "1 AM/PM", "6 AM/PM","1+6"]
 
 all_means = [0.8737915976892229, 0.3780452778386911, 2.395900386656546, 6.2669428043052715]
 dry_means = [1.6770836191526692, 0.3329708971276553, 3.7649526834622287, 8.490219724548774]
@@ -31,7 +31,7 @@ def exclude_outliers(x):
     low_bd = q25 - 1.5*iqr
     return x[(x > low_bd)*(x < high_bd)]
 
-titles = ["Leaf water potential","Soil moisture","ET","GPP"]
+titles = [r"$LWP^o$","Soil moisture","ET","GPP"]
 units = ["MPa","$m^3/m^3$","mm/day","$\mu mol/m^2/s$"]
 #colors_list = ["tab:blue","tab:green","tab:orange","tab:red","tab:purple"]
 
@@ -75,14 +75,14 @@ def makeplot(err_file,means_list,big_title):
         for scenario in range(1,4):
             if ures[scenario] < 0.05:
                 if meds[scenario] < meds[0]:
-                    sig_lab = "-*"
+                    sig_lab = "(-)"
                 else:
-                    sig_lab = "+*"
+                    sig_lab = "(+)"
             else:
-                sig_lab = "ns"
+                sig_lab = "(ns)"
             newtix.append(sig_lab)
         for ti in range(1,4):
-            ax.text(ti+1,max0,newtix[ti],horizontalalignment="center")
+            ax.text(ti+1,max0,newtix[ti],horizontalalignment="center",fontsize=18)
             
             
         ax.set_title(titles[j]+" (" + units[j] + ")")
@@ -118,12 +118,30 @@ def makeplot(err_file,means_list,big_title):
     plt.tight_layout()
 
 #plt.savefig("err_dry_sept19f.png")
-makeplot("all_rmse_nov25.npy",all_means,"RMSE over 13 years")
-#makeplot("dry_rmse_nov25.npy",dry_means,"RMSE over 3 dry summers")
-#makeplot("rmse_dec4_hourly.npy",dry_means,"Hourly RMSE")
+filepref = "C:/Users/natan/OneDrive - Stanford/Documents/moflux_docs/transfer_files_nov22/"
+
+
+
+
+makeplot(filepref+"all_rmse_nov25.npy",all_means,"RMSE over 13 years")
+makeplot(filepref+"dry_rmse_nov25.npy",dry_means,"RMSE over 3 dry summers")
+makeplot("rmse_dec4_hourly.npy",dry_means,"Hourly RMSE")
 
 #%%
-prior_errs = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\rmse_prior.npy")#.reshape(4,5,120)
-ret_errs = np.load("all_rmse_nov25.npy")#.reshape(4,5,120)
+#prior_errs = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\rmse_prior.npy")#.reshape(4,5,120)
+all_errs_daily = np.load(filepref+"all_rmse_nov25.npy")#.reshape(4,5,120)
+dry_errs_daily = np.load(filepref+"dry_rmse_nov25.npy")#.reshape(4,5,120)
+#%%
+et_daily_med = np.median(all_errs_daily[2,:,:],axis=1)
+et_dry_med = np.median(dry_errs_daily[2,:,:],axis=1)
+#%%
+et_daily_med/et_daily_med[3]
+et_dry_med/et_dry_med[3]
+#%%
+gpp_daily_med = np.median(all_errs_daily[3,:,:],axis=1)
+gpp_dry_med = np.median(dry_errs_daily[3,:,:],axis=1)
+print(gpp_daily_med/gpp_daily_med[3])
+print(gpp_dry_med/gpp_dry_med[3])
+
 
 
