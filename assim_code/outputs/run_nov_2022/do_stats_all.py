@@ -120,10 +120,10 @@ def get_rmse_dist(tab):
     diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
     return np.sqrt(np.nanmean(diffs**2,0))
 
-do_all_stats(get_daily1, allyears[::24], get_rmse_dist, "all_daily_RMSE.npy"):
-do_all_stats(get_daily1, dry_summers[::24], get_rmse_dist, "dry_daily_RMSE.npy"):
-do_all_stats(get_hourly1, allyears, get_rmse_dist, "all_hourly_RMSE.npy"):
-do_all_stats(get_hourly1, is_summer, get_rmse_dist, "summer_hourly_RMSE.npy"):
+do_all_stats(get_daily1, allyears[::24], get_rmse_dist, "all_daily_RMSE.npy")
+do_all_stats(get_daily1, dry_summers[::24], get_rmse_dist, "dry_daily_RMSE.npy")
+do_all_stats(get_hourly1, allyears, get_rmse_dist, "all_hourly_RMSE.npy")
+do_all_stats(get_hourly1, is_summer, get_rmse_dist, "summer_hourly_RMSE.npy")
 
 #5 AM RMSE in 2007
 #Diurnal RMSE in 2007
@@ -146,7 +146,7 @@ def get_diurnal_amp(x,nstep):
     y = np.reshape(x, (-1, nstep, x.shape[-1]))
     return y[:,6,:] - y[:,14]
 
-do_all_stats(get_daily1, year_is_2007[::24], get_mean_tab, "y2007_daily_mean.npy"):
-do_all_stats(get_daily1, year_is_2007[::24], getcor, "y2007_daily_cor.npy"):
-do_all_stats(get_5am, year_is_2007[::24], meanR2, "y2007_5am_RMSE.npy"):
-do_all_stats(get_diurnal_amp, year_is_2007[::24], get_mean_tab, "y2007_diurnal_RMSE.npy"):
+do_all_stats(get_daily1, year_is_2007[::24], get_mean_tab, "y2007_daily_mean.npy")
+do_all_stats(get_daily1, year_is_2007[::24], getcor, "y2007_daily_cor.npy")
+do_all_stats(get_5am, year_is_2007[::24], get_rmse_dist, "y2007_5am_RMSE.npy")
+do_all_stats(get_diurnal_amp, year_is_2007[::24], get_mean_tab, "y2007_diurnal_RMSE.npy")
