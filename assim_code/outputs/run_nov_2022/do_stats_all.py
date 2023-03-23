@@ -123,7 +123,7 @@ def get_rmse_dist(tab):
 do_all_stats(get_daily1, allyears[::24], get_rmse_dist, "all_daily_RMSE.npy")
 do_all_stats(get_daily1, dry_summers[::24], get_rmse_dist, "dry_daily_RMSE.npy")
 do_all_stats(get_hourly1, allyears, get_rmse_dist, "all_hourly_RMSE.npy")
-do_all_stats(get_hourly1, is_summer, get_rmse_dist, "summer_hourly_RMSE.npy")
+#####do_all_stats(get_hourly1, is_summer, get_rmse_dist, "summer_hourly_RMSE.npy")
 
 #5 AM RMSE in 2007
 #Diurnal RMSE in 2007
@@ -137,16 +137,31 @@ def get_mean_tab(tabx):
 def getcor(tab):
     return np.array([np.corrcoef(tab[:,j],tab[:,-1])[0,1] for j in range(tab.shape[1]-1)])
 
-def get_5am(x,nstep):
-    y = np.reshape(x, (-1, nstep, x.shape[-1]))
+def get_5am(x):
+    y = np.reshape(x, (-1, 24, x.shape[-1]))
     return y[:,6,:]
 
 
-def get_diurnal_amp(x,nstep):
-    y = np.reshape(x, (-1, nstep, x.shape[-1]))
+def get_diurnal_amp(x):
+    y = np.reshape(x, (-1, 24, x.shape[-1]))
     return y[:,6,:] - y[:,14]
 
-do_all_stats(get_daily1, year_is_2007[::24], get_mean_tab, "y2007_daily_mean.npy")
+do_all_stats(get_daily1, year_is_2007[::24], get_mean_tab, "y2007_meanvalue.npy")
 do_all_stats(get_daily1, year_is_2007[::24], getcor, "y2007_daily_cor.npy")
 do_all_stats(get_5am, year_is_2007[::24], get_rmse_dist, "y2007_5am_RMSE.npy")
-do_all_stats(get_diurnal_amp, year_is_2007[::24], get_mean_tab, "y2007_diurnal_RMSE.npy")
+do_all_stats(get_diurnal_amp, year_is_2007[::24], get_rmse_dist, "y2007_diurnal_RMSE.npy")
+
+def get_3hourly(x):
+    return get_daily_2d(x,3)
+
+do_all_stats(get_3hourly, allyears[::3], get_rmse_dist, "all_3hr_RMSE.npy")
+do_all_stats(get_daily1, allyears[::24], get_mean_tab, "all_meanvalue.npy")
+
+def mase_dist(tab):
+    diffs = tab[:,:-1] - tab[:,-1].reshape(-1,1)
+    mae = np.nanmean(np.abs(diffs),0)
+    true_std = np.std(tab[:,1])
+    return mae/true_std  
+
+do_all_stats(get_hourly1, is_summer, mase_dist, "summer_hourly_mase.npy")
+
