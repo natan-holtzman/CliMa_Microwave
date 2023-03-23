@@ -16,46 +16,18 @@ summer_1 = summer_24[::24]
 
 
 print("DRY SUMMERS")
-#prior_min = [ 0.1,  1e-6, 500, 0.75, 0.75,0.01];
-#prior_max = [ 100, 2e-5, 3000, 10, 8,10];
 
-
-#sim_res1 = run_sim_2(FT(22),FT(0.33), FT(2),FT(1e-5), FT(600),FT(4.0),FT(3),FT(1),FT(600));
-#prior_min = [10, 0.01, 0.1,  1e-6, 500, 0.75, 0.75, 0.1,100];
-#prior_max = [120,0.75,  100, 2e-5, 3000, 10, 8, 10,1000];
 out_folder = "./";
 
-
-#true_val = [22,0.33, 2, 1e-5,600, 4, 3, 1, 600];
 par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth", "Kplant location", "Kplant shape","Volume factor","Medlyn g1"];
 
-
-#plt.rcParams["lines.linewidth"] = 1;
-#plt.rcParams["font.size"] = 16;
-
-#for each run in FixET, get the parameters
 out_folder = "./";
-
-#subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/", "o1and6_c2/", "o16offset_c2/"]
-#subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/", "o16offset_c3/"]
-#subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/", "o16offset_c1/"]
 
 obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset","o1AMPM_all"];
 
 
 
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
-
-
-#leaf_post = np.array(leaf_post)
-
-#out_names = ["Leaf pre-dawn","Leaf diurnal","RZSM"];
-
-#leaftab = np.array(pd.read_csv("postLeaf.csv"));
-#branchtab = np.array(pd.read_csv(out_folder+"postBranch.csv"));
-#trunktab =  np.array(pd.read_csv(out_folder+"postTrunk.csv"));
-#RZSMtab =  np.array(pd.read_csv(out_folder+"postRZ.csv"));
-#ETtab =  np.array(pd.read_csv(out_folder+"postET.csv"));
 
 def getcor(x,y):
     return np.corrcoef(x,y)[0,1]
@@ -228,11 +200,6 @@ GSWerrs,GSWmean = do_compare(fname,1)
 fname = "postSWS.csv"
 print(fname)
 SMCerrs,SMCmean = do_compare(fname,1)
-
-
-#plt.figure()
-#plt.box(ETerrs)
-
 
 all_errs = [LWPerrs,SMCerrs,ETerrs,GPPerrs];
 all_means = [LWPmean, SMCmean, ETmean, GPPmean]

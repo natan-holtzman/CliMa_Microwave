@@ -8,28 +8,12 @@ using CSV
 using Dates
 
 
-#pygui(true)
-
-#=
-rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams");
-rcParams["lines.linewidth"] = 1;
-rcParams["lines.markersize"] = 2;
-
-rcParams["font.size"] = 15;
-rcParams["mathtext.default"] = "regular";
-=#
-
 #include(string(PROJECT_HOME,"/assim_code/mironov.jl"));
 #include(string(PROJECT_HOME,"/assim_code/tau_omega_new2_only_omega.jl"));
 include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 
 df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_fluxnet_data_nov2022_lef.csv"), DataFrame);
 df_raw[!,"RAIN"] *= 2;
-
-#df_raw.LAI_modis = 0.9 .+ 5/3*(df_raw.LAI_modis .- 0.9);
-
-#N = 24*365*12
-#istart = 24*365*0 + 1; 
 
 N = 24*365*1;
 istart = 24*365*2 + 1; 
@@ -157,41 +141,6 @@ for i in 1:120
     push!(radPost,radI);
 end
 
-#tcan0 = (sim_res0[1].LW_OUT / 0.97 / K_STEFAN ) .^ 0.25;
-#=
-function myr2(ret,obs)
-  return sqrt(mean((ret-obs) .^ 2));
-end
-=#
-#function that takes in an ax, an averaging fun, and 3 input datasets
-
-#=
-function myplot3_old(ax,afun,data0,dataP,dataH,extract_fun,xvals)
-    vP = hcat([afun(extract_fun(x),24) for x in dataP]...);
-    vH = hcat([afun(extract_fun(x),24) for x in dataH]...);
-    v0 = afun(extract_fun(data0),24)
-    ax.plot(xvals,vP,"b",alpha=0.67,label="Prior")
-    ax.plot(xvals,vH,"r",alpha=0.67,label="HOURLY retrieval")
-    ax.plot(xvals,v0,"k",label="True model")
-    ax.set_xlim(xvals[1],xvals[end])
-end
-
-function row_quant(x,q)
-    return [quantile(x[i,:],q) for i in 1:size(x)[1]]
-end
-
-
-function myplot3(ax,afun,data0,dataP,dataH,extract_fun,xvals)
-    vP = hcat([afun(extract_fun(x),24) for x in dataP]...);
-    vH = hcat([afun(extract_fun(x),24) for x in dataH]...);
-    v0 = afun(extract_fun(data0),24)
-    ax.plot(xvals,v0,"k--",label="True model")
-    ax.fill_between(xvals,row_quant(vP,0.25),row_quant(vP,0.75),color="b",alpha=0.5,label="Prior",linewidth=1)
-    ax.fill_between(xvals,row_quant(vH,0.25),row_quant(vH,0.75),color="r",alpha=0.5,label="HOURLY retrieval",linewidth=1)
-    ax.set_xlim(xvals[1],xvals[end])
-end
-=#
-
 function pickVOD(x)
     return x[3][:,1]
 end
@@ -212,52 +161,7 @@ function diurnal_nomean(x,d)
     y = get_diurnal(x,d)
     return y; # .- mean(y)
   end
-#=
-vodP = deepcopy(radPrior);
-vodH = deepcopy(radPost);
 
-
-dayser = 1:365;
-hser = 0:23;
-println("plotting")
-fig, axes = subplots(4,2,figsize=(11,15))
-axes[1,1].plot([],[],"k--",label="True model")
-axes[1,1].plot([],[],"b",alpha=0.67,label="Prior distribution")
-axes[1,1].plot([],[],"r",alpha=0.67,label="HOURLY retrieval")
-fig.legend(loc="upper center",bbox_to_anchor=(0.5,0.97),ncol=3)
-
-myplot3(axes[1,1],get_daily,vod0,vodP,vodH,pickVOD,dayser)
-myplot3(axes[1,2],diurnal_nomean,vod0,vodP,vodH,pickVOD,hser)
-axes[1,1].set_ylabel("VOD")
-axes[1,1].set_title("Daily means")
-axes[1,2].set_title("Mean diurnal cycle")
-
-
-ssm_true = sim_res0[2][:,1]
-myplot3(axes[2,1],get_daily,ssm_true,soilPrior,soilPost,pickSSM,dayser)
-myplot3(axes[2,2],diurnal_nomean,ssm_true,soilPrior,soilPost,pickSSM,hser)
-
-smclab = string("Surface soil\nmoisture ",raw"$(m^3/m^3)$");
-
-axes[2,1].set_ylabel(smclab)
-
-
-myplot3(axes[3,1],get_daily,vod0,vodP,vodH,pickTbh,dayser)
-myplot3(axes[3,2],diurnal_nomean,vod0,vodP,vodH,pickTbh,hser)
-axes[3,1].set_ylabel(raw"$T_{BH}$ (K)")
-
-myplot3(axes[4,1],get_daily,vod0,vodP,vodH,pickTbv,dayser)
-myplot3(axes[4,2],diurnal_nomean,vod0,vodP,vodH,pickTbv,hser)
-axes[4,1].set_ylabel(raw"$T_{BV}$ (K)")
-
-axes[4,1].set_xlabel("Day of year 2007")
-axes[4,2].set_xlabel("Hour of day")
-tight_layout()
-
-fig.subplots_adjust(top=0.9)
-
-fig.savefig("testfig_mar22e.png")
-=#
 
 dataP = deepcopy(radPrior);
 dataH = deepcopy(radPost);

@@ -31,53 +31,11 @@ par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth"
 #plt.rcParams["lines.linewidth"] = 1;
 #plt.rcParams["font.size"] = 16;
 
-#for each run in FixET, get the parameters
 out_folder = "./";
-
-#subdir_list = ["oAll_c2/", "o1AMPM_c2/","o6AMPM_c2/", "o1and6_c2/", "o16offset_c2/"]
-#subdir_list2 = ["oAll_c3/", "o1AMPM_c3/", "o6AMPM_c3/", "o1and6_c3/", "o16offset_c3/"]
-#subdir_list3 = ["oAll_c1/", "o1AMPM_c1/", "o6AMPM_c1/", "o1and6_c1/", "o16offset_c1/"]
 
 obs_types = ['oAll','o1AMPM','o6AMPM',"o1and6","o16offset","o1AMPM_all"];
 
-
-
 obs_names = ["All", "1 AM/PM", "6 AM/PM","1+6 sync.","1+6 offset"]
-
-#d24 = np.arange(24*365*12) % (24*365)
-#summer_24 = (d24 >= 150)*(d24 < 275)
-#summer_24 = d24 >= 0
-
-#d1 = np.arange(365*12) % 365 
-#summer_1 = (d1 >= 150)*(d1 < 275)
-#summer_1 = d1 >= 0
-
-#y1 = np.floor(np.arange(365*12) / 365) + 2005
-#summer_1 = ((y1 < 6)+(y1 > 9)) * summer_1
-#summer_1 = (y1 == 6)*summer_1
-
-#y24 = np.floor(np.arange(24*365*12)/(24*365)) + 2005
-
-#summer_1 = (((y1 == 2005) + (y1 == 2012) + (y1 == 6)) > 0) * summer_1
-#summer_24 = (((y24 == 2005) + (y24 == 2012) + (y24 == 6)) > 0) * summer_24
-
-
-#summer_1 = (summer_1==0)
-#summer_24 = (summer_24==0)
-
-
-#summer_24 = ((y24<6)+(y24>9)) * summer_24
-#summer_24 = (y24 == 6)*summer_24
-
-#leaf_post = np.array(leaf_post)
-
-#out_names = ["Leaf pre-dawn","Leaf diurnal","RZSM"];
-
-#leaftab = np.array(pd.read_csv("postLeaf.csv"));
-#branchtab = np.array(pd.read_csv(out_folder+"postBranch.csv"));
-#trunktab =  np.array(pd.read_csv(out_folder+"postTrunk.csv"));
-#RZSMtab =  np.array(pd.read_csv(out_folder+"postRZ.csv"));
-#ETtab =  np.array(pd.read_csv(out_folder+"postET.csv"));
 
 def getcor(tab):
     return np.array([np.corrcoef(tab[:,j],tab[:,-1])[0,1] for j in range(tab.shape[1]-1)])
@@ -173,10 +131,6 @@ def do_analysis(tabx):
             getcor(np.array(relative_anom).T)]
 
 
-#def do_analysis(listx):
-#    to_unwrap = [do_analysis_base(x) for x in listx]
-#    return [np.stack([x[i] for x in to_unwrap],1) for i in range(3)]
-
 j = 0
 
 mpa2mm = 10**6 / 9.8
@@ -200,28 +154,10 @@ for i in range(5):
  
      #   datalist.append(g0[:,:-1])
         normpost.append((g0[:,:-1]+grav_pot) * np.exp(p0[:,11]).reshape(1,40) - grav_pot )
-   # datalist.append(g0[:,-1].reshape(-1,1))
-   # normlist.append(g0[:,-1].reshape(-1,1))
-   # data_all = np.concatenate(datalist,axis=1)
-   # norm_all = np.concatenate(normlist,axis=1)   
-    
-  #  leafpost.append(data_all)
-  #  normpost.append(norm_all)
-
+  
 normpost.append(g0[:,-1].reshape(-1,1))
 normpost = np.concatenate(normpost,axis=1)
 print(normpost.shape)
-
-    #leafpost.append(get_daily_2d(g3,24)[summer_1,:])
-    #leafpost_midnight.append(g3[3::24,:])
-    #leafpost_noon.append(g3[15::24,:])    
-
-
-#print("Leaf daily mean")
-#leaftab = [meanR2(x) for x in leafpost]
-#print(leaftab)
-#print(np.mean(leafpost[1][:,-1]))
-
 
 print("Leaf normalized")
 #print([x.shape for x in normpost])
@@ -229,10 +165,6 @@ print("Leaf normalized")
 LWPcor =  getcor(normpost)
 
 
-#LWPmean = np.abs(np.mean(normpost[0][:,-1]))
-
-#print(leaftab)
-#print(np.mean(normpost[1][:,-1]))
 daily = 1
 def do_compare(fname):
 	leafpost = []
@@ -267,13 +199,8 @@ fname = "postSWS.csv"
 print(fname)
 SMCcor = do_compare(fname)
 
-
-#all_clim_errs = [LWPclim_err,SMCclim_err,ETclim_err,GPPclim_err];
 all_cors = [LWPcor, SMCcor, ETcor, GPPcor]
-#all_anom_errs = [LWPanom_err,SMCanom_err,ETanom_err,GPPanom_err];
 
-#np.save("means_nov25.npy",np.array(all_means))
-#np.save("clim_cor_nov25.npy",np.array(all_clim_errs))
 np.save("cor_2007.npy",np.array(all_cors))
 
 

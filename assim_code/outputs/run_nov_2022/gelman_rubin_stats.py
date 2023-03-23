@@ -1,27 +1,13 @@
 import numpy as np
-#import matplotlib.pyplot as plt
 import pandas as pd
-#sim_res1 = run_sim_2(FT(22),FT(0.33), FT(2),FT(1e-5), FT(600),FT(4.0),FT(3),FT(1),FT(600));
-#plt.rcParams["lines.linewidth"] = 1;
-#plt.rcParams["font.size"] = 22;
+
 
 print("ALL YEARS")
-#prior_min = [ 0.1,  1e-6, 500, 0.75, 0.75,0.01];
-#prior_max = [ 100, 2e-5, 3000, 10, 8,10];
 
-
-#sim_res1 = run_sim_2(FT(22),FT(0.33), FT(2),FT(1e-5), FT(600),FT(4.0),FT(3),FT(1),FT(600));
-#prior_min = [10, 0.01, 0.1,  1e-6, 500, 0.75, 0.75, 0.1,100];
-#prior_max = [120,0.75,  100, 2e-5, 3000, 10, 8, 10,1000];
 out_folder = "./";
 
 
-#true_val = [22,0.33, 2, 1e-5,600, 4, 3, 1, 600];
 par_names = ["Vcmax", "Stomatal margin", "Kmax_plant", "Kmax_soil", "Soil depth", "Kplant location", "Kplant shape","Volume factor","Medlyn g1"];
-
-
-#plt.rcParams["lines.linewidth"] = 1;
-#plt.rcParams["font.size"] = 16;
 
 #for each run in FixET, get the parameters
 out_folder = "./";
