@@ -82,7 +82,9 @@ mymax = ax.get_ylim()[1]
 #ax.set_ylim(0,mymax)
 #ax.set_title("(a)",loc="left",fontsize=28)
 ax.text(-0.1,1.1,"(a)",fontsize=24,transform=ax.transAxes)
-ax.set_title("RMSE of pre-dawn $LWP^o$ (MPa)")
+#ax.set_title("RMSE of pre-dawn $LWP^o$ (MPa)")
+ax.set_title("RMSE of pre-dawn $\mathit{\psi_l^o}$ (MPa)")
+
 ax.set_xticks(range(1,5),obs_names[:4])
 
 ax = ax_all[0,1]
@@ -92,7 +94,7 @@ mymax = ax.get_ylim()[1]
 #ax.set_ylim(0,mymax)
 #ax.set_title("(c)",loc="left",fontsize=28)
 ax.text(-0.1,1.1,"(b)",fontsize=24,transform=ax.transAxes)
-ax.set_title("RMSE of diurnal $\Delta LWP^o$ (MPa)")
+ax.set_title("RMSE of diurnal $\Delta \mathit{\psi_l^o}$ (MPa)")
 ax.set_xticks(range(1,5),obs_names[:4])
 
 #ax.set_xticks(range(1,6),obs_names[:-1])

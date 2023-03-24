@@ -31,7 +31,9 @@ def exclude_outliers(x):
     low_bd = q25 - 1.5*iqr
     return x[(x > low_bd)*(x < high_bd)]
 
-titles = [r"$LWP^o$","Soil moisture","ET","GPP"]
+#titles = [r"$LWP^o$","Soil moisture","ET","GPP"]
+titles = [r"$\mathit{\psi_l^o}$","Column-averaged\nsoil moisture","ET","GPP"]
+
 units = ["MPa","$m^3/m^3$","mm/day","$\mu mol/m^2/s$"]
 #colors_list = ["tab:blue","tab:green","tab:orange","tab:red","tab:purple"]
 
@@ -121,7 +123,7 @@ def makeplot(err_file,means_list,big_title):
 filepref = "test_stats/"
 
 makeplot(filepref+"all_daily_rmse.npy",all_means,"RMSE over 13 years")
-makeplot(filepref+"dry_daily_rmse.npy",dry_means,"RMSE over 3 dry summers")
+makeplot(filepref+"dry_daily_rmse.npy",dry_means,"RMSE over four dry summers")
 makeplot(filepref+"all_hourly_rmse.npy",dry_means,"Hourly RMSE")
 
 #%%
