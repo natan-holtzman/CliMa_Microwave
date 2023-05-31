@@ -26,7 +26,7 @@ df_raw[!,"RAIN"] *= 2;
 #N = 24*365*12
 #istart = 24*365*0 + 1; 
 
-N = 24*365*1;
+N = 24*365*13;
 istart = 24*365*0 + 1; 
 
 soil0 = 0.4;
@@ -188,7 +188,7 @@ axes[2,1].set_title("(b) Noon",fontsize=20,loc="left")
 #ylabel("Relative height (not to scale)")
 
 
-#=
+
 function get_daily_missing(x,navg)
 	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
             xres = reshape(x,(navg,:));
@@ -204,7 +204,7 @@ etnan = Float64.(replace(etmiss, missing => NaN));
 
 
 
-figure(figsize=(8,8))
+figure(figsize=(10,8))
 subplot(2,1,1)
 plot(daylist[1:5:end],etnan,"k",label="Eddy covariance")
 plot(daylist[1:5:end],get_daily(sim_res1[1].ETmod,24*5)*18/1000*60*60*24,"r",label="CliMA Land",alpha=0.75)
@@ -225,7 +225,7 @@ plot(daylist,pdLWP[7:24:end],"ko",label="Observations",markersize=5,fillstyle="n
 #plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
 xlabel("Time")
 title("Predawn leaf water potential (MPa)",loc="center",fontsize=18)
-axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Assimilation period")
+axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Model-data fusion period")
 #=
 axvspan(drystart[1],dryend[1],color="grey",alpha=0.33,label="Dry summers")
 for j in 2:length(drystart)
@@ -238,7 +238,7 @@ title("(b)",loc="left",fontsize=18)
 
 tight_layout()
 
-savefig("data_comparison_jan10.png")
+savefig("data_comparison_may31.png")
 
 
 
@@ -282,5 +282,4 @@ plot(daylist[1:5:end],get_daily(sim_res1[2][:,1],24*5),"r",label="Model",alpha=0
 xlabel("Time")
 ylabel("Surface soil moisture")
 legend()
-=#
 =#
