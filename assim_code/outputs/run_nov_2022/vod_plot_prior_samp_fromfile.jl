@@ -157,11 +157,11 @@ dayser = 1:365;
 hser = 0:23;
 println("plotting")
 fig, axes = subplots(4,2,figsize=(15,15))
-axes[1,1].plot([],[],"bs",alpha=0.1,label="Prior, 0.05:0.95 quartiles",markersize=12)
-axes[1,1].plot([],[],"bs",alpha=0.3,label="Prior, 0.25:0.75 quartiles",markersize=12)
+axes[1,1].plot([],[],"bs",alpha=0.1,label="Prior, 0.05:0.95 quantiles",markersize=12)
+axes[1,1].plot([],[],"bs",alpha=0.3,label="Prior, 0.25:0.75 quantiles",markersize=12)
 
-axes[1,1].plot([],[],"rs",alpha=0.1,label="HOURLY retrieval, 0.05:0.95 quartiles",markersize=12)
-axes[1,1].plot([],[],"rs",alpha=0.3,label="HOURLY retrieval, 0.25:0.75 quartiles",markersize=12)
+axes[1,1].plot([],[],"rs",alpha=0.1,label="HOURLY retrieval, 0.05:0.95 quantiles",markersize=12)
+axes[1,1].plot([],[],"rs",alpha=0.3,label="HOURLY retrieval, 0.25:0.75 quantiles",markersize=12)
 
 axes[1,1].plot([],[],"k--",label="True model")
 
@@ -216,5 +216,5 @@ tight_layout()
 
 fig.subplots_adjust(top=0.9)
 
-fig.savefig("testfig_mar23d.png")
+fig.savefig("testfig_may31d.png")
 
