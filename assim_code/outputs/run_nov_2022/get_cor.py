@@ -201,6 +201,6 @@ SMCcor = do_compare(fname)
 
 all_cors = [LWPcor, SMCcor, ETcor, GPPcor]
 
-np.save("cor_2007.npy",np.array(all_cors))
+np.save("cor_2007b.npy",np.array(all_cors))
 
-
+np.savetxt("ETcor_test.csv",ETcor)
