@@ -118,25 +118,22 @@ def makeplot(err_file,means_list,big_title):
     plt.tight_layout()
 
 #plt.savefig("err_dry_sept19f.png")
-filepref = "C:/Users/natan/OneDrive - Stanford/Documents/moflux_docs/transfer_files_nov22/"
+filepref = "test_stats/"
 
-
-
-
-makeplot(filepref+"all_rmse_nov25.npy",all_means,"RMSE over 13 years")
-makeplot(filepref+"dry_rmse_nov25.npy",dry_means,"RMSE over 3 dry summers")
-makeplot("rmse_dec4_hourly.npy",dry_means,"Hourly RMSE")
+makeplot(filepref+"all_daily_rmse.npy",all_means,"RMSE over 13 years")
+makeplot(filepref+"dry_daily_rmse.npy",dry_means,"RMSE over 3 dry summers")
+makeplot(filepref+"all_hourly_rmse.npy",dry_means,"Hourly RMSE")
 
 #%%
 #prior_errs = np.load(r"C:\Users\natan\OneDrive - Stanford\Documents\moflux_docs\transfer_files_nov22\rmse_prior.npy")#.reshape(4,5,120)
-all_errs_daily = np.load(filepref+"all_rmse_nov25.npy")#.reshape(4,5,120)
-dry_errs_daily = np.load(filepref+"dry_rmse_nov25.npy")#.reshape(4,5,120)
+all_errs_daily = np.load(filepref+"all_daily_rmse.npy")#.reshape(4,5,120)
+dry_errs_daily = np.load(filepref+"dry_daily_rmse.npy")#.reshape(4,5,120)
 #%%
 et_daily_med = np.median(all_errs_daily[2,:,:],axis=1)
 et_dry_med = np.median(dry_errs_daily[2,:,:],axis=1)
 #%%
-et_daily_med/et_daily_med[3]
-et_dry_med/et_dry_med[3]
+print(et_daily_med/et_daily_med[3])
+print(et_dry_med/et_dry_med[3])
 #%%
 gpp_daily_med = np.median(all_errs_daily[3,:,:],axis=1)
 gpp_dry_med = np.median(dry_errs_daily[3,:,:],axis=1)
