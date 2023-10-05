@@ -225,7 +225,7 @@ plot(daylist,pdLWP[7:24:end],"ko",label="Observations",markersize=5,fillstyle="n
 #plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
 xlabel("Time")
 title("Predawn leaf water potential (MPa)",loc="center",fontsize=18)
-axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Model-data fusion period")
+#axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Model-data fusion period")
 #=
 axvspan(drystart[1],dryend[1],color="grey",alpha=0.33,label="Dry summers")
 for j in 2:length(drystart)
@@ -238,7 +238,7 @@ title("(b)",loc="left",fontsize=18)
 
 tight_layout()
 
-savefig("data_comparison_may31.png")
+savefig("data_comparison_august5.png")
 
 
 
@@ -283,3 +283,44 @@ xlabel("Time")
 ylabel("Surface soil moisture")
 legend()
 =#
+
+
+
+figure(figsize=(10,8))
+subplot(2,1,1)
+plot(daylist[1:5:end],etnan,"k",label="Eddy covariance")
+plot(daylist[1:5:end],get_daily(sim_res1[1].ETmod,24*5)*18/1000*60*60*24,"r",label="CliMA Land",alpha=0.75)
+#xlabel("Time",fontsize=24)
+#ylabel("ET (mm/day)")
+ylim(-0.1,8)
+xlim(daylist[1],daylist[end])
+legend(fontsize=15,loc="upper left",ncol=2)
+title("(a)",loc="left",fontsize=20)
+title("Evapotranspiration",loc="center",fontsize=20)
+ylabel("ET (mm/day)",fontsize=20)
+
+
+pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
+
+subplot(2,1,2)
+plot(daylist,cm1[7:24:end],"r",alpha=0.75,label="CliMA Land")
+plot(daylist,pdLWP[7:24:end],"ko",label="Observations",markersize=5,fillstyle="none",markeredgewidth=2)
+#plot(daylist[1:5:end]/365,get_daily(sim_res1long[1].ColumnSMC,24*5),"b",label="Model surface",alpha=0.75)
+xlabel("Time",fontsize=20)
+title("Predawn leaf water potential",loc="center",fontsize=20)
+ylabel(raw"$\Psi$ (MPa)",fontsize=20)
+
+#axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Model-data fusion period")
+#=
+axvspan(drystart[1],dryend[1],color="grey",alpha=0.33,label="Dry summers")
+for j in 2:length(drystart)
+	axvspan(drystart[j],dryend[j],color="grey",alpha=0.33)
+end
+=#
+xlim(daylist[1],daylist[end])
+legend(fontsize=15,ncol=2)
+title("(b)",loc="left",fontsize=20)
+
+tight_layout()
+
+savefig("data_comparison_august5c.png")

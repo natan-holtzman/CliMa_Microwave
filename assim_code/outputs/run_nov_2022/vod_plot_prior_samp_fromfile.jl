@@ -163,7 +163,7 @@ axes[1,1].plot([],[],"bs",alpha=0.3,label="Prior, 0.25:0.75 quantiles",markersiz
 axes[1,1].plot([],[],"rs",alpha=0.1,label="HOURLY retrieval, 0.05:0.95 quantiles",markersize=12)
 axes[1,1].plot([],[],"rs",alpha=0.3,label="HOURLY retrieval, 0.25:0.75 quantiles",markersize=12)
 
-axes[1,1].plot([],[],"k--",label="True model")
+axes[1,1].plot([],[],"k--",label=""""True" model""")
 
 fig.legend(loc="upper center",bbox_to_anchor=(0.5,1),ncol=3,fontsize=20)
 
@@ -216,5 +216,5 @@ tight_layout()
 
 fig.subplots_adjust(top=0.9)
 
-fig.savefig("testfig_may31d.png")
+fig.savefig("fig5_oct2.png")
 

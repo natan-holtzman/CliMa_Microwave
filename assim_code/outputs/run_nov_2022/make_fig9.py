@@ -33,7 +33,7 @@ bias_2007 = (mean_2007[:,:,:-1] - mean_2007[:,:,np.array([-1])]).reshape(4,5,120
 am5_2007 = np.load("test_stats/y2007_5am_rmse.npy")
 amp_2007 = np.load("test_stats/y2007_diurnal_rmse.npy")
 #%%
-cor_2007 = np.load("test_stats/y2007_daily_cor.npy")
+cor_2007 = np.load("test_stats/y2007_daily_cor.npy") / (18.02/1000*60*60*24)
 
 summer_mase = np.load("test_stats/summer_hourly_mase.npy")
 #%%
