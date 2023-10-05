@@ -51,7 +51,7 @@ def do_all_stats(day_agg, period_select, metric, outfname):
     #print("Leaf normalized")
     LWPerrs = np.array([metric(x) for x in normpost])
 
-    def do_compare(fname,daily):
+    def do_compare(fname,daily,scalefac=1):
         leafpost = []
 
         for i in range(5):
@@ -62,15 +62,15 @@ def do_all_stats(day_agg, period_select, metric, outfname):
                 g0 = day_agg(g0)[period_select,:]
                 datalist.append(g0[:,:-1])
             datalist.append(g0[:,-1].reshape(-1,1))
-            data_all = np.concatenate(datalist,axis=1)
+            data_all = scalefac*np.concatenate(datalist,axis=1)
             leafpost.append(data_all)
         ETtab = np.array([metric(x) for x in leafpost])
         return ETtab
 
     fname = "postET.csv"
     #print(fname)
-    ETerrs = do_compare(fname,1)
-    ETerrs *= 18.02/1000*60*60*24;
+    ETerrs = do_compare(fname,1,18.02/1000*60*60*24)
+    #ETerrs *= 18.02/1000*60*60*24;
 
     fname = "postGPP.csv"
     #print(fname)
