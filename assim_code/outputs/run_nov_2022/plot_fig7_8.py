@@ -34,6 +34,11 @@ def exclude_outliers(x):
 #titles = [r"$LWP^o$","Soil moisture","ET","GPP"]
 titles = [r"$\mathit{\psi_l^o}$","Column-averaged\nsoil moisture","ET","GPP"]
 
+titles = [r"RMSE of $\mathit{\psi_l^o}$",
+          "RMSE of column-averaged\nsoil moisture",
+          "RMSE of ET","RMSE of GPP"]
+
+
 units = ["MPa","$m^3/m^3$","mm/day","$\mu mol/m^2/s$"]
 #colors_list = ["tab:blue","tab:green","tab:orange","tab:red","tab:purple"]
 
@@ -115,7 +120,7 @@ def makeplot(err_file,means_list,big_title):
     #     ax2.plot([],[],color=colors_list[coli], label=obs_names[coli],linewidth=4,alpha=0.75)
     # fig.legend(loc="center",bbox_to_anchor=(0.5, -0.025),ncols=5,title="Observation scenario")
     
-    fig.suptitle(big_title,fontsize=24)
+    #fig.suptitle(big_title,fontsize=24)
     
     plt.tight_layout()
 
