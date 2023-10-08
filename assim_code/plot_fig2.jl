@@ -202,7 +202,7 @@ xlim(xtime[24*2],xtime[end-(24*7)])
 ylim(0.77,1)
 xticks([],[])
 #title("Hourly")
-title("HOURLY VOD",loc="left")
+title("(a) HOURLY VOD",loc="left")
 
 subplot(6,1,2)
 hsel = zeros(size(xtime));
@@ -214,7 +214,7 @@ xlim(xtime[24*2],xtime[end-(24*7)])
 ylim(0.77,1)
 xticks([],[])
 #title("1 AM/PM")
-title("1 AM/PM VOD",loc="left")
+title("(b) 1 AM/PM VOD",loc="left")
 
 
 subplot(6,1,3)
@@ -227,7 +227,7 @@ xlim(xtime[24*2],xtime[end-(24*7)])
 ylim(0.77,1)
 xticks([],[])
 #title("6 AM/PM")
-title("6 AM/PM VOD",loc="left")
+title("(c) 6 AM/PM VOD",loc="left")
 
 
 subplot(6,1,4)
@@ -242,7 +242,7 @@ xlim(xtime[24*2],xtime[end-(24*7)])
 ylim(0.77,1)
 xticks([],[])
 
-title("1+6 VOD",loc="left")
+title("(d) 1+6 VOD",loc="left")
 
 
 etsamp  = sim_res0[1].ETmod[(155-1)*24 .+ (1:(24*18))] * (18/1000 * 60*60);
@@ -251,7 +251,7 @@ subplot(6,1,5)
 plot(xtime,etsamp,"blue")
 #ylim(0.77,1)
 #title("Hourly")
-title("ET (mm/hour)",loc="left")
+title("(e) ET (mm/hour)",loc="left")
 dtlocs = xtime[1:48:end];
 DateTick = Dates.format.(dtlocs, "U d");
 #xticks(dtlocs,DateTick);
@@ -269,7 +269,7 @@ plot(xtime,obsH[(155-1)*24 .+ (1:(24*18))],"r",alpha=0.75)
 plot(xtime,vod0[1][(155-1)*24 .+ (1:(24*18))],"k",alpha=0.75)
 #ylim(0.77,1)
 #title("Hourly")
-title(raw"$H-pol brightness temperature (K)$",loc="left")
+title(raw"(f) $T_{BH} (K)$",loc="left")
 dtlocs = xtime[1:48:end];
 DateTick = Dates.format.(dtlocs, "U d");
 xticks(dtlocs,DateTick);
