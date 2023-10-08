@@ -190,8 +190,13 @@ ylabel("VOD")
 allvod = trueVOD[(155-1)*24 .+ (1:(24*18))];
 xtime = mydates[(155-1)*24 .+ (1:(24*18))];
 
-figure()
-subplot(5,1,1)
+
+obsTB = CSV.read("obsTB_witherr_1.csv",DataFrame);
+obsH = Array(obsTB.hpol);
+obsV = Array(obsTB.vpol);
+
+figure(figsize=(8,10))
+subplot(6,1,1)
 plot(xtime,allvod,color=colors_list[1],label="Hourly",markersize=4)
 xlim(xtime[24*2],xtime[end-(24*7)])
 ylim(0.77,1)
@@ -199,7 +204,7 @@ xticks([],[])
 #title("Hourly")
 title("HOURLY VOD",loc="left")
 
-subplot(5,1,2)
+subplot(6,1,2)
 hsel = zeros(size(xtime));
 hsel[2:(24*3):end] .= 1;
 hsel[(2+12):(24*3):end] .= 1;
@@ -212,7 +217,7 @@ xticks([],[])
 title("1 AM/PM VOD",loc="left")
 
 
-subplot(5,1,3)
+subplot(6,1,3)
 hsel = zeros(size(xtime));
 hsel[7:(24*3):end] .= 1;
 hsel[(7+12):(24*3):end] .= 1;
@@ -225,7 +230,7 @@ xticks([],[])
 title("6 AM/PM VOD",loc="left")
 
 
-subplot(5,1,4)
+subplot(6,1,4)
 hsel = zeros(size(xtime));
 hsel[2:(24*3):end] .= 1;
 hsel[(2+12):(24*3):end] .= 1;
@@ -242,23 +247,38 @@ title("1+6 VOD",loc="left")
 
 etsamp  = sim_res0[1].ETmod[(155-1)*24 .+ (1:(24*18))] * (18/1000 * 60*60);
 
-subplot(5,1,5)
-plot(xtime,etsamp,"k")
+subplot(6,1,5)
+plot(xtime,etsamp,"blue")
 #ylim(0.77,1)
 #title("Hourly")
 title("ET (mm/hour)",loc="left")
 dtlocs = xtime[1:48:end];
 DateTick = Dates.format.(dtlocs, "U d");
-xticks(dtlocs,DateTick);
+#xticks(dtlocs,DateTick);
+xticks([],[])
+
 xlim(xtime[24*2],xtime[end-(24*7)]);
 
+
+subplot(6,1,6)
+plot([],[],"k",alpha=0.75,label="Without noise")
+plot([],[],"r",alpha=0.75,label="After adding noise")
+
+
+plot(xtime,obsH[(155-1)*24 .+ (1:(24*18))],"r",alpha=0.75)
+plot(xtime,vod0[1][(155-1)*24 .+ (1:(24*18))],"k",alpha=0.75)
+#ylim(0.77,1)
+#title("Hourly")
+title(raw"$H-pol brightness temperature (K)$",loc="left")
+dtlocs = xtime[1:48:end];
+DateTick = Dates.format.(dtlocs, "U d");
+xticks(dtlocs,DateTick);
+xlim(xtime[24*2],xtime[end-(24*7)]);
+legend(loc=(0.3,1.1),ncol=2,fontsize=12)
 xlabel("Time in 2007")
+
+tight_layout()
 #supylabel("VOD")
 
 
-#=
-obsTB = CSV.read("obsTB_witherr_1.csv",DataFrame);
-obsH = Array(obsTB.hpol);
-obsV = Array(obsTB.vpol);
-=#
 

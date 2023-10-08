@@ -107,8 +107,9 @@ etnan = Float64.(replace(etmiss, missing => NaN));
 
 figure(figsize=(10,8))
 subplot(2,1,1)
-plot(daylist[1:5:end],etnan,"k",label="Eddy covariance")
 plot(daylist[1:5:end],get_daily(sim_res1[1].ETmod,24*5)*18/1000*60*60*24,"r",label="CliMA Land",alpha=0.75)
+plot(daylist[1:5:end],etnan,"k",label="Eddy covariance")
+
 #xlabel("Time",fontsize=24)
 #ylabel("ET (mm/day)")
 ylim(-0.1,8)
@@ -116,7 +117,7 @@ xlim(daylist[1],daylist[end])
 legend(fontsize=15,loc="upper left",ncol=2)
 title("(a)",loc="left",fontsize=20)
 title("Evapotranspiration",loc="center",fontsize=20)
-ylabel("ET (mm/day)",fontsize=20)
+ylabel("ET (mm/day)",fontsize=16)
 
 
 pdLWP = Float64.(replace(sim_res1[1].LWP_predawn, missing => NaN));
@@ -130,10 +131,12 @@ ylabel(raw"$\Psi$ (MPa)",fontsize=20)
 
 axvspan(Date(2007,1,1),Date(2007,12,31),color="green",alpha=0.33,label="Model-data fusion period")
 
+ylim(-5,0)
 xlim(daylist[1],daylist[end])
-legend(fontsize=15,ncol=2)
-title("(b)",loc="left",fontsize=20)
+legend(fontsize=15,ncol=3)
+title("(b)",loc="left",fontsize=16)
 
 tight_layout()
 
-savefig("data_comparison_fig4.png")
+savefig("data_comparison_fig4c.png")
+
