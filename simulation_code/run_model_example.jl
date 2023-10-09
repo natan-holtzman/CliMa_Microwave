@@ -23,7 +23,7 @@ df_raw = CSV.read(string(PROJECT_HOME,"/data/moflux_fluxnet_data.csv"), DataFram
 
 df_raw[!,"RAIN"] *= 2; #convert per half hour to per hour
 
-include(string(PROJECT_HOME,"/simulation_code/full_model.jl"));
+include(string(PROJECT_HOME,"/simulation_code/full_model_newP63.jl"));
 include(string(PROJECT_HOME,"/assim_code/time_averaging.jl"))
 
 

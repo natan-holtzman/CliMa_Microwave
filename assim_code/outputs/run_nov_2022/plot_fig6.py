@@ -119,7 +119,7 @@ par_names += vod_names
 
 #%%
 j0 = 0
-fig, ax_all = plt.subplots(6,3,figsize=(12,14),dpi=200)
+fig, ax_all = plt.subplots(6,3,figsize=(12,18),dpi=150)
 for row in range(len(order_index)):
     for column in range(len(order_index[row])):
         print(row,column)
@@ -149,6 +149,6 @@ for coli in range(4):
 lg = fig.legend(loc="center",bbox_to_anchor=(0.67, 0.9),ncols=2,fontsize=24)
 lg.set_title(title="Observation scenario", prop = {'size':24})
 
-plt.tight_layout()
+plt.tight_layout(w_pad = 2, h_pad=2)
 #%%
 

@@ -118,7 +118,7 @@ ax.set_title("Correlation of daily ET")
 ax.text(-0.1,1.1,"(d)",fontsize=24,transform=ax.transAxes)
 ax.set_xticks(range(1,5),obs_names[:4])
 
-fig.suptitle("Errors in model-data fusion year",fontsize=24)
+#fig.suptitle("Errors in model-data fusion year",fontsize=24)
 
 # for coli in range(5):
 #     ax.plot([],[],color=colors_list[coli], label=obs_names[coli],linewidth=4,alpha=0.75)
