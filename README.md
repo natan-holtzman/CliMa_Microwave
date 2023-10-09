@@ -1,11 +1,13 @@
 # CliMa_Microwave
 This repository contains code related to the paper "Constraining plant hydraulics with microwave radiometry in a land surface model: Impacts of temporal resolution" by Holtzman et al., submitted to Water Resources Research in 2023.
 
-The "simulation_code" folder contains code for running the modified version of the CliMA Land model that is described in the paper.
+The "simulation_code" folder contains source code of the modified plant and soil modules of the CliMA Land model version that is described in the paper.
 
 The "assim_code" folder contains code for model-data-fusion, as well as analysis and plotting results.
 
 The "data" folder contains input data for the model and scripts that were used to process that data.
+
+To run any of the code in this repository, first make sure to use "env_feb171" as your Julia environment. Instantiating this environment will install the specific version of the overall CliMA Land model that was used in the paper. Note: newer versions of CliMA Land are not backwards-compatible with many of the scripts in this repository.
 
 For an example of the modified CliMA Land model that was presented in the paper, you can run assim_code/plot_fig2.jl or assim_code/plot_fig3_4.jl
 
