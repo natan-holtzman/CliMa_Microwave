@@ -1,17 +1,17 @@
 # CliMa_Microwave
 This repository contains code related to the paper "Constraining plant hydraulics with microwave radiometry in a land surface model: Impacts of temporal resolution" by Holtzman et al., submitted to Water Resources Research in 2023.
 
-The "simulation_code" folder contains source code of the modified plant and soil modules of the CliMA Land model version that is described in the paper.
+The `simulation_code` folder contains source code of the modified plant and soil modules of the CliMA Land model version that is described in the paper.
 
-The "assim_code" folder contains code for model-data-fusion, as well as analysis and plotting results.
+The `assim_code` folder contains code for model-data-fusion, as well as analysis and plotting results.
 
-The "data" folder contains input data for the model and scripts that were used to process that data.
+The `data` folder contains input data for the model and scripts that were used to process that data.
 
-To run any of the code in this repository, first make sure to use "env_feb171" as your Julia environment. Instantiating this environment will install the specific version of the overall CliMA Land model that was used in the paper. Note: newer versions of CliMA Land are not backwards-compatible with many of the scripts in this repository.
+To run any of the code in this repository, first make sure to use `feb_j171` as your Julia environment. Instantiating this environment will install the specific version of the overall CliMA Land model that was used in the paper. This repository is _not_ compatible with newer versions of CliMA Land.
 
-For an example of the modified CliMA Land model that was presented in the paper, you can run assim_code/plot_fig2.jl or assim_code/plot_fig3_4.jl
+For an example of the modified CliMA Land model that was presented in the paper, you can run `assim_code/plot_fig2.jl` or `assim_code/plot_fig3_4.jl`
 
-To generate the full results, carry out the following command-line workflow within the assim_code/outputs/run_nov_2022 folder:
+To generate the full results, carry out the following command-line workflow within the `assim_code/outputs/run_nov_2022` folder:
 
 1. Generate synthetic brightness temperature observations from the "true" model
 
@@ -25,7 +25,7 @@ julia make_noisyTB.jl
 julia loop_mode.jl "oALL" "opt_par.csv" "obsTB_witherr_1.csv"
 ```
 
-3. Run the model-data fusion algorithm for the various observing scenarios. Here this is shown as a loop for clarity, but in practice it should be implemented as a batch job in parallel, as in the example Slurm script run_mcmc_shareTB.sh
+3. Run the model-data fusion algorithm for the various observing scenarios. Here this is shown as a loop for clarity, but in practice it should be implemented as a batch job in parallel, as in the example Slurm script `run_mcmc_shareTB.sh`
 ```
 argnames=("o1AMPM" "o6AMPM" "oAll" "o1and6" "o1AMPM" "o6AMPM" "oAll" "o1and6" "o1AMPM" "o6AMPM" "oAll" "o1and6")
 dirnames=("o1AMPM_c1/" "o6AMPM_c1/" "oAll_c1/" "o1and6_c1/" "o1AMPM_c2/" "o6AMPM_c2/" "oAll_c2/" "o1and6_c2/" "o1AMPM_c3/" "o6AMPM_c3/" "oAll_c3/" "o1and6_c3")
@@ -40,7 +40,7 @@ for i in {1..12}; do
 	julia predict_5000_v2.jl dirnames[$i]
 done
 ```
-4. Run the analysis and plotting code.
+5. Run the analysis and plotting code.
 ```
 julia vod_quantiles_save.jl
 julia plot_fig5.jl
