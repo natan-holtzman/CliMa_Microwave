@@ -215,6 +215,6 @@ axes[4,2].set_xlabel("Hour of day")
 tight_layout()
 
 fig.subplots_adjust(top=0.9)
-
-fig.savefig("fig5_oct2.png")
+savedir = "C:/Users/natan/OneDrive - Stanford/Documents/clima paper writing/coauthor edits/wrr reviews/fig_pdfs/";
+fig.savefig(string(savedir,"fig5.pdf"))
 

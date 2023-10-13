@@ -278,6 +278,9 @@ legend(loc=(0.3,1.1),ncol=2,fontsize=12)
 xlabel("Time in 2007")
 
 tight_layout()
+
+savedir = "C:/Users/natan/OneDrive - Stanford/Documents/clima paper writing/coauthor edits/wrr reviews/fig_pdfs/";
+savefig(string(savedir,"fig2.pdf"))
 #supylabel("VOD")
 
 

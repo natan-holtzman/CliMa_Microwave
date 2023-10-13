@@ -82,16 +82,28 @@ fig, axes = subplots(2,1)
 inight = 275*24 + 6;
 plot_tree_1trunk_fig(axes[1,1],sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
 axes[1,1].set_xlim(-2.5,0)
-axes[1,1].set_title("(a) 5 AM",fontsize=20,loc="left")
+axes[1,1].set_title("(a) 5 AM",fontsize=16,loc="left")
 
 
 inight = 275*24 + 13;
 plot_tree_1trunk_fig(axes[2,1],sim_res1[6][inight,:], sim_res1[7][inight,:],sim_res1[end]);
 axes[2,1].set_xlim(-2.5,0)
-axes[2,1].set_title("(b) Noon",fontsize=20,loc="left")
+axes[2,1].set_title("(b) Noon",fontsize=16,loc="left")
 
-#xlabel("Water potential (MPa)")
-#ylabel("Relative height (not to scale)")
+axes[2,1].set_xlabel("Water potential (MPa)",fontsize=16)
+
+axes[2,1].text(-2.45,12,"Leaves",color="g",fontweight="bold")
+axes[2,1].text(-1.65,12,"Branches",color="g",fontweight="bold")
+axes[2,1].text(-1.8,-0.5,"Trunk",color="k",fontweight="bold")
+axes[2,1].text(-1.15,2,"Roots",color="brown",fontweight="bold")
+axes[2,1].text(-0.45,2,"Soil layers",color="brown",fontweight="bold")
+
+
+fig.supylabel("Relative height (not to scale)",fontsize=16)
+
+tight_layout()
+savedir = "C:/Users/natan/OneDrive - Stanford/Documents/clima paper writing/coauthor edits/wrr reviews/fig_pdfs/";
+savefig(string(savedir,"fig3.pdf"))
 
 function get_daily_missing(x,navg)
 	if (typeof(x[1])==Float64) | (typeof(x[1])==Float32)
@@ -138,5 +150,7 @@ title("(b)",loc="left",fontsize=16)
 
 tight_layout()
 
-savefig("data_comparison_fig4c.png")
+savefig(string(savedir,"fig4.pdf"))
+
+#savefig("data_comparison_fig4c.png")
 
